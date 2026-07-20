@@ -48,7 +48,7 @@ e2e-backend backend="../pinch-backend" db="docker":
       PINCH_FRONTEND_BASE_URL=http://localhost:5183 \
       PINCH_BREACH_CHECK_ENABLED=false \
       PINCH_SECRET_KEY=e2e-only-not-a-secret \
-      PINCH_SECRET_ENCRYPTION_KEY=${PINCH_SECRET_ENCRYPTION_KEY:-0fgqNJQuqR09ILyfU1jynGBXmn3_6a_h-8iLItevJXk=} \
+      PINCH_SECRET_ENCRYPTION_KEY=0fgqNJQuqR09ILyfU1jynGBXmn3_6a_h-8iLItevJXk= \
       PYTHONUNBUFFERED=1 \
       uv run litestar --app pinch_backend.api.app:app run --port 8100 2>&1 \
       | tee {{ justfile_directory() }}/test-results/backend.log

@@ -4,7 +4,7 @@ import { type APIRequestContext, request } from '@playwright/test'
 // a double-submit cookie: a safe request issues the cookie, unsafe requests
 // echo it in x-csrftoken.
 
-const API = 'http://localhost:8100'
+export const API = 'http://localhost:8100'
 
 /** One suite-wide password: what it is never matters, only that it works. */
 export const PASSWORD = 'correct-horse-battery'
@@ -84,21 +84,33 @@ export async function seedUser(
   }
 }
 
+/** A logged-in API context: health warm-up (issues the CSRF cookie), then
+ * login. Caller owns disposal. */
+export async function authedContext(
+  email: string,
+  password: string,
+): Promise<{
+  ctx: APIRequestContext
+  csrf: () => Promise<Record<string, string>>
+}> {
+  const ctx = await request.newContext({ baseURL: API })
+  await ctx.get('/health')
+  const login = await ctx.post('/api/v1/auth/login', {
+    data: { email, password },
+    headers: await csrfHeader(ctx),
+  })
+  if (!login.ok()) throw new Error(`login failed: ${login.status()}`)
+  return { ctx, csrf: () => csrfHeader(ctx) }
+}
+
 /** Revoke every session of the user except the API context's own — the way a
  * browser session dies out from under a still-open tab. */
 export async function revokeOtherSessions(
   email: string,
   password: string,
 ): Promise<void> {
-  const ctx = await request.newContext({ baseURL: API })
+  const { ctx } = await authedContext(email, password)
   try {
-    await ctx.get('/health')
-    const login = await ctx.post('/api/v1/auth/login', {
-      data: { email, password },
-      headers: await csrfHeader(ctx),
-    })
-    if (!login.ok()) throw new Error(`revoke login failed: ${login.status()}`)
-
     const sessions = await ctx.get('/api/v1/auth/sessions')
     const { items } = (await sessions.json()) as {
       items: Array<{ id: string; current: boolean }>
