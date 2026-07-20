@@ -11,7 +11,10 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,
-  retries: 0,
+  // One CI retry: the suite's single non-hermetic edge (Plaid's sandbox)
+  // has shown transient NETWORK_ERRORs; our own regressions still fail
+  // loudly locally where retries stay off.
+  retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
     baseURL: 'http://localhost:5183',
