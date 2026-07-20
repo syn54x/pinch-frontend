@@ -41,12 +41,15 @@ e2e *args:
 # Breach checking is disabled so the suite never touches the network.
 e2e-backend backend="../pinch-backend":
     docker exec local-pg psql -U postgres -c 'DROP DATABASE IF EXISTS pinch_e2e' -c 'CREATE DATABASE pinch_e2e'
+    mkdir -p test-results
     cd {{ backend }} && \
       PINCH_DATABASE_URL=postgres://postgres:password@localhost:5432/pinch_e2e \
       PINCH_FRONTEND_BASE_URL=http://localhost:5183 \
       PINCH_BREACH_CHECK_ENABLED=false \
       PINCH_SECRET_KEY=e2e-only-not-a-secret \
-      uv run litestar --app pinch_backend.api.app:app run --port 8100
+      PYTHONUNBUFFERED=1 \
+      uv run litestar --app pinch_backend.api.app:app run --port 8100 2>&1 \
+      | tee {{ justfile_directory() }}/test-results/backend.log
 
 # Re-export the backend's OpenAPI schema and regenerate the typed client.
 # The committed openapi.json snapshot is the contract seam between the repos:
