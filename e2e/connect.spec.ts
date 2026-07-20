@@ -1,28 +1,8 @@
-import { expect, type Page, test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import { PASSWORD, seedUser, uniqueEmail } from './helpers/api'
 import { mintSandboxPublicToken } from './helpers/plaid'
+import { armPlaidFake } from './helpers/plaid-fake'
 import { loginViaUi } from './helpers/ui'
-
-/** Serve the fake Plaid script and arm its knobs. */
-async function armPlaidFake(
-  page: Page,
-  mode: 'success' | 'cancel' | 'error',
-  publicToken?: string,
-) {
-  await page.route('**/link-initialize.js', (route) =>
-    route.fulfill({
-      path: 'e2e/fixtures/plaid-link.js',
-      contentType: 'application/javascript',
-    }),
-  )
-  await page.addInitScript(
-    (knobs: { mode: 'success' | 'cancel' | 'error'; token?: string }) => {
-      window.__E2E_PLAID_MODE = knobs.mode
-      window.__E2E_PLAID_PUBLIC_TOKEN = knobs.token
-    },
-    { mode, token: publicToken },
-  )
-}
 
 test('connect a bank: widget → exchange → first sync → balances materialize', async ({
   page,

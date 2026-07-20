@@ -13,7 +13,10 @@ window.Plaid = {
         const mode = window.__E2E_PLAID_MODE ?? 'success'
         setTimeout(() => {
           if (mode === 'success') {
-            onSuccess(window.__E2E_PLAID_PUBLIC_TOKEN, { accounts: [] })
+            onSuccess(
+              window.__E2E_PLAID_PUBLIC_TOKEN ?? 'e2e-fake-public-token',
+              { accounts: [] },
+            )
           } else if (mode === 'cancel') {
             onExit(null, {})
           } else {
