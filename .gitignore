@@ -26,3 +26,6 @@ dist-ssr
 # Playwright
 test-results/
 playwright-report/
+
+# CI backend checkout (cross-repo e2e)
+/pinch-backend/

@@ -35,12 +35,13 @@ test *args:
 e2e *args:
     pnpm exec playwright test {{ args }}
 
-# Stand up the backend for e2e on a fresh database (requires the local-pg
-# docker container). The Playwright config runs this as a webServer; the
-# schema arrives via the backend's auto-migrate-on-connect (its ADR-0002).
-# Breach checking is disabled so the suite never touches the network.
-e2e-backend backend="../pinch-backend":
-    docker exec local-pg psql -U postgres -c 'DROP DATABASE IF EXISTS pinch_e2e' -c 'CREATE DATABASE pinch_e2e'
+# Stand up the backend for e2e on a fresh database. The Playwright config
+# runs this as a webServer; the schema arrives via the backend's
+# auto-migrate-on-connect (its ADR-0002). Breach checking is disabled so
+# the suite never touches the network. db mode: "docker" resets through the
+# local-pg container (dev), "direct" through psql (CI's service container).
+e2e-backend backend="../pinch-backend" db="docker":
+    just _e2e-db-reset-{{ db }}
     mkdir -p test-results
     cd {{ backend }} && \
       PINCH_DATABASE_URL=postgres://postgres:password@localhost:5432/pinch_e2e \
@@ -50,6 +51,12 @@ e2e-backend backend="../pinch-backend":
       PYTHONUNBUFFERED=1 \
       uv run litestar --app pinch_backend.api.app:app run --port 8100 2>&1 \
       | tee {{ justfile_directory() }}/test-results/backend.log
+
+_e2e-db-reset-docker:
+    docker exec local-pg psql -U postgres -c 'DROP DATABASE IF EXISTS pinch_e2e' -c 'CREATE DATABASE pinch_e2e'
+
+_e2e-db-reset-direct:
+    PGPASSWORD=password psql -h localhost -U postgres -c 'DROP DATABASE IF EXISTS pinch_e2e' -c 'CREATE DATABASE pinch_e2e'
 
 # Re-export the backend's OpenAPI schema and regenerate the typed client.
 # The committed openapi.json snapshot is the contract seam between the repos:

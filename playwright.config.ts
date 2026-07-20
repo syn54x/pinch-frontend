@@ -23,10 +23,12 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
     {
-      command: 'just e2e-backend',
+      // CI overrides both: the pinned backend checkout lives inside the
+      // workspace and the Postgres service is reachable directly.
+      command: `just e2e-backend ${process.env.E2E_BACKEND_DIR ?? '../pinch-backend'} ${process.env.E2E_DB_MODE ?? 'docker'}`,
       url: 'http://localhost:8100/health',
       reuseExistingServer: false,
-      timeout: 60_000,
+      timeout: 120_000,
     },
     {
       command: 'pnpm dev --port 5183 --strictPort',
