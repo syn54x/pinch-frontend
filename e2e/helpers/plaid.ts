@@ -1,34 +1,46 @@
 import { readFile } from 'node:fs/promises'
 import { request } from '@playwright/test'
+import { authedContext } from './api'
 
 // Plaid sandbox helpers: mint public tokens without the Link widget (the
 // backend's own tests use the same shortcut) and seed real sandbox
 // connections through the real backend exchange.
 
 const PLAID_SANDBOX = 'https://sandbox.plaid.com'
-const API = 'http://localhost:8100'
 
 // First Platypus Bank — Plaid's canonical sandbox institution.
 const SANDBOX_INSTITUTION = 'ins_109508'
 
+/** Strip optional quotes and trailing comments from a dotenv value. */
+function dotenvValue(env: string, key: string): string | undefined {
+  const raw = env.match(new RegExp(`^${key}=(.*)$`, 'm'))?.[1]?.trim()
+  if (!raw) return undefined
+  const unquoted = raw.match(/^"([^"]*)"|^'([^']*)'/)
+  if (unquoted) return unquoted[1] ?? unquoted[2]
+  return raw.split(/\s+#/)[0].trim() || undefined
+}
+
 let cachedCreds: { clientId: string; secret: string } | null = null
 
-/** Sandbox credentials: process env in CI, the backend's .env locally. */
+/** Sandbox credentials: process env in CI, the backend's .env locally.
+ * All-or-nothing per source — never a mixed pair. */
 async function plaidCreds(): Promise<{ clientId: string; secret: string }> {
   if (cachedCreds) return cachedCreds
-  let clientId = process.env.PINCH_PLAID_CLIENT_ID
-  let secret = process.env.PINCH_PLAID_SECRET
-  if (!clientId || !secret) {
-    const env = await readFile(
-      new URL('../../../pinch-backend/.env', import.meta.url),
-      'utf8',
-    ).catch(() => '')
-    clientId ??= env.match(/^PINCH_PLAID_CLIENT_ID=(.+)$/m)?.[1]?.trim()
-    secret ??= env.match(/^PINCH_PLAID_SECRET=(.+)$/m)?.[1]?.trim()
+  const envClientId = process.env.PINCH_PLAID_CLIENT_ID
+  const envSecret = process.env.PINCH_PLAID_SECRET
+  if (envClientId && envSecret) {
+    cachedCreds = { clientId: envClientId, secret: envSecret }
+    return cachedCreds
   }
+  const backendDir =
+    process.env.E2E_BACKEND_DIR ??
+    new URL('../../../pinch-backend', import.meta.url).pathname
+  const dotenv = await readFile(`${backendDir}/.env`, 'utf8').catch(() => '')
+  const clientId = dotenvValue(dotenv, 'PINCH_PLAID_CLIENT_ID')
+  const secret = dotenvValue(dotenv, 'PINCH_PLAID_SECRET')
   if (!clientId || !secret) {
     throw new Error(
-      'Plaid sandbox credentials not found (env or ../pinch-backend/.env)',
+      'Plaid sandbox credentials not found (process env or backend .env)',
     )
   }
   cachedCreds = { clientId, secret }
@@ -70,20 +82,8 @@ export async function seedSandboxConnection(
   password: string,
 ): Promise<void> {
   const publicToken = await mintSandboxPublicToken()
-  const ctx = await request.newContext({ baseURL: API })
+  const { ctx, csrf } = await authedContext(email, password)
   try {
-    await ctx.get('/health')
-    const csrf = async () => {
-      const state = await ctx.storageState()
-      const token = state.cookies.find((c) => c.name === 'csrftoken')?.value
-      if (!token) throw new Error('no csrftoken cookie in API context')
-      return { 'x-csrftoken': token }
-    }
-    const login = await ctx.post('/api/v1/auth/login', {
-      data: { email, password },
-      headers: await csrf(),
-    })
-    if (!login.ok()) throw new Error(`seed login failed: ${login.status()}`)
     const created = await ctx.post('/api/v1/connections', {
       data: { public_token: publicToken },
       headers: await csrf(),

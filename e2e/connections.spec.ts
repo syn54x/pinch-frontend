@@ -20,7 +20,8 @@ test('a sandbox connection renders with status, sync state, and account count', 
   await expect(row.getByText('Plaid connection')).toBeVisible()
   await expect(row.getByText('active')).toBeVisible()
   await expect(row.getByText('Never synced')).toBeVisible()
-  await expect(row.getByText(/\d+ accounts?/)).toBeVisible()
+  // [1-9]: "0 accounts" would mean the exchange created none — a failure.
+  await expect(row.getByText(/[1-9]\d* accounts?/)).toBeVisible()
 })
 
 test('disconnect severs the connection but accounts survive as manual', async ({
@@ -47,7 +48,10 @@ test('disconnect severs the connection but accounts survive as manual', async ({
   await expect(page.getByTestId('connection-card')).toHaveCount(0)
   await expect(page.getByText(/No connections yet/)).toBeVisible()
 
-  // The accounts live on.
+  // The accounts live on — and as *manual* accounts, per the AC.
   await page.getByRole('link', { name: 'Accounts' }).click()
   await expect(page.getByTestId('account-card')).toHaveCount(accountCount)
+  await expect(
+    page.getByTestId('account-card').first().getByText('manual'),
+  ).toBeVisible()
 })

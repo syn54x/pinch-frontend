@@ -41,6 +41,7 @@ function AccountCard({ account }: { account: AccountOut }) {
         <div className="flex items-center gap-3">
           <span className="font-medium">{account.label}</span>
           <Badge variant="secondary">{account.kind}</Badge>
+          {account.manual && <Badge variant="outline">manual</Badge>}
         </div>
         <span className="tabular-nums">
           {account.balance ? (
