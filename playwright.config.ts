@@ -16,6 +16,9 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:5183',
     trace: 'retain-on-failure',
+    // The money formatter renders in the runtime locale; the suite asserts
+    // en-US strings, so make that contract explicit.
+    locale: 'en-US',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
