@@ -3,8 +3,8 @@ import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import type { FormEvent } from 'react'
 import { errorDetail } from '@/api/client'
 import { loginMutation } from '@/api/generated/@tanstack/react-query.gen'
+import { AuthShell } from '@/components/auth-shell'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
@@ -45,50 +45,47 @@ function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Log in to Pinch</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={onSubmit} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                required
-                autoComplete="email"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-                autoComplete="current-password"
-              />
-            </div>
-            {login.isError && (
-              <p role="alert" className="text-destructive text-sm">
-                {errorDetail(login.error)}
-              </p>
-            )}
-            <Button type="submit" disabled={login.isPending}>
-              Log in
-            </Button>
-            <p className="text-center text-muted-foreground text-sm">
-              No account?{' '}
-              <Link to="/signup" className="underline">
-                Sign up
-              </Link>
-            </p>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <AuthShell title="Log in to Pinch">
+      <form onSubmit={onSubmit} className="grid gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            required
+            autoComplete="email"
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            required
+            autoComplete="current-password"
+          />
+        </div>
+        {login.isError && (
+          <p role="alert" className="text-destructive text-sm">
+            {errorDetail(login.error)}
+          </p>
+        )}
+        <Button type="submit" disabled={login.isPending}>
+          Log in
+        </Button>
+        <p className="text-center text-muted-foreground text-sm">
+          No account?{' '}
+          <Link to="/signup" className="underline">
+            Sign up
+          </Link>
+          {' · '}
+          <Link to="/reset-password" className="underline">
+            Forgot password?
+          </Link>
+        </p>
+      </form>
+    </AuthShell>
   )
 }
