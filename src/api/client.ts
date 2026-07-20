@@ -31,7 +31,11 @@ async function isCsrfRejection(response: Response): Promise<boolean> {
 // invalidates in-flight tokens (and a hosted secret rotation would too).
 // A rejected token is recoverable by construction: drop the cookie, let a
 // safe request issue a fresh one, and retry the original request once.
-async function fetchWithCsrfRecovery(request: Request): Promise<Response> {
+async function fetchWithCsrfRecovery(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> {
+  const request = new Request(input, init)
   const retry = request.clone()
   const response = await fetch(request)
   if (await isCsrfRejection(response)) {
