@@ -36,6 +36,10 @@ function AuthedError() {
   // The catch-all for render/load failures behind the login wall (session
   // expiry never lands here — the 401 interceptor redirects first). A full
   // reload is the honest retry: it re-runs the guard and every query.
+  //
+  // Invariant: child routes throw here because they have no errorComponent
+  // of their own and the router has no defaultErrorComponent. Adding either
+  // would silently intercept below this boundary and lose the retry.
   return (
     <div className="mx-auto max-w-3xl px-6 py-16 text-center">
       <p className="font-medium">Something went wrong loading this page.</p>
