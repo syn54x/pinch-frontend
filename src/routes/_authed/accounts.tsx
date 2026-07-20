@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { listAccountsOptions } from '@/api/generated/@tanstack/react-query.gen'
 import type { AccountOut } from '@/api/generated/types.gen'
 import { Badge } from '@/components/ui/badge'
@@ -74,7 +74,10 @@ function EmptyState() {
       <CardContent className="py-10 text-center text-muted-foreground text-sm">
         <p className="font-medium text-foreground">No accounts yet</p>
         <p className="mt-1">
-          Connect a bank or import data with the Pinch CLI to get started.
+          <Link to="/connections" className="underline">
+            Connect a bank
+          </Link>{' '}
+          or import data with the Pinch CLI to get started.
         </p>
       </CardContent>
     </Card>

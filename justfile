@@ -54,7 +54,7 @@ e2e-backend backend="../pinch-backend" db="docker":
       PINCH_SECRET_KEY=e2e-only-not-a-secret \
       PINCH_SECRET_ENCRYPTION_KEY=0fgqNJQuqR09ILyfU1jynGBXmn3_6a_h-8iLItevJXk= \
       PYTHONUNBUFFERED=1 \
-      sh -c '(until curl -sf http://localhost:8100/health >/dev/null 2>&1; do sleep 0.5; done; echo "[e2e-harness] server healthy, starting worker"; uv run python -m pinch_backend.cli.app worker; echo "[e2e-harness] worker exited: $?") & worker_waiter=$!; trap "kill $worker_waiter 2>/dev/null" EXIT; uv run litestar --app pinch_backend.api.app:app run --port 8100' 2>&1 \
+      sh -c '(until curl -sf http://localhost:8100/health >/dev/null 2>&1; do sleep 0.5; done; echo "[e2e-harness] server healthy, starting worker"; exec uv run python -m pinch_backend.cli.app worker) & worker_waiter=$!; trap "kill $worker_waiter 2>/dev/null" EXIT; uv run litestar --app pinch_backend.api.app:app run --port 8100' 2>&1 \
       | tee {{ justfile_directory() }}/test-results/backend.log
 
 e2e_db_reset_sql := "-c 'DROP DATABASE IF EXISTS pinch_e2e' -c 'CREATE DATABASE pinch_e2e'"

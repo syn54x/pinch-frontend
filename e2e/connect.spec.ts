@@ -46,9 +46,12 @@ test('connect a bank: widget → exchange → first sync → balances materializ
   // The poll window sees the worker finish; no reload anywhere.
   await expect(row.getByText(/Synced /)).toBeVisible({ timeout: 90_000 })
 
-  // Balances materialized on the accounts page through the invalidation.
+  // Balances materialized on the accounts page through the invalidation —
+  // scoped to the cards so only real balances satisfy it.
   await page.getByRole('link', { name: 'Accounts' }).click()
-  await expect(page.getByText(/\$\d/).first()).toBeVisible()
+  await expect(
+    page.getByTestId('account-card').getByText(/\$\d/).first(),
+  ).toBeVisible()
 })
 
 test('cancelling the widget leaves no residue', async ({ page }) => {
@@ -60,7 +63,8 @@ test('cancelling the widget leaves no residue', async ({ page }) => {
   await page.getByRole('link', { name: 'Connections' }).click()
   await page.getByRole('button', { name: 'Connect bank' }).click()
 
-  await page.waitForTimeout(1000)
+  // The flow ends (button re-enables) — then assert nothing was left behind.
+  await expect(page.getByRole('button', { name: 'Connect bank' })).toBeEnabled()
   await expect(page.getByTestId('connection-card')).toHaveCount(0)
   await expect(page.getByRole('alert')).toHaveCount(0)
 })
