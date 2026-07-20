@@ -52,11 +52,13 @@ e2e-backend backend="../pinch-backend" db="docker":
       uv run litestar --app pinch_backend.api.app:app run --port 8100 2>&1 \
       | tee {{ justfile_directory() }}/test-results/backend.log
 
+e2e_db_reset_sql := "-c 'DROP DATABASE IF EXISTS pinch_e2e' -c 'CREATE DATABASE pinch_e2e'"
+
 _e2e-db-reset-docker:
-    docker exec local-pg psql -U postgres -c 'DROP DATABASE IF EXISTS pinch_e2e' -c 'CREATE DATABASE pinch_e2e'
+    docker exec local-pg psql -U postgres {{ e2e_db_reset_sql }}
 
 _e2e-db-reset-direct:
-    PGPASSWORD=password psql -h localhost -U postgres -c 'DROP DATABASE IF EXISTS pinch_e2e' -c 'CREATE DATABASE pinch_e2e'
+    PGPASSWORD=password psql -h localhost -U postgres {{ e2e_db_reset_sql }}
 
 # Re-export the backend's OpenAPI schema and regenerate the typed client.
 # The committed openapi.json snapshot is the contract seam between the repos:
