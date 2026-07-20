@@ -20,6 +20,7 @@ check:
 # (Full snapshot-vs-backend freshness is CP4's cross-repo job.)
 check-drift:
     pnpm exec openapi-ts
+    git add -N src/api/generated
     git diff --exit-code src/api/generated
 
 # Auto-fix lint/format issues.

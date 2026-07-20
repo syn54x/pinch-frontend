@@ -27,13 +27,14 @@ function errorDetail(error: unknown): string {
 
 function LoginPage() {
   const router = useRouter()
+  const { queryClient } = Route.useRouteContext()
   const { redirect } = Route.useSearch()
   const login = useMutation({
     ...loginMutation(),
     onSuccess: () => {
       // The guard's /me probe may hold a cached 401 — drop it so the
       // destination's beforeLoad re-asks the server.
-      router.options.context.queryClient.clear()
+      queryClient.clear()
       router.history.push(redirect ?? '/accounts')
     },
   })

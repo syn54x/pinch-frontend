@@ -64,6 +64,36 @@ export async function seedUser(
   }
 }
 
+/** Revoke every session of the user except the API context's own — the way a
+ * browser session dies out from under a still-open tab. */
+export async function revokeOtherSessions(
+  email: string,
+  password: string,
+): Promise<void> {
+  const ctx = await request.newContext({ baseURL: API })
+  try {
+    await ctx.get('/health')
+    const login = await ctx.post('/api/v1/auth/login', {
+      data: { email, password },
+      headers: await csrfHeader(ctx),
+    })
+    if (!login.ok()) throw new Error(`revoke login failed: ${login.status()}`)
+
+    const sessions = await ctx.get('/api/v1/auth/sessions')
+    const { items } = (await sessions.json()) as {
+      items: Array<{ id: string; current: boolean }>
+    }
+    for (const session of items.filter((s) => !s.current)) {
+      const revoked = await ctx.delete(`/api/v1/auth/sessions/${session.id}`, {
+        headers: await csrfHeader(ctx),
+      })
+      if (!revoked.ok()) throw new Error(`revoke failed: ${revoked.status()}`)
+    }
+  } finally {
+    await ctx.dispose()
+  }
+}
+
 let counter = 0
 
 /** Unique-per-run email so tests never collide on the shared database. */
