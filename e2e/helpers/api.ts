@@ -23,6 +23,8 @@ export interface SeedAccount {
   kind: 'depository' | 'credit' | 'investment' | 'loan' | 'asset'
   label: string
   currency: string
+  /** Signed integer minor units (the backend's I-1 discipline). */
+  balanceMinor?: number
 }
 
 /** Create a user (and optionally accounts) via the API. Returns nothing —
@@ -51,7 +53,7 @@ export async function seedUser(
 
     // Signup lands the context authenticated (session cookie set) — create
     // accounts as that user.
-    for (const account of accounts) {
+    for (const { balanceMinor, ...account } of accounts) {
       const created = await ctx.post('/api/v1/accounts', {
         data: account,
         headers: await csrfHeader(ctx),
@@ -60,6 +62,21 @@ export async function seedUser(
         throw new Error(
           `seed account failed: ${created.status()} ${await created.text()}`,
         )
+      }
+      if (balanceMinor !== undefined) {
+        const { id } = (await created.json()) as { id: string }
+        const balance = await ctx.post(
+          `/api/v1/accounts/${id}/balance-entries`,
+          {
+            data: { amount_minor: balanceMinor },
+            headers: await csrfHeader(ctx),
+          },
+        )
+        if (!balance.ok()) {
+          throw new Error(
+            `seed balance failed: ${balance.status()} ${await balance.text()}`,
+          )
+        }
       }
     }
   } finally {

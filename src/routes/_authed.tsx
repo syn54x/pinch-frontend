@@ -29,7 +29,27 @@ export const Route = createFileRoute('/_authed')({
     }
   },
   component: AuthedLayout,
+  errorComponent: AuthedError,
 })
+
+function AuthedError() {
+  // The catch-all for render/load failures behind the login wall (session
+  // expiry never lands here — the 401 interceptor redirects first). A full
+  // reload is the honest retry: it re-runs the guard and every query.
+  return (
+    <div className="mx-auto max-w-3xl px-6 py-16 text-center">
+      <p className="font-medium">Something went wrong loading this page.</p>
+      <Button
+        variant="outline"
+        size="sm"
+        className="mt-4"
+        onClick={() => window.location.reload()}
+      >
+        Try again
+      </Button>
+    </div>
+  )
+}
 
 function AuthedLayout() {
   const router = useRouter()
