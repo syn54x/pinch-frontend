@@ -3,8 +3,8 @@ import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import type { FormEvent } from 'react'
 import { errorDetail } from '@/api/client'
 import { signupMutation } from '@/api/generated/@tanstack/react-query.gen'
+import { AuthShell } from '@/components/auth-shell'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
@@ -37,51 +37,44 @@ function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-svh items-center justify-center px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Create your Pinch account</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={onSubmit} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                required
-                autoComplete="email"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-                minLength={8}
-                autoComplete="new-password"
-              />
-            </div>
-            {signup.isError && (
-              <p role="alert" className="text-destructive text-sm">
-                {errorDetail(signup.error)}
-              </p>
-            )}
-            <Button type="submit" disabled={signup.isPending}>
-              Create account
-            </Button>
-            <p className="text-center text-muted-foreground text-sm">
-              Have an account?{' '}
-              <Link to="/login" className="underline">
-                Log in
-              </Link>
-            </p>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <AuthShell title="Create your Pinch account">
+      <form onSubmit={onSubmit} className="grid gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            required
+            autoComplete="email"
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+          />
+        </div>
+        {signup.isError && (
+          <p role="alert" className="text-destructive text-sm">
+            {errorDetail(signup.error)}
+          </p>
+        )}
+        <Button type="submit" disabled={signup.isPending}>
+          Create account
+        </Button>
+        <p className="text-center text-muted-foreground text-sm">
+          Have an account?{' '}
+          <Link to="/login" className="underline">
+            Log in
+          </Link>
+        </p>
+      </form>
+    </AuthShell>
   )
 }
