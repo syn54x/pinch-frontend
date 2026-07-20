@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useCallback, useEffect, useState } from 'react'
-import { errorDetail } from '@/api/client'
+import { errorDetail, statusOf } from '@/api/client'
 import { createConnection, createLinkToken } from '@/api/generated'
 import {
   deleteConnectionMutation,
@@ -36,14 +36,19 @@ export const Route = createFileRoute('/_authed/connections')({
 const SYNC_WINDOW_MS = 120_000
 const SYNC_POLL_MS = 3_000
 
-type SyncWindow = { baseline: string | null; startedAt: number }
+type SyncWindow = {
+  baseline: string | null
+  startedAt: number
+  /** Cap reached: stop polling, show "still working" until data moves. */
+  expired: boolean
+}
 
 function ConnectionsPage() {
   const queryClient = useQueryClient()
   // Poll-while-pending: only client-triggered syncs are watched, and the
-  // list refetches only while a window is open.
+  // list refetches only while a live (non-expired) window is open.
   const [syncWindows, setSyncWindows] = useState<Record<string, SyncWindow>>({})
-  const watching = Object.keys(syncWindows).length > 0
+  const watching = Object.values(syncWindows).some((window) => !window.expired)
 
   const connections = useQuery({
     ...listConnectionsOptions(),
@@ -57,14 +62,36 @@ function ConnectionsPage() {
       [connection.id]: {
         baseline: connection.last_synced_at,
         startedAt: Date.now(),
+        expired: false,
       },
     }))
   }, [])
 
+  // Expiry runs on a real timer: the data-driven effect below can't see a
+  // stalled sync (structural sharing keeps unchanged responses referentially
+  // identical, so it never re-runs while nothing changes).
+  useEffect(() => {
+    if (!watching) return
+    const timer = setInterval(() => {
+      const now = Date.now()
+      setSyncWindows((windows) => {
+        let changed = false
+        const next = { ...windows }
+        for (const [id, window] of Object.entries(next)) {
+          if (!window.expired && now - window.startedAt > SYNC_WINDOW_MS) {
+            next[id] = { ...window, expired: true }
+            changed = true
+          }
+        }
+        return changed ? next : windows
+      })
+    }, 5_000)
+    return () => clearInterval(timer)
+  }, [watching])
+
   const items = connections.data?.items
   useEffect(() => {
-    if (!items || !watching) return
-    const now = Date.now()
+    if (!items) return
     const closed: string[] = []
     let synced = false
     for (const [id, window] of Object.entries(syncWindows)) {
@@ -72,13 +99,13 @@ function ConnectionsPage() {
       // A connection absent from the list is NOT closed here: right after
       // an exchange the cached list is stale and doesn't contain the new
       // row yet — treating that as "deleted" killed windows at birth.
-      // Genuinely-gone connections age out via the expiry below.
+      // Genuinely-gone connections age out via the expiry timer.
       const finished =
         connection &&
         (connection.last_synced_at !== window.baseline ||
           connection.status !== 'active')
-      if (finished) synced = true
-      if (finished || now - window.startedAt > SYNC_WINDOW_MS) {
+      if (finished) {
+        synced = true
         closed.push(id)
       }
     }
@@ -93,7 +120,7 @@ function ConnectionsPage() {
         queryClient.invalidateQueries({ queryKey: listAccountsQueryKey() })
       }
     }
-  }, [items, watching, syncWindows, queryClient])
+  }, [items, syncWindows, queryClient])
 
   return (
     <div>
@@ -109,7 +136,13 @@ function ConnectionsPage() {
             <ConnectionCard
               key={connection.id}
               connection={connection}
-              syncing={connection.id in syncWindows}
+              syncState={
+                syncWindows[connection.id] === undefined
+                  ? undefined
+                  : syncWindows[connection.id].expired
+                    ? 'expired'
+                    : 'watching'
+              }
             />
           ))
         ) : (
@@ -141,10 +174,22 @@ function ConnectBank({
     setError(null)
     setBusy(true)
     try {
-      const { data: tokenOut } = await createLinkToken({
-        body: null, // creation mode; repair passes a connection_id (CP2)
-        throwOnError: true,
-      })
+      let tokenOut: { link_token: string }
+      try {
+        ;({ data: tokenOut } = await createLinkToken({
+          body: null, // creation mode; repair passes a connection_id (CP2)
+          throwOnError: true,
+        }))
+      } catch (caught) {
+        // A 403 on link-token means the keyless stance: Plaid isn't
+        // configured on this instance (status-keyed, not prose-sniffed).
+        setError(
+          statusOf(caught) === 403
+            ? `${errorDetail(caught)} — set PINCH_PLAID_CLIENT_ID and PINCH_PLAID_SECRET on the backend to enable bank connections.`
+            : errorDetail(caught),
+        )
+        return
+      }
       const publicToken = await connect(tokenOut.link_token)
       if (publicToken === null) return // dismissed — not an error
       const { data: connection } = await createConnection({
@@ -167,8 +212,6 @@ function ConnectBank({
       {error && (
         <p role="alert" className="text-destructive text-sm">
           {error}
-          {error.includes('not configured') &&
-            ' — set PINCH_PLAID_CLIENT_ID and PINCH_PLAID_SECRET on the backend to enable bank connections.'}
         </p>
       )}
       <Button onClick={handleConnect} disabled={busy}>
@@ -186,10 +229,10 @@ const STATUS_VARIANT = {
 
 function ConnectionCard({
   connection,
-  syncing = false,
+  syncState,
 }: {
   connection: ConnectionOut
-  syncing?: boolean
+  syncState?: 'watching' | 'expired'
 }) {
   const count = connection.accounts.length
 
@@ -207,13 +250,15 @@ function ConnectionCard({
             </Badge>
           </div>
           <p className="text-muted-foreground text-sm">
-            {syncing
-              ? connection.last_synced_at
-                ? 'Syncing…'
-                : 'First sync running…'
-              : connection.last_synced_at
-                ? `Synced ${relativeTime(connection.last_synced_at)}`
-                : 'Never synced'}
+            {syncState === 'expired'
+              ? 'Still working — check back shortly'
+              : syncState === 'watching'
+                ? connection.last_synced_at
+                  ? 'Syncing…'
+                  : 'First sync running…'
+                : connection.last_synced_at
+                  ? `Synced ${relativeTime(connection.last_synced_at)}`
+                  : 'Never synced'}
             {' · '}
             {count} {count === 1 ? 'account' : 'accounts'}
           </p>

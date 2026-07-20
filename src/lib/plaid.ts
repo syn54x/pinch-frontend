@@ -43,9 +43,26 @@ export function usePlaidConnect(): (
     if (token && ready) open()
   }, [token, ready, open])
 
+  // If the script never loads (ready never flips), fail the attempt rather
+  // than hanging the caller's busy state forever.
+  useEffect(() => {
+    if (!token || ready) return
+    const timer = setTimeout(() => {
+      pending.current?.reject(new PlaidExitError('Plaid took too long to load'))
+      pending.current = null
+      setToken(null)
+    }, 20_000)
+    return () => clearTimeout(timer)
+  }, [token, ready])
+
   return useCallback(
     (linkToken: string) =>
       new Promise<string | null>((resolve, reject) => {
+        if (pending.current) {
+          // Never clobber an in-flight attempt — its promise would hang.
+          reject(new PlaidExitError('A connect attempt is already in progress'))
+          return
+        }
         pending.current = { resolve, reject }
         setToken(linkToken)
       }),
