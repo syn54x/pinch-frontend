@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
-import { seedUser, uniqueEmail } from './helpers/api'
+import { revokeOtherSessions, seedUser, uniqueEmail } from './helpers/api'
+import { loginViaUi } from './helpers/ui'
 
 const PASSWORD = 'correct-horse-battery'
 
@@ -43,10 +44,7 @@ test('logout revokes the session for real', async ({ page }) => {
   const email = uniqueEmail('logout')
   await seedUser(email, PASSWORD)
 
-  await page.goto('/login')
-  await page.getByLabel('Email').fill(email)
-  await page.getByLabel('Password').fill(PASSWORD)
-  await page.getByRole('button', { name: 'Log in' }).click()
+  await loginViaUi(page, email, PASSWORD)
   await expect(page).toHaveURL(/\/accounts$/)
 
   await page.getByRole('button', { name: 'Log out' }).click()
@@ -79,13 +77,29 @@ test('the session survives a reload', async ({ page }) => {
     { kind: 'asset', label: 'House', currency: 'USD' },
   ])
 
-  await page.goto('/login')
-  await page.getByLabel('Email').fill(email)
-  await page.getByLabel('Password').fill(PASSWORD)
-  await page.getByRole('button', { name: 'Log in' }).click()
+  await loginViaUi(page, email, PASSWORD)
   await expect(page).toHaveURL(/\/accounts$/)
 
   await page.reload()
   await expect(page).toHaveURL(/\/accounts$/)
   await expect(page.getByText('House')).toBeVisible()
+})
+
+test('a session revoked server-side bounces to login when the tab refocuses', async ({
+  page,
+}) => {
+  const email = uniqueEmail('miduse')
+  await seedUser(email, PASSWORD)
+
+  await loginViaUi(page, email, PASSWORD)
+  await expect(page).toHaveURL(/\/accounts$/)
+
+  // The session dies out from under the open tab. Returning to the tab
+  // refetches (React Query focus behavior); the dead session's 401 must land
+  // on login — the global handler, not the route guard, owns this path.
+  await revokeOtherSessions(email, PASSWORD)
+  await page.evaluate(() => {
+    document.dispatchEvent(new Event('visibilitychange', { bubbles: true }))
+  })
+  await expect(page).toHaveURL(/\/login/)
 })

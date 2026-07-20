@@ -5,6 +5,7 @@ import {
   redirect,
   useRouter,
 } from '@tanstack/react-router'
+import { isUnauthorized } from '@/api/client'
 import {
   logoutMutation,
   meOptions,
@@ -18,7 +19,10 @@ export const Route = createFileRoute('/_authed')({
   beforeLoad: async ({ context, location }) => {
     try {
       await context.queryClient.ensureQueryData(meOptions())
-    } catch {
+    } catch (error) {
+      // Only "no valid session" belongs at login; a 500 or unreachable
+      // backend must surface as an error, not a confusing login loop.
+      if (!isUnauthorized(error)) throw error
       throw redirect({ to: '/login', search: { redirect: location.href } })
     }
   },
@@ -27,12 +31,13 @@ export const Route = createFileRoute('/_authed')({
 
 function AuthedLayout() {
   const router = useRouter()
+  const { queryClient } = Route.useRouteContext()
   const logout = useMutation({
     ...logoutMutation(),
     onSuccess: () => {
       // The session is gone server-side; drop every cached answer that
       // presumed it (starting with /me) and go to login.
-      router.options.context.queryClient.clear()
+      queryClient.clear()
       router.history.push('/login')
     },
   })

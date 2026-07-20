@@ -21,6 +21,37 @@ client.setConfig({
   credentials: 'include',
 })
 
+/** True when an error thrown by the generated client is the backend's 401. */
+export function isUnauthorized(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'status_code' in error &&
+    (error as { status_code: unknown }).status_code === 401
+  )
+}
+
+// Auth endpoints whose 401s mean something other than "the session died":
+// login's is "wrong credentials" (rendered inline by the form) and me's is
+// the route guard's probe (redirected via the router, no full page load).
+const SELF_HANDLED_401S = ['/api/v1/auth/login', '/api/v1/auth/me']
+
+// Session expiry, handled once: any other 401 means the cookie went stale
+// out from under the app — send the user to login, keeping their place.
+client.interceptors.response.use((response, request) => {
+  if (
+    response.status === 401 &&
+    !SELF_HANDLED_401S.includes(new URL(request.url).pathname)
+  ) {
+    const { pathname, search } = window.location
+    if (pathname !== '/login') {
+      const redirect = encodeURIComponent(pathname + search)
+      window.location.assign(`/login?redirect=${redirect}`)
+    }
+  }
+  return response
+})
+
 client.interceptors.request.use(async (request) => {
   if (UNSAFE_METHODS.has(request.method)) {
     // Pre-session bootstrap: the double-submit cookie is issued on any safe
