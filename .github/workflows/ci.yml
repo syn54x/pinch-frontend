@@ -62,6 +62,10 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
+      # Pre-warm the backend env so the Playwright webServer boot isn't
+      # racing its timeout against uv's first-run downloads.
+      - run: uv sync
+        working-directory: pinch-backend
       - run: pnpm exec playwright test
         env:
           E2E_BACKEND_DIR: ${{ github.workspace }}/pinch-backend
