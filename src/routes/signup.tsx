@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import type { FormEvent } from 'react'
+import { errorDetail } from '@/api/client'
 import { signupMutation } from '@/api/generated/@tanstack/react-query.gen'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,13 +11,6 @@ import { Label } from '@/components/ui/label'
 export const Route = createFileRoute('/signup')({
   component: SignupPage,
 })
-
-function errorDetail(error: unknown): string {
-  if (error && typeof error === 'object' && 'detail' in error) {
-    return String((error as { detail: unknown }).detail)
-  }
-  return 'Something went wrong — please try again.'
-}
 
 function SignupPage() {
   const router = useRouter()
@@ -79,6 +73,12 @@ function SignupPage() {
             <Button type="submit" disabled={signup.isPending}>
               Create account
             </Button>
+            <p className="text-center text-muted-foreground text-sm">
+              Have an account?{' '}
+              <Link to="/login" className="underline">
+                Log in
+              </Link>
+            </p>
           </form>
         </CardContent>
       </Card>

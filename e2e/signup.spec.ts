@@ -1,9 +1,8 @@
 import { expect, test } from '@playwright/test'
-import { seedUser, uniqueEmail } from './helpers/api'
+import { PASSWORD, seedUser, uniqueEmail } from './helpers/api'
+import { verificationTokenFor } from './helpers/mail'
 
-const PASSWORD = 'correct-horse-battery'
-
-test('signup lands authenticated-unverified with the verify banner', async ({
+test('signup → banner → fish token → verify → banner gone', async ({
   page,
 }) => {
   const email = uniqueEmail('signup')
@@ -13,6 +12,7 @@ test('signup lands authenticated-unverified with the verify banner', async ({
   await page.getByLabel('Password').fill(PASSWORD)
   await page.getByRole('button', { name: 'Create account' }).click()
 
+  // Lands authenticated-unverified, banner nudging.
   await expect(page).toHaveURL(/\/accounts$/)
   await expect(page.getByText('Verify your email')).toBeVisible()
 
@@ -20,6 +20,15 @@ test('signup lands authenticated-unverified with the verify banner', async ({
   await page.getByRole('button', { name: 'Dismiss' }).click()
   await expect(page.getByText('Verify your email')).not.toBeVisible()
   await expect(page.getByRole('heading', { name: 'Accounts' })).toBeVisible()
+
+  // The emailed link completes the journey; back in the app the banner is
+  // gone for real — verified, not merely dismissed.
+  const token = await verificationTokenFor(email)
+  await page.goto(`/verify-email?token=${token}`)
+  await expect(page.getByText('Email verified')).toBeVisible()
+  await page.getByRole('link', { name: 'Go to Pinch' }).click()
+  await expect(page).toHaveURL(/\/accounts$/)
+  await expect(page.getByText('Verify your email')).not.toBeVisible()
 })
 
 test('signup with a taken email shows an inline error', async ({ page }) => {

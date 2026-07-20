@@ -11,15 +11,22 @@ function escapeRegExp(value: string): string {
 }
 
 async function tokenFor(email: string, linkPath: string): Promise<string> {
-  const pattern = new RegExp(
-    `=== mail to ${escapeRegExp(email)}[^]*?${linkPath}\\?token=([A-Za-z0-9_-]+)`,
+  // Match within a single mail block (delimited by the trailing `===`), so a
+  // near-miss can never bleed into the next mail and steal its token.
+  const block = new RegExp(
+    `=== mail to ${escapeRegExp(email)} — [^\\n]*===\\n([^]*?)\\n===`,
     'g',
   )
+  const link = new RegExp(`${linkPath}\\?token=([A-Za-z0-9_-]+)`)
   const deadline = Date.now() + 10_000
   while (Date.now() < deadline) {
     const log = await readFile(LOG_PATH, 'utf8').catch(() => '')
-    const last = [...log.matchAll(pattern)].at(-1)
-    if (last) return last[1]
+    const bodies = [...log.matchAll(block)].map((match) => match[1])
+    const tokens = bodies
+      .map((body) => body.match(link)?.[1])
+      .filter((token): token is string => token !== undefined)
+    const last = tokens.at(-1)
+    if (last) return last
     await new Promise((resolve) => setTimeout(resolve, 200))
   }
   throw new Error(`no ${linkPath} mail for ${email} in backend.log`)
