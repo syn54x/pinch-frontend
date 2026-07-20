@@ -88,6 +88,29 @@ test('the session survives a reload', async ({ page }) => {
   await expect(page.getByText('House')).toBeVisible()
 })
 
+test('a stale CSRF cookie self-heals instead of failing the form', async ({
+  page,
+  context,
+}) => {
+  // The backend's dev secret is per-process: a restart invalidates every
+  // in-flight csrftoken. Simulate a browser that lived through one.
+  await context.addCookies([
+    {
+      name: 'csrftoken',
+      value: 'stale-token-from-a-dead-process',
+      url: 'http://localhost:5183',
+    },
+  ])
+
+  const email = uniqueEmail('stalecsrf')
+  await page.goto('/signup')
+  await page.getByLabel('Email').fill(email)
+  await page.getByLabel('Password').fill(PASSWORD)
+  await page.getByRole('button', { name: 'Create account' }).click()
+
+  await expect(page).toHaveURL(/\/accounts$/)
+})
+
 test('a session revoked server-side bounces to login when the tab refocuses', async ({
   page,
 }) => {
