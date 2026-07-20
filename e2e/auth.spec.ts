@@ -1,8 +1,11 @@
 import { expect, test } from '@playwright/test'
-import { revokeOtherSessions, seedUser, uniqueEmail } from './helpers/api'
+import {
+  PASSWORD,
+  revokeOtherSessions,
+  seedUser,
+  uniqueEmail,
+} from './helpers/api'
 import { loginViaUi } from './helpers/ui'
-
-const PASSWORD = 'correct-horse-battery'
 
 test('login lands on the accounts page showing seeded accounts', async ({
   page,

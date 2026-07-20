@@ -6,6 +6,9 @@ import { type APIRequestContext, request } from '@playwright/test'
 
 const API = 'http://localhost:8100'
 
+/** One suite-wide password: what it is never matters, only that it works. */
+export const PASSWORD = 'correct-horse-battery'
+
 async function csrfHeader(
   ctx: APIRequestContext,
 ): Promise<Record<string, string>> {

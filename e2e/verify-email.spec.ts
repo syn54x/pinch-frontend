@@ -1,9 +1,7 @@
 import { expect, test } from '@playwright/test'
-import { seedUser, uniqueEmail } from './helpers/api'
+import { PASSWORD, seedUser, uniqueEmail } from './helpers/api'
 import { verificationTokenFor } from './helpers/mail'
 import { loginViaUi } from './helpers/ui'
-
-const PASSWORD = 'correct-horse-battery'
 
 test('the emailed link verifies the address and clears the banner', async ({
   page,

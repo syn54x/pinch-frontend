@@ -21,14 +21,30 @@ client.setConfig({
   credentials: 'include',
 })
 
-/** True when an error thrown by the generated client is the backend's 401. */
-export function isUnauthorized(error: unknown): boolean {
-  return (
+/** The HTTP status of an error thrown by the generated client, if any. */
+export function statusOf(error: unknown): number | undefined {
+  if (
     typeof error === 'object' &&
     error !== null &&
     'status_code' in error &&
-    (error as { status_code: unknown }).status_code === 401
-  )
+    typeof (error as { status_code: unknown }).status_code === 'number'
+  ) {
+    return (error as { status_code: number }).status_code
+  }
+  return undefined
+}
+
+/** True when an error thrown by the generated client is the backend's 401. */
+export function isUnauthorized(error: unknown): boolean {
+  return statusOf(error) === 401
+}
+
+/** The backend's structured error detail, for inline display in forms. */
+export function errorDetail(error: unknown): string {
+  if (error && typeof error === 'object' && 'detail' in error) {
+    return String((error as { detail: unknown }).detail)
+  }
+  return 'Something went wrong — please try again.'
 }
 
 // Auth endpoints whose 401s mean something other than "the session died":
