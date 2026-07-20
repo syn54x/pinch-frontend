@@ -82,6 +82,14 @@ export async function seedSandboxConnection(
   password: string,
 ): Promise<void> {
   const publicToken = await mintSandboxPublicToken()
+  await exchangeViaBackend(email, password, publicToken)
+}
+
+async function exchangeViaBackend(
+  email: string,
+  password: string,
+  publicToken: string,
+): Promise<void> {
   const { ctx, csrf } = await authedContext(email, password)
   try {
     const created = await ctx.post('/api/v1/connections', {
@@ -93,6 +101,34 @@ export async function seedSandboxConnection(
         `connection exchange failed: ${created.status()} ${await created.text()}`,
       )
     }
+  } finally {
+    await ctx.dispose()
+  }
+}
+
+/** Poll until the seeded connection's auto-enqueued first sync completes —
+ * the page only refetches inside client-triggered windows, so tests that
+ * assert on a synced row must not race the worker. */
+export async function waitForFirstSync(
+  email: string,
+  password: string,
+  timeoutMs = 90_000,
+): Promise<void> {
+  const { ctx } = await authedContext(email, password)
+  try {
+    const deadline = Date.now() + timeoutMs
+    while (Date.now() < deadline) {
+      const response = await ctx.get('/api/v1/connections')
+      const { items } = (await response.json()) as {
+        items: Array<{ last_synced_at: string | null; status: string }>
+      }
+      if (items.some((item) => item.last_synced_at !== null)) return
+      if (items.some((item) => item.status !== 'active')) {
+        throw new Error(`first sync failed: ${JSON.stringify(items)}`)
+      }
+      await new Promise((resolve) => setTimeout(resolve, 2_000))
+    }
+    throw new Error('first sync did not complete in time')
   } finally {
     await ctx.dispose()
   }

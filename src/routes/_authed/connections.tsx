@@ -2,12 +2,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useCallback, useEffect, useState } from 'react'
 import { errorDetail, statusOf } from '@/api/client'
-import { createConnection, createLinkToken } from '@/api/generated'
+import {
+  createConnection,
+  createLinkToken,
+  refreshConnection,
+} from '@/api/generated'
 import {
   deleteConnectionMutation,
   listAccountsQueryKey,
   listConnectionsOptions,
   listConnectionsQueryKey,
+  refreshConnectionMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
 import type { ConnectionOut } from '@/api/generated/types.gen'
 import {
@@ -38,6 +43,9 @@ const SYNC_POLL_MS = 3_000
 
 type SyncWindow = {
   baseline: string | null
+  /** Status at window open — repair windows watch non-active rows, so
+   * "finished" means changed-from-baseline, never !== 'active'. */
+  baselineStatus: ConnectionOut['status']
   startedAt: number
   /** Cap reached: stop polling, show "still working" until data moves. */
   expired: boolean
@@ -61,6 +69,7 @@ function ConnectionsPage() {
       ...windows,
       [connection.id]: {
         baseline: connection.last_synced_at,
+        baselineStatus: connection.status,
         startedAt: Date.now(),
         expired: false,
       },
@@ -103,7 +112,7 @@ function ConnectionsPage() {
       const finished =
         connection &&
         (connection.last_synced_at !== window.baseline ||
-          connection.status !== 'active')
+          connection.status !== window.baselineStatus)
       if (finished) {
         synced = true
         closed.push(id)
@@ -143,6 +152,7 @@ function ConnectionsPage() {
                     ? 'expired'
                     : 'watching'
               }
+              onSyncTriggered={openSyncWindow}
             />
           ))
         ) : (
@@ -230,11 +240,14 @@ const STATUS_VARIANT = {
 function ConnectionCard({
   connection,
   syncState,
+  onSyncTriggered,
 }: {
   connection: ConnectionOut
   syncState?: 'watching' | 'expired'
+  onSyncTriggered: (connection: ConnectionOut) => void
 }) {
   const count = connection.accounts.length
+  const broken = connection.status !== 'active'
 
   return (
     <Card data-testid="connection-card">
@@ -268,9 +281,107 @@ function ConnectionCard({
             </p>
           )}
         </div>
-        <DisconnectButton connection={connection} />
+        <span className="flex shrink-0 items-center gap-1">
+          {broken && (
+            <RepairButton
+              connection={connection}
+              onTriggered={onSyncTriggered}
+            />
+          )}
+          <RefreshButton
+            connection={connection}
+            disabled={syncState !== undefined}
+            onTriggered={onSyncTriggered}
+          />
+          <DisconnectButton connection={connection} />
+        </span>
       </CardContent>
     </Card>
+  )
+}
+
+function RefreshButton({
+  connection,
+  disabled,
+  onTriggered,
+}: {
+  connection: ConnectionOut
+  disabled: boolean
+  onTriggered: (connection: ConnectionOut) => void
+}) {
+  const refresh = useMutation({
+    ...refreshConnectionMutation(),
+    onSuccess: () => onTriggered(connection),
+  })
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      disabled={disabled || refresh.isPending}
+      onClick={() => refresh.mutate({ path: { connection_id: connection.id } })}
+    >
+      Refresh
+    </Button>
+  )
+}
+
+function RepairButton({
+  connection,
+  onTriggered,
+}: {
+  connection: ConnectionOut
+  onTriggered: (connection: ConnectionOut) => void
+}) {
+  const queryClient = useQueryClient()
+  const connect = usePlaidConnect()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleRepair() {
+    setError(null)
+    setBusy(true)
+    try {
+      // Update-mode token for the same Item — repair, never re-create
+      // (a fresh connect on a broken connection duplicates accounts).
+      const { data: tokenOut } = await createLinkToken({
+        body: { connection_id: connection.id },
+        throwOnError: true,
+      })
+      const result = await connect(tokenOut.link_token)
+      if (result === null) return // dismissed — not an error
+      // Update mode needs no exchange; the follow-up sync proves the fix.
+      await refreshConnection({
+        path: { connection_id: connection.id },
+        throwOnError: true,
+      })
+      queryClient.invalidateQueries({ queryKey: listConnectionsQueryKey() })
+      onTriggered(connection)
+    } catch (caught) {
+      setError(
+        caught instanceof PlaidExitError ? caught.message : errorDetail(caught),
+      )
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <span className="flex items-center gap-2">
+      {error && (
+        <span role="alert" className="text-destructive text-sm">
+          {error}
+        </span>
+      )}
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={busy}
+        onClick={handleRepair}
+      >
+        Repair
+      </Button>
+    </span>
   )
 }
 
