@@ -73,6 +73,10 @@ jobs:
         env:
           E2E_BACKEND_DIR: ${{ github.workspace }}/pinch-backend
           E2E_DB_MODE: direct
+          # Plaid sandbox — the suite's one accepted non-hermetic edge (F2):
+          # consumed by the e2e backend and the token-minting helper.
+          PINCH_PLAID_CLIENT_ID: ${{ secrets.PINCH_PLAID_CLIENT_ID }}
+          PINCH_PLAID_SECRET: ${{ secrets.PINCH_PLAID_SECRET }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

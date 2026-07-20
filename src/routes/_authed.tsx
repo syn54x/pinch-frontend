@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import {
   createFileRoute,
+  Link,
   Outlet,
   redirect,
   useRouter,
@@ -71,7 +72,17 @@ function AuthedLayout() {
   return (
     <div className="min-h-svh">
       <header className="flex items-center justify-between border-b px-6 py-3">
-        <span className="font-semibold">Pinch</span>
+        <div className="flex items-center gap-6">
+          <span className="font-semibold">Pinch</span>
+          <nav className="flex items-center gap-4 text-sm">
+            <Link to="/accounts" className="hover:underline">
+              Accounts
+            </Link>
+            <Link to="/connections" className="hover:underline">
+              Connections
+            </Link>
+          </nav>
+        </div>
         <Button
           variant="ghost"
           size="sm"
