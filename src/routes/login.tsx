@@ -1,12 +1,14 @@
 import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import type { FormEvent } from 'react'
-import { errorDetail } from '@/api/client'
 import { loginMutation } from '@/api/generated/@tanstack/react-query.gen'
+import {
+  EmailField,
+  MutationError,
+  PasswordField,
+} from '@/components/auth-form'
 import { AuthShell } from '@/components/auth-shell'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
 type LoginSearch = {
   redirect?: string
@@ -47,31 +49,9 @@ function LoginPage() {
   return (
     <AuthShell title="Log in to Pinch">
       <form onSubmit={onSubmit} className="grid gap-4">
-        <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            required
-            autoComplete="current-password"
-          />
-        </div>
-        {login.isError && (
-          <p role="alert" className="text-destructive text-sm">
-            {errorDetail(login.error)}
-          </p>
-        )}
+        <EmailField />
+        <PasswordField autoComplete="current-password" />
+        <MutationError mutation={login} />
         <Button type="submit" disabled={login.isPending}>
           Log in
         </Button>

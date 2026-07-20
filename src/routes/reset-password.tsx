@@ -1,15 +1,17 @@
 import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import type { FormEvent } from 'react'
-import { errorDetail } from '@/api/client'
 import {
   confirmPasswordResetMutation,
   requestPasswordResetMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
+import {
+  EmailField,
+  MutationError,
+  PasswordField,
+} from '@/components/auth-form'
 import { AuthShell } from '@/components/auth-shell'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
 type ResetSearch = {
   token?: string
@@ -62,21 +64,8 @@ function RequestForm() {
 
   return (
     <form onSubmit={onSubmit} className="grid gap-4">
-      <div className="grid gap-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          required
-          autoComplete="email"
-        />
-      </div>
-      {request.isError && (
-        <p role="alert" className="text-destructive text-sm">
-          {errorDetail(request.error)}
-        </p>
-      )}
+      <EmailField />
+      <MutationError mutation={request} />
       <Button type="submit" disabled={request.isPending}>
         Send reset link
       </Button>
@@ -107,22 +96,8 @@ function ConfirmForm({ token }: { token: string }) {
 
   return (
     <form onSubmit={onSubmit} className="grid gap-4">
-      <div className="grid gap-2">
-        <Label htmlFor="password">New password</Label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          required
-          minLength={8}
-          autoComplete="new-password"
-        />
-      </div>
-      {confirm.isError && (
-        <p role="alert" className="text-destructive text-sm">
-          {errorDetail(confirm.error)}
-        </p>
-      )}
+      <PasswordField label="New password" autoComplete="new-password" />
+      <MutationError mutation={confirm} />
       <Button type="submit" disabled={confirm.isPending}>
         Set new password
       </Button>
