@@ -26,7 +26,7 @@ jobs:
   # The walking skeleton's definition of done: the full Playwright suite
   # against a real backend (checked out at the SHA pinned in e2e/backend.pin
   # — bumping it is a reviewable diff) and a fresh Postgres.
-  # Requires the BACKEND_CHECKOUT_TOKEN secret (pinch-backend is private).
+  # Uses the org-level GH_TOKEN secret (pinch-backend is private).
   e2e:
     runs-on: ubuntu-latest
     services:
@@ -50,7 +50,7 @@ jobs:
           repository: syn54x/pinch-backend
           ref: ${{ steps.pin.outputs.sha }}
           path: pinch-backend
-          token: ${{ secrets.BACKEND_CHECKOUT_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
       - uses: pnpm/action-setup@v4
         with:
           version: 11
