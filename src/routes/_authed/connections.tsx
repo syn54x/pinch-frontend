@@ -102,21 +102,18 @@ function ConnectionsPage() {
   useEffect(() => {
     if (!items) return
     const closed: string[] = []
-    let synced = false
+    let balancesArrived = false
     for (const [id, window] of Object.entries(syncWindows)) {
       const connection = items.find((candidate) => candidate.id === id)
+      if (!connection) continue
       // A connection absent from the list is NOT closed here: right after
       // an exchange the cached list is stale and doesn't contain the new
       // row yet — treating that as "deleted" killed windows at birth.
       // Genuinely-gone connections age out via the expiry timer.
-      const finished =
-        connection &&
-        (connection.last_synced_at !== window.baseline ||
-          connection.status !== window.baselineStatus)
-      if (finished) {
-        synced = true
-        closed.push(id)
-      }
+      const syncCompleted = connection.last_synced_at !== window.baseline
+      const statusChanged = connection.status !== window.baselineStatus
+      if (syncCompleted) balancesArrived = true
+      if (syncCompleted || statusChanged) closed.push(id)
     }
     if (closed.length > 0) {
       setSyncWindows((windows) => {
@@ -124,8 +121,9 @@ function ConnectionsPage() {
         for (const id of closed) delete next[id]
         return next
       })
-      if (synced) {
-        // Balances arrived — make the money pages re-ask.
+      // Only a completed sync moves money — a status flip (e.g. a sync
+      // failing into error) closes the window without invalidating.
+      if (balancesArrived) {
         queryClient.invalidateQueries({ queryKey: listAccountsQueryKey() })
       }
     }
@@ -288,9 +286,12 @@ function ConnectionCard({
               onTriggered={onSyncTriggered}
             />
           )}
+          {/* Expired windows leave Refresh usable: clicking re-opens the
+              window with a fresh baseline, so a dead sync never locks the
+              verb until remount. Only a live watch disables it. */}
           <RefreshButton
             connection={connection}
-            disabled={syncState !== undefined}
+            disabled={syncState === 'watching'}
             onTriggered={onSyncTriggered}
           />
           <DisconnectButton connection={connection} />

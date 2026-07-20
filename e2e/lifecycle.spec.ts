@@ -38,7 +38,7 @@ test('a reauth-required connection repairs back to active', async ({
   await waitForFirstSync(email, PASSWORD)
   // Stage what a provider reauth failure leaves behind; the healthy item
   // underneath lets the full repair → sync → active arc run for real.
-  await forceConnectionStatus('reauth_required')
+  await forceConnectionStatus(email, 'reauth_required')
   await armPlaidFake(page, 'success')
 
   await loginViaUi(page, email, PASSWORD)
@@ -54,4 +54,27 @@ test('a reauth-required connection repairs back to active', async ({
   await expect(row.getByText('active')).toBeVisible({ timeout: 90_000 })
   await expect(row.getByText(/Synced /)).toBeVisible()
   await expect(row.getByRole('button', { name: 'Repair' })).toHaveCount(0)
+})
+
+test('credential-less repair surfaces the backend message honestly', async ({
+  page,
+}) => {
+  test.setTimeout(150_000)
+  const email = uniqueEmail('nocreds')
+  await seedUser(email, PASSWORD)
+  await seedSandboxConnection(email, PASSWORD)
+  await waitForFirstSync(email, PASSWORD)
+  await forceConnectionStatus(email, 'reauth_required', {
+    stripCredentials: true,
+  })
+  await armPlaidFake(page, 'success')
+
+  await loginViaUi(page, email, PASSWORD)
+  await page.getByRole('link', { name: 'Connections' }).click()
+  const row = page.getByTestId('connection-card')
+
+  await row.getByRole('button', { name: 'Repair' }).click()
+  await expect(row.getByRole('alert')).toContainText(/no provider credentials/)
+  // The dead-end's remaining verb is still there.
+  await expect(row.getByRole('button', { name: 'Disconnect' })).toBeVisible()
 })
