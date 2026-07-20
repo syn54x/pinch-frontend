@@ -1,14 +1,16 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import {
   createFileRoute,
   Outlet,
   redirect,
   useRouter,
 } from '@tanstack/react-router'
+import { useState } from 'react'
 import { isUnauthorized } from '@/api/client'
 import {
   logoutMutation,
   meOptions,
+  requestEmailVerificationMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
 import { Button } from '@/components/ui/button'
 
@@ -55,9 +57,47 @@ function AuthedLayout() {
           Log out
         </Button>
       </header>
+      <VerifyEmailBanner />
       <main className="mx-auto max-w-3xl px-6 py-8">
         <Outlet />
       </main>
+    </div>
+  )
+}
+
+function VerifyEmailBanner() {
+  // Verification gates nothing (F1): a nudge for unverified users, nothing
+  // more. Dismissal is per page-load state — it comes back on reload, which
+  // is the right amount of persistent for a nudge.
+  const me = useQuery(meOptions())
+  const [dismissed, setDismissed] = useState(false)
+  const resend = useMutation(requestEmailVerificationMutation())
+
+  if (dismissed || !me.data || me.data.email_verified) return null
+
+  return (
+    <div
+      role="status"
+      className="flex items-center justify-between gap-4 border-b bg-muted px-6 py-2 text-sm"
+    >
+      <span>
+        {resend.isSuccess
+          ? 'Sent — check your inbox for a fresh link.'
+          : `Verify your email — we sent a confirmation link to ${me.data.email}.`}
+      </span>
+      <span className="flex shrink-0 items-center gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={resend.isPending}
+          onClick={() => resend.mutate({})}
+        >
+          Resend
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => setDismissed(true)}>
+          Dismiss
+        </Button>
+      </span>
     </div>
   )
 }
