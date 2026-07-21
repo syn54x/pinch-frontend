@@ -16,7 +16,11 @@ export type OAuthResumeState = {
   linkToken: string
   /** Present for repair-mode attempts; absent means create-mode. */
   connectionId?: string
+  stashedAt: number
 }
+
+/** Link tokens expire in ~30 minutes; older stashes are dead attempts. */
+const OAUTH_STATE_MAX_AGE_MS = 30 * 60 * 1000
 
 function stashOAuthState(state: OAuthResumeState): void {
   sessionStorage.setItem(OAUTH_STORAGE_KEY, JSON.stringify(state))
@@ -27,7 +31,10 @@ export function readOAuthState(): OAuthResumeState | null {
   if (!raw) return null
   try {
     const parsed = JSON.parse(raw) as OAuthResumeState
-    return typeof parsed.linkToken === 'string' ? parsed : null
+    if (typeof parsed.linkToken !== 'string') return null
+    if (Date.now() - (parsed.stashedAt ?? 0) > OAUTH_STATE_MAX_AGE_MS)
+      return null
+    return parsed
   } catch {
     return null
   }
@@ -83,8 +90,12 @@ export async function resumeOAuthLink(
     const handler = plaid.create({
       token: state.linkToken,
       receivedRedirectUri,
-      onSuccess: (publicToken) => resolve(publicToken),
+      onSuccess: (publicToken) => {
+        handler.destroy()
+        resolve(publicToken)
+      },
       onExit: (error) => {
+        handler.destroy()
         if (error) {
           reject(
             new PlaidExitError(
@@ -107,6 +118,7 @@ export async function resumeOAuthLink(
  * Plaid's shapes through this boundary. */
 export function usePlaidConnect(): (
   linkToken: string,
+  options?: { connectionId?: string },
 ) => Promise<string | null> {
   const [token, setToken] = useState<string | null>(null)
   const pending = useRef<{
@@ -160,7 +172,11 @@ export function usePlaidConnect(): (
           return
         }
         // Stash before open: if the widget goes OAuth, the page is gone.
-        stashOAuthState({ linkToken, connectionId: options?.connectionId })
+        stashOAuthState({
+          linkToken,
+          connectionId: options?.connectionId,
+          stashedAt: Date.now(),
+        })
         pending.current = {
           resolve: (value) => {
             clearOAuthState()

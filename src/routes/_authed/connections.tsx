@@ -115,10 +115,9 @@ function ConnectionsPage() {
   useEffect(() => {
     if (!watch || !items) return
     const connection = items.find((candidate) => candidate.id === watch)
-    if (connection) {
-      openSyncWindow(connection)
-      navigate({ search: {}, replace: true })
-    }
+    if (connection) openSyncWindow(connection)
+    // Clear the param either way — an unfound id would dangle forever.
+    navigate({ search: {}, replace: true })
   }, [watch, items, openSyncWindow, navigate])
 
   useEffect(() => {
@@ -270,7 +269,7 @@ function ConnectionCard({
   const broken = connection.status !== 'active'
 
   return (
-    <Card data-testid="connection-card">
+    <Card data-testid="connection-card" data-connection-id={connection.id}>
       <CardContent className="flex items-center justify-between gap-4">
         <div className="grid gap-1">
           <div className="flex items-center gap-3">
@@ -370,7 +369,9 @@ function RepairButton({
         body: { connection_id: connection.id },
         throwOnError: true,
       })
-      const result = await connect(tokenOut.link_token)
+      const result = await connect(tokenOut.link_token, {
+        connectionId: connection.id,
+      })
       if (result === null) return // dismissed — not an error
       // Update mode needs no exchange; the follow-up sync proves the fix.
       await refreshConnection({
