@@ -40,6 +40,11 @@ function AccountCard({ account }: { account: AccountOut }) {
       <CardContent className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <span className="font-medium">{account.label}</span>
+          {account.mask && (
+            <span className="text-muted-foreground text-sm">
+              ···{account.mask}
+            </span>
+          )}
           <Badge variant="secondary">{account.kind}</Badge>
           {account.manual && <Badge variant="outline">manual</Badge>}
         </div>

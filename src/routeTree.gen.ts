@@ -17,6 +17,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AuthedAccountsRouteImport } from './routes/_authed/accounts'
 import { Route as AuthedConnectionsRouteImport } from './routes/_authed/connections'
+import { Route as ConnectOauthReturnRouteImport } from './routes/connect.oauth-return'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -57,6 +58,11 @@ const AuthedConnectionsRoute = AuthedConnectionsRouteImport.update({
   path: '/connections',
   getParentRoute: () => AuthedRoute,
 } as any)
+const ConnectOauthReturnRoute = ConnectOauthReturnRouteImport.update({
+  id: '/connect/oauth-return',
+  path: '/connect/oauth-return',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof VerifyEmailRoute
   '/accounts': typeof AuthedAccountsRoute
   '/connections': typeof AuthedConnectionsRoute
+  '/connect/oauth-return': typeof ConnectOauthReturnRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/verify-email': typeof VerifyEmailRoute
   '/accounts': typeof AuthedAccountsRoute
   '/connections': typeof AuthedConnectionsRoute
+  '/connect/oauth-return': typeof ConnectOauthReturnRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/verify-email': typeof VerifyEmailRoute
   '/_authed/accounts': typeof AuthedAccountsRoute
   '/_authed/connections': typeof AuthedConnectionsRoute
+  '/connect/oauth-return': typeof ConnectOauthReturnRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/accounts'
     | '/connections'
+    | '/connect/oauth-return'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/accounts'
     | '/connections'
+    | '/connect/oauth-return'
   id:
     | '__root__'
     | '/'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/_authed/accounts'
     | '/_authed/connections'
+    | '/connect/oauth-return'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -125,6 +137,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
+  ConnectOauthReturnRoute: typeof ConnectOauthReturnRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -185,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedConnectionsRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/connect/oauth-return': {
+      id: '/connect/oauth-return'
+      path: '/connect/oauth-return'
+      fullPath: '/connect/oauth-return'
+      preLoaderRoute: typeof ConnectOauthReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -208,6 +228,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   VerifyEmailRoute: VerifyEmailRoute,
+  ConnectOauthReturnRoute: ConnectOauthReturnRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

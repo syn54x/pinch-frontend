@@ -15,9 +15,8 @@ test('a sandbox connection renders with status, sync state, and account count', 
   await expect(page).toHaveURL(/\/connections$/)
 
   const row = page.getByTestId('connection-card').first()
-  // Institution name arrives with the backend enabler (CP3) — until then
-  // the row degrades honestly.
-  await expect(row.getByText('Plaid connection')).toBeVisible()
+  // The enabler landed (CP3): sandbox connections carry their real name.
+  await expect(row.getByText('First Platypus Bank')).toBeVisible()
   await expect(row.getByText('active')).toBeVisible()
   await expect(row.getByText('Never synced')).toBeVisible()
   // [1-9]: "0 accounts" would mean the exchange created none — a failure.
