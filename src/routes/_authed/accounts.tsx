@@ -37,8 +37,8 @@ function AccountsPage() {
 function AccountCard({ account }: { account: AccountOut }) {
   return (
     <Card data-testid="account-card">
-      <CardContent className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <CardContent className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="font-medium">{account.label}</span>
           {account.mask && (
             <span className="text-muted-foreground text-sm">
@@ -48,16 +48,18 @@ function AccountCard({ account }: { account: AccountOut }) {
           <Badge variant="secondary">{account.kind}</Badge>
           {account.manual && <Badge variant="outline">manual</Badge>}
         </div>
-        <span className="tabular-nums">
-          {account.balance ? (
-            formatMinorUnits(
+        {account.balance ? (
+          <span className="amount ml-auto text-sm">
+            {formatMinorUnits(
               account.balance.amount_minor,
               account.balance.currency,
-            )
-          ) : (
-            <span className="text-muted-foreground">No balance yet</span>
-          )}
-        </span>
+            )}
+          </span>
+        ) : (
+          <span className="ml-auto text-muted-foreground text-sm">
+            No balance yet
+          </span>
+        )}
       </CardContent>
     </Card>
   )

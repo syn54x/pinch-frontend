@@ -10,7 +10,12 @@
       "!public",
       "!src/index.css",
       "!test-results",
-      "!playwright-report"
+      "!playwright-report",
+      "!.claude",
+      "!.cursor",
+      "!.github/skills",
+      "!.impeccable",
+      "!.tanstack"
     ]
   },
   "formatter": {
