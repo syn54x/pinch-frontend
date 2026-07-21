@@ -36,6 +36,7 @@ export type AccountOut = {
     kind: AccountKind;
     label: string;
     currency: string;
+    mask: string | null;
     manual: boolean;
     archived: boolean;
     balance: BalanceOut | null;
@@ -174,6 +175,7 @@ export type ConnectionCreateIn = {
 export type ConnectionOut = {
     id: string;
     provider: ConnectionProvider;
+    institution_name: string | null;
     status: ConnectionStatus;
     last_synced_at: string | null;
     error_detail: string | null;

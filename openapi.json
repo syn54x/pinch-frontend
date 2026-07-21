@@ -4702,6 +4702,16 @@
                     "currency": {
                         "type": "string"
                     },
+                    "mask": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
                     "manual": {
                         "type": "boolean"
                     },
@@ -4732,7 +4742,8 @@
                     "id",
                     "kind",
                     "label",
-                    "manual"
+                    "manual",
+                    "mask"
                 ],
                 "title": "AccountOut"
             },
@@ -5000,6 +5011,16 @@
                     "provider": {
                         "$ref": "#/components/schemas/ConnectionProvider"
                     },
+                    "institution_name": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
                     "status": {
                         "$ref": "#/components/schemas/ConnectionStatus"
                     },
@@ -5041,6 +5062,7 @@
                     "created_at",
                     "error_detail",
                     "id",
+                    "institution_name",
                     "last_synced_at",
                     "provider",
                     "status"
