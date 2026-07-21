@@ -33,7 +33,16 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { PlaidExitError, usePlaidConnect } from '@/lib/plaid'
 import { relativeTime } from '@/lib/time'
 
+type ConnectionsSearch = {
+  /** A connection id to open a sync window for on arrival — how the OAuth
+   * return route hands off its freshly exchanged connection. */
+  watch?: string
+}
+
 export const Route = createFileRoute('/_authed/connections')({
+  validateSearch: (search: Record<string, unknown>): ConnectionsSearch => ({
+    watch: typeof search.watch === 'string' ? search.watch : undefined,
+  }),
   component: ConnectionsPage,
 })
 
@@ -98,7 +107,20 @@ function ConnectionsPage() {
     return () => clearInterval(timer)
   }, [watching])
 
+  // The OAuth return route hands off via ?watch=<id>: open its window once
+  // the connection shows up, then drop the param.
+  const { watch } = Route.useSearch()
+  const navigate = Route.useNavigate()
   const items = connections.data?.items
+  useEffect(() => {
+    if (!watch || !items) return
+    const connection = items.find((candidate) => candidate.id === watch)
+    if (connection) {
+      openSyncWindow(connection)
+      navigate({ search: {}, replace: true })
+    }
+  }, [watch, items, openSyncWindow, navigate])
+
   useEffect(() => {
     if (!items) return
     const closed: string[] = []
@@ -253,8 +275,7 @@ function ConnectionCard({
         <div className="grid gap-1">
           <div className="flex items-center gap-3">
             <span className="font-medium">
-              {/* institution_name arrives with the backend enabler (CP3) */}
-              Plaid connection
+              {connection.institution_name ?? 'Plaid connection'}
             </span>
             <Badge variant={STATUS_VARIANT[connection.status]}>
               {connection.status}

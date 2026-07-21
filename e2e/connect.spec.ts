@@ -32,6 +32,13 @@ test('connect a bank: widget → exchange → first sync → balances materializ
   await expect(
     page.getByTestId('account-card').getByText(/\$\d/).first(),
   ).toBeVisible()
+  // The enabler's masks ride along (CP3).
+  await expect(
+    page
+      .getByTestId('account-card')
+      .getByText(/···\d+/)
+      .first(),
+  ).toBeVisible()
 })
 
 test('cancelling the widget leaves no residue', async ({ page }) => {
