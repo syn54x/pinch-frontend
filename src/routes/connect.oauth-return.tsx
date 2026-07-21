@@ -58,8 +58,9 @@ function OAuthReturnPage() {
           watchId = connection.id
         }
         clearOAuthState()
-        router.history.push(`/connections?watch=${watchId}`)
+        router.navigate({ to: '/connections', search: { watch: watchId } })
       } catch (caught) {
+        startedTokens.delete(state.linkToken)
         clearOAuthState()
         setDetail(
           caught instanceof PlaidExitError
