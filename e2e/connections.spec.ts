@@ -18,7 +18,8 @@ test('a sandbox connection renders with status, sync state, and account count', 
   // The enabler landed (CP3): sandbox connections carry their real name.
   await expect(row.getByText('First Platypus Bank')).toBeVisible()
   await expect(row.getByText('active')).toBeVisible()
-  await expect(row.getByText('Never synced')).toBeVisible()
+  // The worker may beat the page load: both sync states are legitimate.
+  await expect(row.getByText(/Never synced|Synced /)).toBeVisible()
   // [1-9]: "0 accounts" would mean the exchange created none — a failure.
   await expect(row.getByText(/[1-9]\d* accounts?/)).toBeVisible()
 })

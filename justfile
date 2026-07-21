@@ -51,6 +51,7 @@ e2e-backend backend="../pinch-backend" db="docker":
       PINCH_DATABASE_URL=postgres://postgres:password@localhost:5432/pinch_e2e \
       PINCH_FRONTEND_BASE_URL=http://localhost:5183 \
       PINCH_BREACH_CHECK_ENABLED=false \
+      PINCH_AUTH_RATE_LIMIT_PER_IP=100000 \
       PINCH_SECRET_KEY=e2e-only-not-a-secret \
       PINCH_SECRET_ENCRYPTION_KEY=0fgqNJQuqR09ILyfU1jynGBXmn3_6a_h-8iLItevJXk= \
       PYTHONUNBUFFERED=1 \
