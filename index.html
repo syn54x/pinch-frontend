@@ -5,6 +5,20 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pinch</title>
+    <script>
+      // Apply the persisted theme before first paint so a dark-theme user
+      // never sees a white flash. Kept in sync with src/lib/theme.ts.
+      ;(() => {
+        try {
+          const pref = localStorage.getItem('pinch-theme')
+          const dark =
+            pref === 'dark' ||
+            (pref !== 'light' &&
+              matchMedia('(prefers-color-scheme: dark)').matches)
+          document.documentElement.classList.toggle('dark', dark)
+        } catch {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

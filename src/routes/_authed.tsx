@@ -13,6 +13,7 @@ import {
   meOptions,
   requestEmailVerificationMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 
 // The login wall: every child route requires a live session. The server is
@@ -83,14 +84,17 @@ function AuthedLayout() {
             </Link>
           </nav>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={logout.isPending}
-          onClick={() => logout.mutate({})}
-        >
-          Log out
-        </Button>
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={logout.isPending}
+            onClick={() => logout.mutate({})}
+          >
+            Log out
+          </Button>
+        </div>
       </header>
       <VerifyEmailBanner />
       <main className="mx-auto max-w-3xl px-6 py-8">
