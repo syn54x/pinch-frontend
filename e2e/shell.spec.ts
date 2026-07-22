@@ -83,14 +83,15 @@ test('navigation moves between surfaces and marks the active item', async ({
   await expect(page.getByText('Nothing to review')).toBeVisible()
 
   // Register mounts with its designed empty state: the ledger's column
-  // header over an honest "nothing yet".
+  // header (now permanent list chrome, CP1) over an honest "nothing yet".
   await primaryNav(page).getByRole('link', { name: 'Register' }).click()
   await expect(page).toHaveURL(/\/register$/)
   await expect(page.getByRole('heading', { name: 'Register' })).toBeVisible()
-  const register = page.getByTestId('register-empty')
-  await expect(register.getByText('Payee')).toBeVisible()
-  await expect(register.getByText('Amount')).toBeVisible()
-  await expect(register.getByText('No transactions yet')).toBeVisible()
+  await expect(page.getByText('Payee', { exact: true })).toBeVisible()
+  await expect(page.getByText('Amount', { exact: true })).toBeVisible()
+  await expect(
+    page.getByTestId('register-empty').getByText('No transactions yet'),
+  ).toBeVisible()
 
   await primaryNav(page).getByRole('link', { name: 'Connections' }).click()
   await expect(page).toHaveURL(/\/connections$/)
