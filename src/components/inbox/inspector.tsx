@@ -53,6 +53,8 @@ export function Inspector({
   onSplitLinesChange,
   onOpenSplit,
   onMergeBack,
+  onSaveSplit,
+  onCancelSplit,
   counterpart,
   counterpartLabel,
   onConfirmTransfer,
@@ -73,6 +75,10 @@ export function Inspector({
   onSplitLinesChange: (lines: SplitDraftLine[]) => void
   onOpenSplit: () => void
   onMergeBack: () => void
+  /** ↩ — close the editor keeping the (valid) document staged. */
+  onSaveSplit: () => void
+  /** Escape / Cancel — discard this editing session's changes. */
+  onCancelSplit: () => void
   /** The detected pair's other leg (det rows only; null while loading). */
   counterpart: TransactionOut | null
   counterpartLabel: string | null
@@ -167,6 +173,8 @@ export function Inspector({
           editing={panel === 'split'}
           onChange={onSplitLinesChange}
           onMergeBack={onMergeBack}
+          onSave={onSaveSplit}
+          onCancel={onCancelSplit}
           categories={categories}
           categoriesPending={categoriesPending}
         />
@@ -245,24 +253,47 @@ export function Inspector({
       </div>
 
       <div className="mt-auto flex gap-2 pt-5">
-        <Button
-          className="flex-1"
-          onClick={onAccept}
-          disabled={accepting || !splitValid}
-          title={
-            splitValid ? undefined : 'Split lines must match the total first'
-          }
-        >
-          {splitting
-            ? 'Accept split · A'
-            : corrected
-              ? 'Accept correction · A'
-              : 'Accept · A'}
-        </Button>
-        {splitting && panel !== 'split' && (
-          <Button variant="outline" onClick={onOpenSplit}>
-            Edit split
-          </Button>
+        {panel === 'split' ? (
+          // Editing has its own verbs (wireframe s7b): Save keeps the valid
+          // document staged, Cancel discards this session's edits — the
+          // review itself waits for Accept back in the resting state.
+          <>
+            <Button
+              className="flex-1"
+              onClick={onSaveSplit}
+              disabled={!splitValid}
+              title={
+                splitValid
+                  ? undefined
+                  : 'Split lines must match the total first'
+              }
+            >
+              Save split · ↩
+            </Button>
+            <Button variant="outline" onClick={onCancelSplit}>
+              Cancel
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              className="flex-1"
+              onClick={onAccept}
+              disabled={accepting || !splitValid}
+              title={
+                splitValid
+                  ? undefined
+                  : 'Split lines must match the total first'
+              }
+            >
+              {corrected ? 'Accept correction · A' : 'Accept · A'}
+            </Button>
+            {splitting && (
+              <Button variant="outline" onClick={onOpenSplit}>
+                Edit split
+              </Button>
+            )}
+          </>
         )}
       </div>
     </div>

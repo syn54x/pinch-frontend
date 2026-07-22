@@ -43,23 +43,35 @@ test('the Costco case: S drafts categoried lines, the guard blocks a mismatch, M
   await expect(rows(page)).toHaveCount(1)
 
   // S opens the editor: the whole amount on an inherited first line plus
-  // one empty line to fill.
+  // one empty line to fill, wearing the editing chip (wireframe s7b).
   await page.keyboard.press('s')
   const editor = page.getByTestId('split-editor')
   await expect(editor).toBeVisible()
+  await expect(editor).toContainText('editing')
   await expect(editor.getByTestId('split-line')).toHaveCount(2)
   await expect(editor.getByLabel('Line 1 amount')).toHaveValue('214.90')
 
-  // Lines-vs-total is guarded: a mismatch shows the cue and blocks Accept.
+  // + Add line adds one; ✕ removes it; removing the last split line
+  // merges back automatically — one line is not a split.
+  await editor.getByRole('button', { name: '+ Add line' }).click()
+  await expect(editor.getByTestId('split-line')).toHaveCount(3)
+  await editor.getByRole('button', { name: 'Remove line 3' }).click()
+  await expect(editor.getByTestId('split-line')).toHaveCount(2)
+  await editor.getByRole('button', { name: 'Remove line 2' }).click()
+  await expect(page.getByTestId('split-editor')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Accept · A' })).toBeEnabled()
+
+  // Lines-vs-total is guarded: a mismatch shows the cue and blocks Save.
+  await page.keyboard.press('s')
   await editor.getByLabel('Line 2 amount').fill('10.00')
   const cue = editor.getByTestId('split-cue')
   await expect(cue).toHaveAttribute('data-valid', 'false')
   await expect(cue).toContainText('≠')
   await expect(
-    page.getByRole('button', { name: 'Accept split · A' }),
+    page.getByRole('button', { name: 'Save split · ↩' }),
   ).toBeDisabled()
 
-  // The editor holds in dark too (wireframe pair 1e/1g).
+  // The editor holds in dark too (wireframe pair 1c/1f).
   await page.getByRole('button', { name: /Switch to light/ }).click()
   await page.getByRole('button', { name: /Switch to dark/ }).click()
   await expect(page.locator('html')).toHaveClass(/dark/)
@@ -71,7 +83,8 @@ test('the Costco case: S drafts categoried lines, the guard blocks a mismatch, M
   await expect(page.getByTestId('split-editor')).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Accept · A' })).toBeEnabled()
 
-  // Split again, properly: categories live on the lines.
+  // Split again, properly: categories live on the lines; ↩ saves the
+  // valid document and closes back to the resting summary.
   await page.keyboard.press('s')
   await editor.getByLabel('Line 1 amount').fill('164.90')
   await editor.getByLabel('Line 1 category').click()
@@ -84,9 +97,21 @@ test('the Costco case: S drafts categoried lines, the guard blocks a mismatch, M
   await picker.getByRole('option', { name: 'E2E Household' }).click()
   await expect(cue).toHaveAttribute('data-valid', 'true')
   await expect(cue).toContainText('✓')
+  await page.keyboard.press('Enter')
+  await expect(editor).not.toContainText('editing')
+  await expect(page.getByRole('button', { name: 'Edit split' })).toBeVisible()
 
-  // Escape hands the keyboard back; A accepts the split document.
-  await page.keyboard.press('Escape')
+  // Edit split re-opens the staged document; Cancel discards the
+  // session's changes and restores it.
+  await page.getByRole('button', { name: 'Edit split' }).click()
+  await expect(editor).toContainText('editing')
+  await editor.getByLabel('Line 2 amount').fill('1.00')
+  await expect(cue).toHaveAttribute('data-valid', 'false')
+  await page.getByRole('button', { name: 'Cancel' }).click()
+  await expect(editor).not.toContainText('editing')
+  await expect(editor).toContainText('$50.00')
+
+  // A accepts the staged split document.
   await page.keyboard.press('a')
   await expect(page.getByTestId('inbox-empty')).toBeVisible()
 
