@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { type ComponentType, type ReactNode, useState } from 'react'
 import {
+  countUnreviewedTransactionsOptions,
   logoutMutation,
   meOptions,
   requestEmailVerificationMutation,
@@ -28,7 +29,8 @@ declare module '@tanstack/react-router' {
 // is the reference. F3 CP0 ships it lean: only surfaces that exist appear in
 // the nav (no disabled destinations), and there are no Penny affordances and
 // no ⌘K — what ⌘K means is decided when Penny lands (F6). The Inbox count
-// badge arrives with the unreviewed-count enabler (CP1).
+// badge is live (CP2): unreviewed-count, refreshed by review-mutation
+// invalidation and window refocus.
 export function AppShell({ children }: { children: ReactNode }) {
   const title = useRouterState({
     select: (state) =>
@@ -46,6 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav aria-label="Primary" className="flex flex-col gap-[3px]">
           <NavItem to="/inbox" icon={InboxIcon}>
             Inbox
+            <InboxCount />
           </NavItem>
           <NavItem to="/register" icon={List}>
             Register
@@ -97,6 +100,24 @@ function NavItem({
       <Icon aria-hidden />
       {children}
     </Link>
+  )
+}
+
+function InboxCount() {
+  // The live review count (wireframe #24's mono nav badge). Liveness is
+  // invalidation + refocus, never polling: review mutations invalidate this
+  // key, and TanStack's default refetchOnWindowFocus re-asks on return.
+  // Zero hides the badge — inbox zero is a resting state, not a metric.
+  const count = useQuery(countUnreviewedTransactionsOptions())
+  if (count.data === undefined || count.data.count === 0) return null
+
+  return (
+    <span
+      data-testid="inbox-count"
+      className="ml-auto rounded-full bg-primary px-1.5 py-px font-mono font-semibold text-[10px] text-primary-foreground"
+    >
+      {count.data.count}
+    </span>
   )
 }
 
