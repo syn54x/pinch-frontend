@@ -17,6 +17,8 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AuthedAccountsRouteImport } from './routes/_authed/accounts'
 import { Route as AuthedConnectionsRouteImport } from './routes/_authed/connections'
+import { Route as AuthedInboxRouteImport } from './routes/_authed/inbox'
+import { Route as AuthedRegisterRouteImport } from './routes/_authed/register'
 import { Route as ConnectOauthReturnRouteImport } from './routes/connect.oauth-return'
 
 const IndexRoute = IndexRouteImport.update({
@@ -58,6 +60,16 @@ const AuthedConnectionsRoute = AuthedConnectionsRouteImport.update({
   path: '/connections',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedInboxRoute = AuthedInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedRegisterRoute = AuthedRegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const ConnectOauthReturnRoute = ConnectOauthReturnRouteImport.update({
   id: '/connect/oauth-return',
   path: '/connect/oauth-return',
@@ -72,6 +84,8 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof VerifyEmailRoute
   '/accounts': typeof AuthedAccountsRoute
   '/connections': typeof AuthedConnectionsRoute
+  '/inbox': typeof AuthedInboxRoute
+  '/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
 }
 export interface FileRoutesByTo {
@@ -82,6 +96,8 @@ export interface FileRoutesByTo {
   '/verify-email': typeof VerifyEmailRoute
   '/accounts': typeof AuthedAccountsRoute
   '/connections': typeof AuthedConnectionsRoute
+  '/inbox': typeof AuthedInboxRoute
+  '/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
 }
 export interface FileRoutesById {
@@ -94,6 +110,8 @@ export interface FileRoutesById {
   '/verify-email': typeof VerifyEmailRoute
   '/_authed/accounts': typeof AuthedAccountsRoute
   '/_authed/connections': typeof AuthedConnectionsRoute
+  '/_authed/inbox': typeof AuthedInboxRoute
+  '/_authed/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
 }
 export interface FileRouteTypes {
@@ -106,6 +124,8 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/accounts'
     | '/connections'
+    | '/inbox'
+    | '/register'
     | '/connect/oauth-return'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -116,6 +136,8 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/accounts'
     | '/connections'
+    | '/inbox'
+    | '/register'
     | '/connect/oauth-return'
   id:
     | '__root__'
@@ -127,6 +149,8 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/_authed/accounts'
     | '/_authed/connections'
+    | '/_authed/inbox'
+    | '/_authed/register'
     | '/connect/oauth-return'
   fileRoutesById: FileRoutesById
 }
@@ -198,6 +222,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedConnectionsRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/inbox': {
+      id: '/_authed/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof AuthedInboxRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/register': {
+      id: '/_authed/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof AuthedRegisterRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/connect/oauth-return': {
       id: '/connect/oauth-return'
       path: '/connect/oauth-return'
@@ -211,11 +249,15 @@ declare module '@tanstack/react-router' {
 interface AuthedRouteChildren {
   AuthedAccountsRoute: typeof AuthedAccountsRoute
   AuthedConnectionsRoute: typeof AuthedConnectionsRoute
+  AuthedInboxRoute: typeof AuthedInboxRoute
+  AuthedRegisterRoute: typeof AuthedRegisterRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAccountsRoute: AuthedAccountsRoute,
   AuthedConnectionsRoute: AuthedConnectionsRoute,
+  AuthedInboxRoute: AuthedInboxRoute,
+  AuthedRegisterRoute: AuthedRegisterRoute,
 }
 
 const AuthedRouteWithChildren =

@@ -40,6 +40,7 @@ type ConnectionsSearch = {
 }
 
 export const Route = createFileRoute('/_authed/connections')({
+  staticData: { title: 'Connections' },
   validateSearch: (search: Record<string, unknown>): ConnectionsSearch => ({
     watch: typeof search.watch === 'string' ? search.watch : undefined,
   }),
@@ -151,9 +152,10 @@ function ConnectionsPage() {
   }, [items, syncWindows, queryClient])
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-semibold text-xl">Connections</h1>
+    <div className="mx-auto w-full max-w-3xl">
+      {/* The screen title lives in the shell's top bar; the page keeps its
+          primary action (wireframe #16's "Connect bank"). */}
+      <div className="flex items-center justify-end">
         <ConnectBank onConnected={openSyncWindow} />
       </div>
       <div className="mt-4 space-y-3">

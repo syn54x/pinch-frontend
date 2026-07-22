@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { formatMinorUnits } from '@/lib/money'
 
 export const Route = createFileRoute('/_authed/accounts')({
+  staticData: { title: 'Accounts' },
   component: AccountsPage,
 })
 
@@ -17,9 +18,8 @@ function AccountsPage() {
   const accounts = useQuery({ ...listAccountsOptions(), throwOnError: true })
 
   return (
-    <div>
-      <h1 className="font-semibold text-xl">Accounts</h1>
-      <div className="mt-4 space-y-3">
+    <div className="mx-auto w-full max-w-3xl">
+      <div className="space-y-3">
         {accounts.isPending ? (
           <AccountSkeletons />
         ) : accounts.data && accounts.data.items.length > 0 ? (
