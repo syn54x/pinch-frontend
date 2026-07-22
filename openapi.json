@@ -208,6 +208,72 @@
                     }
                 },
                 "deprecated": false
+            },
+            "patch": {
+                "summary": "UpdateMe",
+                "operationId": "update_me",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MePatchIn"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserOut"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
             }
         },
         "/api/v1/auth/sessions": {
@@ -3786,6 +3852,26 @@
                         "allowReserved": false
                     },
                     {
+                        "name": "q",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Case-insensitive substring search over the payee/description, display name, and notes. Composes with the other filters; amounts are not searched."
+                        },
+                        "description": "Case-insensitive substring search over the payee/description, display name, and notes. Composes with the other filters; amounts are not searched.",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    },
+                    {
                         "name": "cursor",
                         "in": "query",
                         "schema": {
@@ -3934,6 +4020,26 @@
                                             "extra": {}
                                         }
                                     ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/v1/transactions/unreviewed-count": {
+            "get": {
+                "summary": "CountUnreviewedTransactions",
+                "operationId": "count_unreviewed_transactions",
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnreviewedCountOut"
                                 }
                             }
                         }
@@ -5713,6 +5819,19 @@
                 ],
                 "title": "MappingSpec"
             },
+            "MePatchIn": {
+                "properties": {
+                    "primary_currency": {
+                        "type": "string",
+                        "description": "ISO 4217 alpha code, same shape rule as signup — unrestricted in v0\n(reports re-express at current rates), so any three uppercase letters\npass and anything else is a 400."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "primary_currency"
+                ],
+                "title": "MePatchIn"
+            },
             "Page_AccountOut_": {
                 "properties": {
                     "items": {
@@ -7268,6 +7387,18 @@
                     "kind"
                 ],
                 "title": "TransferRef"
+            },
+            "UnreviewedCountOut": {
+                "properties": {
+                    "count": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "count"
+                ],
+                "title": "UnreviewedCountOut"
             },
             "UserOut": {
                 "properties": {
