@@ -31,6 +31,8 @@ export function SplitEditor({
   editing,
   onChange,
   onMergeBack,
+  onSave,
+  onCancel,
   categories,
   categoriesPending,
 }: {
@@ -39,6 +41,10 @@ export function SplitEditor({
   editing: boolean
   onChange: (lines: SplitDraftLine[]) => void
   onMergeBack: () => void
+  /** ↩ while editing — close the editor keeping the (valid) document. */
+  onSave: () => void
+  /** Escape while editing — discard this editing session's changes. */
+  onCancel: () => void
   categories: CategoryOut[]
   categoriesPending: boolean
 }) {
@@ -52,11 +58,39 @@ export function SplitEditor({
     onChange(lines.map((line, i) => (i === index ? next : line)))
   }
 
+  // ✕ (wireframe s7b): the line's amount folds back to the anchor — the
+  // total never moves, the cue re-asks for balance. Removing the last
+  // split line merges back automatically: one line is not a split.
+  function removeLine(index: number) {
+    if (lines.length <= 2) {
+      onMergeBack()
+      return
+    }
+    onChange(lines.filter((_, i) => i !== index))
+    setPickerIndex(null)
+  }
+
+  function handleAmountKeys(event: React.KeyboardEvent) {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      if (status.valid) onSave()
+    } else if (event.key === 'Escape') {
+      event.preventDefault()
+      event.stopPropagation()
+      onCancel()
+    }
+  }
+
   return (
     <div data-testid="split-editor">
       <div className="mt-5 flex items-center justify-between">
-        <span className="label-caps">
+        <span className="label-caps flex items-center gap-1.5">
           Split into {lines.length} {lines.length === 1 ? 'line' : 'lines'}
+          {editing && (
+            <span className="rounded-full border border-primary px-1.5 py-px text-[10px] text-primary normal-case tracking-normal">
+              editing
+            </span>
+          )}
         </span>
         <Button variant="ghost" size="xs" onClick={onMergeBack}>
           Merge back
@@ -126,7 +160,17 @@ export function SplitEditor({
                           amountInput: event.target.value,
                         })
                       }
+                      onKeyDown={handleAmountKeys}
                     />
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      aria-label={`Remove line ${index + 1}`}
+                      title="Remove line — amount folds back to anchor"
+                      onClick={() => removeLine(index)}
+                    >
+                      ✕
+                    </Button>
                   </span>
                 ) : (
                   <span
@@ -226,8 +270,9 @@ export function SplitEditor({
       </div>
 
       <p className="mt-2.5 text-[11.5px] text-muted-foreground">
-        one transaction — categories live on the lines, the anchor keeps its raw
-        data, so nothing double-counts
+        {editing
+          ? 'editing — amounts are inputs, ✕ removes a line (its amount folds back to the anchor), + Add line adds one; lines must sum to the total, and removing the last split merges back automatically'
+          : 'one transaction — categories live on the lines, the anchor keeps its raw data, so nothing double-counts. Edit split changes amounts or adds / removes lines'}
       </p>
     </div>
   )

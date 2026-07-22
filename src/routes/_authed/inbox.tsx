@@ -118,6 +118,11 @@ function InboxPage() {
     id: string
     lines: SplitDraftLine[]
   } | null>(null)
+  // What Cancel restores: the draft as it stood when this editing session
+  // opened — null means the session started fresh (cancel un-splits).
+  const [splitBaseline, setSplitBaseline] = useState<SplitDraftLine[] | null>(
+    null,
+  )
   const listboxRef = useRef<HTMLDivElement>(null)
 
   const queue = useQuery(queueOptions())
@@ -288,24 +293,49 @@ function InboxPage() {
     listboxRef.current?.focus()
   }
 
-  /** S: open the split editor, drafting the document on first open. The
-   * split displaces a staged category — decision shapes are exclusive
+  /** S / Edit split: open the editor, drafting the document on first open.
+   * The split displaces a staged category — decision shapes are exclusive
    * (the API's 422) — while staged tags survive to ride along. */
   function openSplit() {
     if (focused === null) return
     if (splitDraft === null || splitDraft.id !== focused.id) {
       setSplitDraft({ id: focused.id, lines: initialSplitDraft(focused) })
+      setSplitBaseline(null)
       setStaged((prev) =>
         prev !== null && prev.id === focused.id
           ? { id: prev.id, value: { tags: prev.value.tags } }
           : prev,
       )
+    } else {
+      // Re-opening an already-staged document: Cancel restores this.
+      setSplitBaseline(splitDraft.lines)
     }
     dispatch({ type: 'openPanel', panel: 'split' })
   }
 
+  /** ↩ / Save split: the valid document stays staged; the editor closes
+   * back to the resting summary — Accept sends it. */
+  function saveSplit() {
+    if (focused === null || focusedSplitLines === null) return
+    if (!splitStatus(focusedSplitLines, focused).valid) return
+    closePanel()
+  }
+
+  /** Escape / Cancel: discard this editing session's changes — back to the
+   * document as it stood on open, or to unsplit for a fresh session. */
+  function cancelSplit() {
+    setSplitDraft((prev) => {
+      if (prev === null || prev.id !== focusId) return prev
+      return splitBaseline === null
+        ? null
+        : { id: prev.id, lines: splitBaseline }
+    })
+    closePanel()
+  }
+
   /** Merge back (wireframe): the draft collapses to the single unsplit
-   * line — a wrong split is reversible in place, nothing was sent. */
+   * line — a wrong split is reversible in place, nothing was sent. Also
+   * where ✕ lands when it removes the last split line. */
   function mergeBack() {
     setSplitDraft((prev) =>
       prev !== null && prev.id === focusId ? null : prev,
@@ -346,8 +376,12 @@ function InboxPage() {
           break
         case 's':
         case 'S':
-          if (state.panel === 'split') closePanel()
-          else openSplit()
+          // While editing, the mode's own verbs exit (↩ save, Esc cancel).
+          if (state.panel !== 'split') openSplit()
+          break
+        case 'Enter':
+          if (state.panel === 'split') saveSplit()
+          else return
           break
         case 't':
         case 'T':
@@ -357,7 +391,8 @@ function InboxPage() {
           consentTransfer()
           break
         case 'Escape':
-          if (state.panel !== null) closePanel()
+          if (state.panel === 'split') cancelSplit()
+          else if (state.panel !== null) closePanel()
           else return
           break
         default:
@@ -550,6 +585,8 @@ function InboxPage() {
             }
             onOpenSplit={openSplit}
             onMergeBack={mergeBack}
+            onSaveSplit={saveSplit}
+            onCancelSplit={cancelSplit}
             counterpart={focusedCounterpart}
             counterpartLabel={
               focusedCounterpart !== null
