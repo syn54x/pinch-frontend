@@ -127,7 +127,9 @@ test('the Venmo → Ally case: the pair speaks the canonical copy, one consent c
 
   // Real detector provenance on the rows, and the callout under the
   // outflow speaks the canonical voice, naming the other leg's account.
-  await expect(page.locator('[data-provenance="detection"]').first()).toBeVisible()
+  await expect(
+    page.locator('[data-provenance="detection"]').first(),
+  ).toBeVisible()
   const callout = page
     .getByTestId('pair-callout')
     .filter({ hasText: 'Ally Savings' })
@@ -166,7 +168,9 @@ test('the Venmo → Ally case: the pair speaks the canonical copy, one consent c
   // The Register wears the exclusion on BOTH legs.
   await page.getByRole('link', { name: 'Register' }).click()
   await expect(page).toHaveURL(/\/register$/)
-  const outRow = page.getByTestId('txn-row').filter({ hasText: 'VENMO PAYMENT' })
+  const outRow = page
+    .getByTestId('txn-row')
+    .filter({ hasText: 'VENMO PAYMENT' })
   const inRow = page.getByTestId('txn-row').filter({ hasText: 'VENMO CASHOUT' })
   await expect(
     outRow.getByTitle('Transfer — excluded from spending'),
