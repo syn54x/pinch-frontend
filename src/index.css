@@ -33,6 +33,13 @@
     --color-cat-8: var(--cat-8);
     --color-cat-9: var(--cat-9);
     --color-cat-10: var(--cat-10);
+    --color-penny: var(--penny);
+    --color-penny-foreground: var(--penny-foreground);
+    --color-prov-rule: var(--prov-rule);
+    --color-prov-hist: var(--prov-hist);
+    --color-prov-ai: var(--prov-ai);
+    --color-prov-det: var(--prov-det);
+    --color-progress: var(--progress);
     --color-ring: var(--ring);
     --color-input: var(--input);
     --color-border: var(--border);
@@ -67,112 +74,137 @@
 }
 
 /*
- * Pinch tokens — "The Copper Ledger" (DESIGN.md).
- * Chrome is neutral + copper; categorical color (--cat-*) is reserved for
- * data. Every token has a light and a dark value (Three Themes Rule).
- * All pairings AA-verified in OKLCH; keep chroma near zero on light
- * surfaces (Cool Canvas Rule — warmth lives in the accent, not the canvas).
+ * Pinch tokens — "The Quiet Ledger" (DESIGN.md), realized from the settled
+ * wireframes (docs/wireframes/project/Pinch Wireframes.dc.html).
+ *
+ * Light: graphite ink on cool near-white paper — chrome carries no hue, so
+ * every scrap of color belongs to data. Dark: the committed Penny-purple
+ * theme from the wireframes — purple-tinted surfaces, and the accent
+ * *becomes* Penny's purple. That light/dark asymmetry is deliberate.
+ *
+ * New wireframe-derived sets: --penny (assistant identity), --prov-*
+ * (categorization provenance: rule/hist/ai/det; tint bgs at /13 light,
+ * /20 dark), --progress (bar fills), and a muted 10-hue --cat-* band.
+ * Every token has a light and a dark value (Three Themes Rule). All
+ * text-on-surface pairings AA-verified in OKLCH (see git history for the
+ * check script) — cat/prov lightness is normalized to keep raw text usage
+ * ≥4.5:1 where the raw wireframe hexes fell short.
  */
 :root {
   color-scheme: light;
-  --background: oklch(0.985 0.002 250);
-  --foreground: oklch(0.145 0.006 250);
+  --background: oklch(0.99 0.002 250);
+  --foreground: oklch(0.23 0.009 250);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0.006 250);
+  --card-foreground: oklch(0.23 0.009 250);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0.006 250);
+  --popover-foreground: oklch(0.23 0.009 250);
   --primary: oklch(0.27 0.012 250);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.955 0.003 250);
-  --secondary-foreground: oklch(0.205 0.006 250);
-  --muted: oklch(0.955 0.003 250);
-  --muted-foreground: oklch(0.5 0.006 250);
-  --accent: oklch(0.955 0.003 250);
-  --accent-foreground: oklch(0.205 0.006 250);
-  --destructive: oklch(0.55 0.21 27);
-  --success: oklch(0.52 0.125 155);
+  --secondary: oklch(0.957 0.003 250);
+  --secondary-foreground: oklch(0.23 0.009 250);
+  --muted: oklch(0.94 0.005 250);
+  --muted-foreground: oklch(0.54 0.014 250);
+  --accent: oklch(0.93 0.006 250);
+  --accent-foreground: oklch(0.23 0.009 250);
+  --destructive: oklch(0.56 0.126 31);
+  --success: oklch(0.54 0.084 158);
   --success-foreground: oklch(0.985 0 0);
   --warning: oklch(0.55 0.11 75);
   --warning-foreground: oklch(0.985 0 0);
-  --border: oklch(0.917 0.004 250);
-  --input: oklch(0.917 0.004 250);
+  --border: oklch(0 0 0 / 9%);
+  --input: oklch(0 0 0 / 9%);
   --ring: oklch(0.27 0.012 250);
-  --cat-1: oklch(0.6 0.13 15);
-  --cat-2: oklch(0.6 0.119 85);
-  --cat-3: oklch(0.6 0.13 115);
-  --cat-4: oklch(0.6 0.13 145);
-  --cat-5: oklch(0.6 0.109 175);
-  --cat-6: oklch(0.6 0.098 205);
-  --cat-7: oklch(0.6 0.123 235);
-  --cat-8: oklch(0.6 0.13 265);
-  --cat-9: oklch(0.6 0.13 300);
-  --cat-10: oklch(0.6 0.13 335);
+  --penny: oklch(0.555 0.156 295);
+  --penny-foreground: oklch(0.985 0 0);
+  --prov-rule: oklch(0.56 0.118 261);
+  --prov-hist: oklch(0.55 0.08 154);
+  --prov-ai: oklch(0.55 0.108 304);
+  --prov-det: oklch(0.55 0.094 79);
+  --progress: oklch(0.3 0.013 250);
+  --cat-1: oklch(0.55 0.1 31);
+  --cat-2: oklch(0.55 0.1 80);
+  --cat-3: oklch(0.55 0.1 115);
+  --cat-4: oklch(0.55 0.1 154);
+  --cat-5: oklch(0.55 0.1 195);
+  --cat-6: oklch(0.55 0.1 228);
+  --cat-7: oklch(0.55 0.1 261);
+  --cat-8: oklch(0.55 0.1 292);
+  --cat-9: oklch(0.55 0.1 322);
+  --cat-10: oklch(0.55 0.1 350);
   --chart-1: var(--cat-1);
   --chart-2: var(--cat-2);
   --chart-3: var(--cat-3);
   --chart-4: var(--cat-4);
   --chart-5: var(--cat-5);
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   --sidebar: oklch(0.97 0.003 250);
-  --sidebar-foreground: oklch(0.145 0.006 250);
+  --sidebar-foreground: oklch(0.23 0.009 250);
   --sidebar-primary: oklch(0.27 0.012 250);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.93 0.003 250);
-  --sidebar-accent-foreground: oklch(0.205 0.006 250);
-  --sidebar-border: oklch(0.917 0.004 250);
+  --sidebar-accent: oklch(0.93 0.006 250);
+  --sidebar-accent-foreground: oklch(0.23 0.009 250);
+  --sidebar-border: oklch(0 0 0 / 9%);
   --sidebar-ring: oklch(0.27 0.012 250);
 }
 
-/* Dark: depth from tonal layering (bg → card → popover get lighter). No
- * hue anywhere in chrome (Graphite): primary is near-white ink, so the
- * categorical data palette carries every bit of color on screen. */
+/* Dark: the wireframes' committed Penny-purple theme. Purple-navy canvas,
+ * purple-tinted surfaces and borders, and primary/ring/penny unify on
+ * Penny's purple — in the dark, the assistant's color IS the accent.
+ * Depth stays tonal (bg → sidebar → card → popover get lighter). */
 .dark {
   color-scheme: dark;
-  --background: oklch(0.145 0.004 250);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.19 0.004 250);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.215 0.004 250);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.006 250);
-  --primary-foreground: oklch(0.2 0.01 250);
-  --secondary: oklch(0.245 0.004 250);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.245 0.004 250);
-  --muted-foreground: oklch(0.72 0.004 250);
-  --accent: oklch(0.245 0.004 250);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.66 0.18 25);
-  --success: oklch(0.72 0.13 155);
+  --background: oklch(0.19 0.047 290);
+  --foreground: oklch(0.93 0.016 295);
+  --card: oklch(0.25 0.05 290);
+  --card-foreground: oklch(0.93 0.016 295);
+  --popover: oklch(0.28 0.05 290);
+  --popover-foreground: oklch(0.93 0.016 295);
+  --primary: oklch(0.67 0.175 295);
+  --primary-foreground: oklch(0.19 0.034 295);
+  --secondary: oklch(0.26 0.045 290);
+  --secondary-foreground: oklch(0.93 0.016 295);
+  --muted: oklch(0.29 0.047 290);
+  --muted-foreground: oklch(0.68 0.04 295);
+  --accent: oklch(0.32 0.07 290);
+  --accent-foreground: oklch(0.93 0.016 295);
+  --destructive: oklch(0.71 0.117 32);
+  --success: oklch(0.73 0.106 158);
   --success-foreground: oklch(0.17 0.02 155);
-  --warning: oklch(0.75 0.13 80);
+  --warning: oklch(0.78 0.12 78);
   --warning-foreground: oklch(0.17 0.02 80);
-  --border: oklch(0.27 0.004 250);
-  --input: oklch(0.29 0.004 250);
-  --ring: oklch(0.92 0.006 250);
-  --cat-1: oklch(0.72 0.13 15);
-  --cat-2: oklch(0.72 0.13 85);
-  --cat-3: oklch(0.72 0.13 115);
-  --cat-4: oklch(0.72 0.13 145);
-  --cat-5: oklch(0.72 0.13 175);
-  --cat-6: oklch(0.72 0.119 205);
-  --cat-7: oklch(0.72 0.13 235);
-  --cat-8: oklch(0.72 0.13 265);
-  --cat-9: oklch(0.72 0.13 300);
-  --cat-10: oklch(0.72 0.13 335);
+  --border: oklch(0.72 0.108 295 / 15%);
+  --input: oklch(0.72 0.108 295 / 15%);
+  --ring: oklch(0.67 0.175 295);
+  --penny: oklch(0.67 0.175 295);
+  --penny-foreground: oklch(0.19 0.034 295);
+  --prov-rule: oklch(0.79 0.081 260);
+  --prov-hist: oklch(0.81 0.087 155);
+  --prov-ai: oklch(0.79 0.095 321);
+  --prov-det: oklch(0.84 0.103 81);
+  --progress: oklch(0.77 0.06 295);
+  --cat-1: oklch(0.73 0.11 31);
+  --cat-2: oklch(0.73 0.11 80);
+  --cat-3: oklch(0.73 0.11 115);
+  --cat-4: oklch(0.73 0.11 154);
+  --cat-5: oklch(0.73 0.11 195);
+  --cat-6: oklch(0.73 0.11 228);
+  --cat-7: oklch(0.73 0.11 261);
+  --cat-8: oklch(0.73 0.11 292);
+  --cat-9: oklch(0.73 0.11 322);
+  --cat-10: oklch(0.73 0.11 350);
   --chart-1: var(--cat-1);
   --chart-2: var(--cat-2);
   --chart-3: var(--cat-3);
   --chart-4: var(--cat-4);
   --chart-5: var(--cat-5);
-  --sidebar: oklch(0.19 0.004 250);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.92 0.006 250);
-  --sidebar-primary-foreground: oklch(0.2 0.01 250);
-  --sidebar-accent: oklch(0.245 0.004 250);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.27 0.004 250);
-  --sidebar-ring: oklch(0.92 0.006 250);
+  --sidebar: oklch(0.215 0.053 290);
+  --sidebar-foreground: oklch(0.93 0.016 295);
+  --sidebar-primary: oklch(0.67 0.175 295);
+  --sidebar-primary-foreground: oklch(0.19 0.034 295);
+  --sidebar-accent: oklch(0.32 0.07 290);
+  --sidebar-accent-foreground: oklch(0.93 0.016 295);
+  --sidebar-border: oklch(0.72 0.108 295 / 15%);
+  --sidebar-ring: oklch(0.67 0.175 295);
 }
 
 /* The Tabular Rule (DESIGN.md): every monetary amount uses this. */
@@ -180,6 +212,17 @@
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
+}
+
+/* The wireframes' section-label voice: small mono caps, muted. Used for
+ * sidebar sections, column headers, and field labels — not headings. */
+@utility label-caps {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
 }
 
 @layer base {
@@ -197,7 +240,7 @@
     background: oklch(0.27 0.012 250 / 15%);
   }
   .dark ::selection {
-    background: oklch(0.92 0.006 250 / 20%);
+    background: oklch(0.67 0.175 295 / 25%);
   }
   @media (prefers-reduced-motion: reduce) {
     *,
