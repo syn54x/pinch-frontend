@@ -5,8 +5,8 @@
 //
 // Rows arrive in the server's visual order (newest-first; day groups derive
 // from `date`), and traversal is flat: J/K walk rows straight across group
-// boundaries. CP3 adds verbs (S split, T transfer) by widening `InboxPanel`
-// — the state/action shape is built to take that without restructuring.
+// boundaries. CP3 widened `InboxPanel` with the deep verbs (S split,
+// T transfer) — exactly the seam CP2 left; no other shape changed.
 
 export interface InboxRow {
   id: string
@@ -14,9 +14,9 @@ export interface InboxRow {
   date: string
 }
 
-/** Which correction affordance is open in the Inspector. CP2 ships
- * 'category'; CP3 widens this union with 'split' and 'transfer'. */
-export type InboxPanel = 'category'
+/** Which correction affordance is open in the Inspector: the category
+ * picker (C), the split editor (S), or the transfer consent (T). */
+export type InboxPanel = 'category' | 'split' | 'transfer'
 
 export interface InboxState {
   rows: InboxRow[]
@@ -38,7 +38,7 @@ export type InboxAction =
   /** Reviews landed: rows leave immediately (progress is felt before the
    * refetch), and a removed focus advances to its nearest survivor. */
   | { type: 'remove'; ids: string[] }
-  /** C (CP3: S, T) — open a correction panel on the focused row. */
+  /** C / S / T — open a correction panel on the focused row. */
   | { type: 'openPanel'; panel: InboxPanel }
   | { type: 'closePanel' }
 

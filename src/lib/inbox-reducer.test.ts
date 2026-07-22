@@ -86,9 +86,11 @@ describe('empty inbox', () => {
     expect(inboxReducer(initialInboxState, { type: 'focusPrev' })).toEqual(
       initialInboxState,
     )
-    expect(
-      inboxReducer(initialInboxState, { type: 'openPanel', panel: 'category' }),
-    ).toEqual(initialInboxState)
+    for (const panel of ['category', 'split', 'transfer'] as const) {
+      expect(
+        inboxReducer(initialInboxState, { type: 'openPanel', panel }),
+      ).toEqual(initialInboxState)
+    }
     expect(
       inboxReducer(initialInboxState, { type: 'remove', ids: ['a'] }),
     ).toEqual(initialInboxState)
@@ -146,22 +148,51 @@ describe('accept advances focus', () => {
 })
 
 describe('panels', () => {
-  it('opens on the focused row and closes on demand', () => {
-    const open = run(loaded(), { type: 'openPanel', panel: 'category' })
-    expect(open.panel).toBe('category')
-    expect(run(open, { type: 'closePanel' }).panel).toBeNull()
+  // The deep verbs (CP3) share the panel machinery with C — every law
+  // below holds for all three, so each runs across the whole union.
+  const PANELS = ['category', 'split', 'transfer'] as const
+
+  it.each(PANELS)(
+    '%s opens on the focused row and closes on demand',
+    (panel) => {
+      const open = run(loaded(), { type: 'openPanel', panel })
+      expect(open.panel).toBe(panel)
+      expect(run(open, { type: 'closePanel' }).panel).toBeNull()
+    },
+  )
+
+  it.each(PANELS)(
+    'any focus move closes the %s panel — a correction never retargets',
+    (panel) => {
+      const open = run(loaded(), { type: 'openPanel', panel })
+      expect(run(open, { type: 'focusNext' }).panel).toBeNull()
+      expect(run(open, { type: 'focus', id: 'c' }).panel).toBeNull()
+      expect(run(open, { type: 'remove', ids: ['a'] }).panel).toBeNull()
+    },
+  )
+
+  it.each(PANELS)('%s survives a sync that keeps the focused row', (panel) => {
+    const open = run(loaded(), { type: 'openPanel', panel })
+    expect(run(open, { type: 'sync', rows: ROWS }).panel).toBe(panel)
   })
 
-  it('any focus move closes the panel — a correction never retargets', () => {
-    const open = run(loaded(), { type: 'openPanel', panel: 'category' })
-    expect(run(open, { type: 'focusNext' }).panel).toBeNull()
-    expect(run(open, { type: 'focus', id: 'c' }).panel).toBeNull()
-    expect(run(open, { type: 'remove', ids: ['a'] }).panel).toBeNull()
+  it('one panel at a time: opening another replaces the last', () => {
+    const state = run(
+      loaded(),
+      { type: 'openPanel', panel: 'transfer' },
+      { type: 'openPanel', panel: 'category' },
+    )
+    expect(state.panel).toBe('category')
   })
 
-  it('survives a sync that keeps the focused row', () => {
-    const open = run(loaded(), { type: 'openPanel', panel: 'category' })
-    expect(run(open, { type: 'sync', rows: ROWS }).panel).toBe('category')
+  it('removing the focused row closes its split editor with it', () => {
+    const state = run(
+      loaded(),
+      { type: 'openPanel', panel: 'split' },
+      { type: 'remove', ids: ['a'] },
+    )
+    expect(state.focusId).toBe('b')
+    expect(state.panel).toBeNull()
   })
 })
 
