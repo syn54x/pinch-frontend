@@ -124,8 +124,17 @@ test('a session revoked server-side bounces to login when the tab refocuses', as
   // refetches (React Query focus behavior); the dead session's 401 must land
   // on login — the global handler, not the route guard, owns this path.
   await revokeOtherSessions(email, PASSWORD)
-  await page.evaluate(() => {
-    document.dispatchEvent(new Event('visibilitychange', { bubbles: true }))
-  })
+  // The refocus can redirect fast enough (CI timing) to tear down the
+  // evaluate's execution context mid-call — which is the success signal,
+  // not a failure — so fire the event and wait on the URL together, and
+  // swallow the navigation-induced context teardown.
+  await Promise.all([
+    page.waitForURL(/\/login/),
+    page
+      .evaluate(() => {
+        document.dispatchEvent(new Event('visibilitychange', { bubbles: true }))
+      })
+      .catch(() => {}),
+  ])
   await expect(page).toHaveURL(/\/login/)
 })
