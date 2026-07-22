@@ -59,15 +59,16 @@ test('keyboard-only pass: J/K/A/C clear the inbox, count live throughout', async
   await seedInbox(email)
   await openInbox(page, email)
 
-  // Day groups with the wireframe's label voice; the legend shows the core
-  // verbs and nothing cut (no E, no CP3 verbs yet).
+  // Day groups with the wireframe's label voice; the legend shows every
+  // shipped verb (CP3 added S/T) and nothing cut (no E — #15).
   await expect(page.getByTestId('inbox-day').first()).toBeVisible()
   const legend = page.getByTestId('inbox-legend')
   await expect(legend).toContainText('move')
   await expect(legend).toContainText('accept')
   await expect(legend).toContainText('category')
+  await expect(legend).toContainText('split')
+  await expect(legend).toContainText('transfer')
   await expect(legend).not.toContainText('explain')
-  await expect(legend).not.toContainText('split')
 
   // The nav badge and the header count agree with reviewed=false reality.
   const total = await rows(page).count()
