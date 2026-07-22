@@ -75,6 +75,14 @@ export class RegisterSeeder {
   async categoryId(name: string): Promise<string> {
     const existing = this.categoryIds.get(name)
     if (existing) return existing
+    // Signup seeds a default taxonomy, and the backend enforces unique
+    // sibling names — reuse a same-named category instead of tripping it.
+    const listed = await this.listCategories()
+    const match = listed.find((c) => c.name === name)
+    if (match) {
+      this.categoryIds.set(name, match.id)
+      return match.id
+    }
     const category = await post<{ id: string }>(
       this.ctx,
       this.csrf,
@@ -83,6 +91,27 @@ export class RegisterSeeder {
     )
     this.categoryIds.set(name, category.id)
     return category.id
+  }
+
+  private async listCategories(): Promise<{ id: string; name: string }[]> {
+    const items: { id: string; name: string }[] = []
+    let cursor: string | null = null
+    do {
+      const url: string = cursor
+        ? `/api/v1/categories?cursor=${encodeURIComponent(cursor)}`
+        : '/api/v1/categories'
+      const response = await this.ctx.get(url)
+      if (!response.ok()) {
+        throw new Error(`seed GET ${url} failed: ${response.status()}`)
+      }
+      const page = (await response.json()) as {
+        items: { id: string; name: string }[]
+        next_cursor: string | null
+      }
+      items.push(...page.items)
+      cursor = page.next_cursor
+    } while (cursor)
+    return items
   }
 
   async createTxn(accountId: string, txn: SeedTxn): Promise<string> {

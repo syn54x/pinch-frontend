@@ -241,7 +241,12 @@ test('text search reaches payee, display name, and notes', async ({ page }) => {
   // Nothing matches → the distinct no-matches state, with the way out.
   await searchBox.fill('zebra crossing')
   await expect(page.getByTestId('register-no-matches')).toBeVisible()
-  await page.getByRole('button', { name: 'Clear filters' }).click()
+  // Both the filter bar and the no-matches state offer "Clear filters";
+  // take the one the empty state teaches.
+  await page
+    .getByTestId('register-no-matches')
+    .getByRole('button', { name: 'Clear filters' })
+    .click()
   await expect(rows(page)).toHaveCount(3)
 })
 
@@ -265,9 +270,15 @@ test('the Inspector shows everything and edits every field in place', async ({
   await rowFor(page, 'WHOLEFDS').getByRole('button').click()
 
   // The Inspector shows everything: raw description, account/status line,
-  // amount, category.
+  // amount, category. With no display-name override the title echoes the
+  // raw description, so pin each occurrence to its element.
   const pane = inspector(page)
-  await expect(pane.getByText('WHOLEFDS #10234 AUSTIN TX')).toBeVisible()
+  await expect(
+    pane.getByRole('heading', { name: 'WHOLEFDS #10234 AUSTIN TX' }),
+  ).toBeVisible()
+  await expect(
+    pane.getByRole('paragraph').filter({ hasText: 'WHOLEFDS #10234' }),
+  ).toBeVisible()
   await expect(pane.getByText(/Chase Checking/)).toBeVisible()
   await expect(pane.getByText(/posted/)).toBeVisible()
   await expect(pane.getByText('−$62.40')).toBeVisible()
