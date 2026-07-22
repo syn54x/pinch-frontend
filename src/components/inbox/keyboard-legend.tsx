@@ -27,6 +27,12 @@ export function KeyboardLegend() {
         <Key>C</Key> category
       </span>
       <span className="flex items-center gap-1">
+        <Key>S</Key> split
+      </span>
+      <span className="flex items-center gap-1">
+        <Key>T</Key> transfer
+      </span>
+      <span className="flex items-center gap-1">
         <Key>⇧A</Key> accept all
       </span>
     </div>

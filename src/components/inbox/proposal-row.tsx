@@ -57,6 +57,11 @@ export function ProposalRow({
           ) : (
             <UncategorizedPill />
           )}
+          {(txn.splits?.length ?? 0) > 0 && (
+            <span className="shrink-0 rounded-full border px-1.5 py-px text-[10px] text-muted-foreground">
+              split · {txn.splits?.length}
+            </span>
+          )}
         </div>
       </div>
       <ProvenanceBadge provenance={proposal?.provenance ?? 'none'} />
