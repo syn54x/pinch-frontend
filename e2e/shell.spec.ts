@@ -66,7 +66,11 @@ test('navigation moves between surfaces and marks the active item', async ({
   page,
 }) => {
   const email = uniqueEmail('shell-nav')
-  await seedUser(email, PASSWORD)
+  // One account, so the Inbox shows its empty state — an EMPTY ledger now
+  // mounts Onboarding instead (CP4), which is that surface's own spec.
+  await seedUser(email, PASSWORD, [
+    { kind: 'depository', label: 'Checking', currency: 'USD' },
+  ])
   await loginViaUi(page, email, PASSWORD)
   await expect(page).toHaveURL(/\/accounts$/)
   await expect(
