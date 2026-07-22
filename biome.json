@@ -8,6 +8,7 @@
       "!src/routeTree.gen.ts",
       "!openapi.json",
       "!public",
+      "!docs/wireframes",
       "!src/index.css",
       "!test-results",
       "!playwright-report",
