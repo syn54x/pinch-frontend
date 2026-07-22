@@ -39,8 +39,9 @@ test('signup → wizard → currency saves → connect → honest progress → a
   await wizard(page).getByRole('button', { name: 'Continue' }).click()
   await expect(wizard(page)).toContainText('Connect your first account')
   const me = await page.request.get(`${API}/api/v1/auth/me`)
-  expect(((await me.json()) as { primary_currency: string }).primary_currency)
-    .toBe('EUR')
+  expect(
+    ((await me.json()) as { primary_currency: string }).primary_currency,
+  ).toBe('EUR')
 
   // The wizard holds in dark too (wireframe pair 1s/1s-d).
   await page.getByRole('button', { name: /Switch to light/ }).click()
@@ -50,7 +51,9 @@ test('signup → wizard → currency saves → connect → honest progress → a
   await page.getByRole('button', { name: /Switch to system/ }).click()
 
   // Connect a bank — the F2 flow behind the wizard's card.
-  await wizard(page).getByRole('button', { name: /Connect a bank/ }).click()
+  await wizard(page)
+    .getByRole('button', { name: /Connect a bank/ })
+    .click()
 
   // Honest progress: the connection's own status voice, and none of the
   // wireframe's classification theater (#20 cuts it until M8).
@@ -82,7 +85,9 @@ test('the manual path creates an account in place — and a ledger with an accou
   // Skip the currency step — every step is skippable, but skipping the
   // whole wizard isn't required to reach manual.
   await wizard(page).getByRole('button', { name: 'Continue' }).click()
-  await wizard(page).getByRole('button', { name: /Add manually/ }).click()
+  await wizard(page)
+    .getByRole('button', { name: /Add manually/ })
+    .click()
   await wizard(page).getByLabel('Account name').fill('Everyday Checking')
   await wizard(page).getByRole('button', { name: 'Create account' }).click()
 
