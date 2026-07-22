@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { Inbox as InboxIcon } from 'lucide-react'
 import {
   Fragment,
@@ -16,6 +16,7 @@ import {
   getTransactionOptions,
   listAccountsOptions,
   listCategoriesOptions,
+  listConnectionsOptions,
   listTagsOptions,
   listTransactionsOptions,
   listTransactionsQueryKey,
@@ -32,6 +33,10 @@ import {
 import { KeyboardLegend } from '@/components/inbox/keyboard-legend'
 import { PairCallout } from '@/components/inbox/pair-callout'
 import { ProposalRow, proposalRowDomId } from '@/components/inbox/proposal-row'
+import {
+  OnboardingWizard,
+  onboardingSkippedThisLoad,
+} from '@/components/onboarding/wizard'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { dayGroups, inboxReducer, initialInboxState } from '@/lib/inbox-reducer'
@@ -129,6 +134,23 @@ function InboxPage() {
   // Account labels name the pair callout's other leg (wireframe: "pairs
   // with Ally Savings …"). Loaded once; a ledger has few accounts.
   const accounts = useQuery(listAccountsOptions({}))
+  // Onboarding's stateless trigger (#20): no accounts AND no connections —
+  // the ledger's emptiness is the state, nothing is stored.
+  const connections = useQuery(listConnectionsOptions())
+  const emptyLedger =
+    accounts.data !== undefined &&
+    connections.data !== undefined &&
+    accounts.data.items.length === 0 &&
+    connections.data.items.length === 0
+  // 'engaged' keeps the wizard mounted once the user starts it — a fresh
+  // connection un-infers the trigger mid-flow, but step 3 must still show.
+  // 'done' (plus the module-scope skip flag) lasts exactly one page load.
+  const [wizard, setWizard] = useState<'inferred' | 'engaged' | 'done'>(
+    'inferred',
+  )
+  const showOnboarding =
+    wizard === 'engaged' ||
+    (wizard === 'inferred' && emptyLedger && !onboardingSkippedThisLoad())
 
   // Server truth → reducer rows (order + date only; rendering re-joins).
   const items = queue.data?.items
@@ -357,6 +379,15 @@ function InboxPage() {
     }
   }, [focusId])
 
+  if (showOnboarding) {
+    return (
+      <OnboardingWizard
+        onEngage={() => setWizard('engaged')}
+        onDone={() => setWizard('done')}
+      />
+    )
+  }
+
   if (queue.isPending) {
     return (
       <div className="flex h-full flex-col gap-3" data-testid="inbox-loading">
@@ -390,7 +421,7 @@ function InboxPage() {
     )
   }
 
-  if (visible.length === 0) return <InboxZero />
+  if (visible.length === 0) return <InboxZero showConnect={emptyLedger} />
 
   const groups = dayGroups(visible)
   const reviewError = review.isError
@@ -534,8 +565,9 @@ function InboxPage() {
 }
 
 // The designed zero state (CP0, refined for CP2): inbox zero is the loop's
-// earned resting point, not an error and not a blank.
-function InboxZero() {
+// earned resting point, not an error and not a blank. A skipped-through
+// onboarding lands here too — with the route back to connecting (#20).
+function InboxZero({ showConnect = false }: { showConnect?: boolean }) {
   return (
     <div
       data-testid="inbox-empty"
@@ -549,6 +581,11 @@ function InboxZero() {
         When transactions sync in, their category proposals queue here for a
         quick review pass — accept or correct, one at a time or all at once.
       </p>
+      {showConnect && (
+        <Button asChild variant="outline" size="sm" className="mt-4">
+          <Link to="/connections">Connect a bank</Link>
+        </Button>
+      )}
     </div>
   )
 }
