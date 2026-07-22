@@ -377,6 +377,18 @@ export type MappingSpec = {
 };
 
 /**
+ * MePatchIn
+ */
+export type MePatchIn = {
+    /**
+     * ISO 4217 alpha code, same shape rule as signup — unrestricted in v0
+     * (reports re-express at current rates), so any three uppercase letters
+     * pass and anything else is a 400.
+     */
+    primary_currency: string;
+};
+
+/**
  * Page[AccountOut]
  */
 export type PageAccountOut = {
@@ -891,6 +903,13 @@ export type TransferRef = {
 };
 
 /**
+ * UnreviewedCountOut
+ */
+export type UnreviewedCountOut = {
+    count: number;
+};
+
+/**
  * UserOut
  */
 export type UserOut = {
@@ -1013,6 +1032,37 @@ export type MeResponses = {
 };
 
 export type MeResponse = MeResponses[keyof MeResponses];
+
+export type UpdateMeData = {
+    body: MePatchIn;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/me';
+};
+
+export type UpdateMeErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type UpdateMeError = UpdateMeErrors[keyof UpdateMeErrors];
+
+export type UpdateMeResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: UserOut;
+};
+
+export type UpdateMeResponse = UpdateMeResponses[keyof UpdateMeResponses];
 
 export type ListSessionsData = {
     body?: never;
@@ -2552,6 +2602,10 @@ export type ListTransactionsData = {
         tag?: Array<string> | null;
         is_transfer?: boolean | null;
         /**
+         * Case-insensitive substring search over the payee/description, display name, and notes. Composes with the other filters; amounts are not searched.
+         */
+        q?: string | null;
+        /**
          * Opaque page position from a previous `next_cursor`.
          */
         cursor?: string | null;
@@ -2617,6 +2671,22 @@ export type CreateTransactionResponses = {
 };
 
 export type CreateTransactionResponse = CreateTransactionResponses[keyof CreateTransactionResponses];
+
+export type CountUnreviewedTransactionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/transactions/unreviewed-count';
+};
+
+export type CountUnreviewedTransactionsResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: UnreviewedCountOut;
+};
+
+export type CountUnreviewedTransactionsResponse = CountUnreviewedTransactionsResponses[keyof CountUnreviewedTransactionsResponses];
 
 export type GetTransactionData = {
     body?: never;

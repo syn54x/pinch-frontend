@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ArchiveAccountData, ArchiveAccountErrors, ArchiveAccountResponses, CommitImportData, CommitImportErrors, CommitImportResponses, ConfirmEmailVerificationData, ConfirmEmailVerificationErrors, ConfirmEmailVerificationResponses, ConfirmMappingData, ConfirmMappingErrors, ConfirmMappingResponses, ConfirmPasswordResetData, ConfirmPasswordResetErrors, ConfirmPasswordResetResponses, CreateAccountData, CreateAccountErrors, CreateAccountResponses, CreateBalanceEntryData, CreateBalanceEntryErrors, CreateBalanceEntryResponses, CreateCategoryData, CreateCategoryErrors, CreateCategoryResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateImportData, CreateImportErrors, CreateImportResponses, CreateLinkTokenData, CreateLinkTokenErrors, CreateLinkTokenResponses, CreatePatData, CreatePatErrors, CreatePatResponses, CreateRuleData, CreateRuleErrors, CreateRuleResponses, CreateTagData, CreateTagErrors, CreateTagResponses, CreateTransactionData, CreateTransactionErrors, CreateTransactionResponses, CreateTransferData, CreateTransferErrors, CreateTransferResponses, DeleteCategoryData, DeleteCategoryErrors, DeleteCategoryResponses, DeleteConnectionData, DeleteConnectionErrors, DeleteConnectionResponses, DeleteImportData, DeleteImportErrors, DeleteImportProfileData, DeleteImportProfileErrors, DeleteImportProfileResponses, DeleteImportResponses, DeleteRuleData, DeleteRuleErrors, DeleteRuleResponses, DeleteSplitsData, DeleteSplitsErrors, DeleteSplitsResponses, DeleteTagData, DeleteTagErrors, DeleteTagResponses, DissolveTransferData, DissolveTransferErrors, DissolveTransferResponses, GetAccountData, GetAccountErrors, GetAccountResponses, GetCategoryData, GetCategoryErrors, GetCategoryResponses, GetConnectionData, GetConnectionErrors, GetConnectionResponses, GetImportData, GetImportErrors, GetImportResponses, GetRuleData, GetRuleErrors, GetRuleResponses, GetTransactionData, GetTransactionErrors, GetTransactionResponses, HealthData, HealthResponses, ListAccountsData, ListAccountsErrors, ListAccountsResponses, ListBalanceEntriesData, ListBalanceEntriesErrors, ListBalanceEntriesResponses, ListCategoriesData, ListCategoriesErrors, ListCategoriesResponses, ListConnectionsData, ListConnectionsErrors, ListConnectionsResponses, ListCorrectionLogData, ListCorrectionLogErrors, ListCorrectionLogResponses, ListImportProfilesData, ListImportProfilesErrors, ListImportProfilesResponses, ListImportRowsData, ListImportRowsErrors, ListImportRowsResponses, ListPatsData, ListPatsErrors, ListPatsResponses, ListRulesData, ListRulesErrors, ListRulesResponses, ListSessionsData, ListSessionsErrors, ListSessionsResponses, ListTagsData, ListTagsErrors, ListTagsResponses, ListTransactionsData, ListTransactionsErrors, ListTransactionsResponses, ListTransfersData, ListTransfersErrors, ListTransfersResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutResponses, MeData, MeResponses, PatchTransactionData, PatchTransactionErrors, PatchTransactionResponses, PreviewRuleData, PreviewRuleErrors, PreviewRuleResponses, PutSplitsData, PutSplitsErrors, PutSplitsResponses, RefreshConnectionData, RefreshConnectionErrors, RefreshConnectionResponses, RequestEmailVerificationData, RequestEmailVerificationResponses, RequestPasswordResetData, RequestPasswordResetErrors, RequestPasswordResetResponses, ReviewBatchData, ReviewBatchErrors, ReviewBatchResponses, ReviewTransactionData, ReviewTransactionErrors, ReviewTransactionResponses, RevokePatData, RevokePatErrors, RevokePatResponses, RevokeSessionData, RevokeSessionErrors, RevokeSessionResponses, SignupData, SignupErrors, SignupResponses, UpdateAccountLabelData, UpdateAccountLabelErrors, UpdateAccountLabelResponses, UpdateCategoryData, UpdateCategoryErrors, UpdateCategoryResponses, UpdateRuleData, UpdateRuleErrors, UpdateRuleResponses } from './types.gen';
+import type { ArchiveAccountData, ArchiveAccountErrors, ArchiveAccountResponses, CommitImportData, CommitImportErrors, CommitImportResponses, ConfirmEmailVerificationData, ConfirmEmailVerificationErrors, ConfirmEmailVerificationResponses, ConfirmMappingData, ConfirmMappingErrors, ConfirmMappingResponses, ConfirmPasswordResetData, ConfirmPasswordResetErrors, ConfirmPasswordResetResponses, CountUnreviewedTransactionsData, CountUnreviewedTransactionsResponses, CreateAccountData, CreateAccountErrors, CreateAccountResponses, CreateBalanceEntryData, CreateBalanceEntryErrors, CreateBalanceEntryResponses, CreateCategoryData, CreateCategoryErrors, CreateCategoryResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateImportData, CreateImportErrors, CreateImportResponses, CreateLinkTokenData, CreateLinkTokenErrors, CreateLinkTokenResponses, CreatePatData, CreatePatErrors, CreatePatResponses, CreateRuleData, CreateRuleErrors, CreateRuleResponses, CreateTagData, CreateTagErrors, CreateTagResponses, CreateTransactionData, CreateTransactionErrors, CreateTransactionResponses, CreateTransferData, CreateTransferErrors, CreateTransferResponses, DeleteCategoryData, DeleteCategoryErrors, DeleteCategoryResponses, DeleteConnectionData, DeleteConnectionErrors, DeleteConnectionResponses, DeleteImportData, DeleteImportErrors, DeleteImportProfileData, DeleteImportProfileErrors, DeleteImportProfileResponses, DeleteImportResponses, DeleteRuleData, DeleteRuleErrors, DeleteRuleResponses, DeleteSplitsData, DeleteSplitsErrors, DeleteSplitsResponses, DeleteTagData, DeleteTagErrors, DeleteTagResponses, DissolveTransferData, DissolveTransferErrors, DissolveTransferResponses, GetAccountData, GetAccountErrors, GetAccountResponses, GetCategoryData, GetCategoryErrors, GetCategoryResponses, GetConnectionData, GetConnectionErrors, GetConnectionResponses, GetImportData, GetImportErrors, GetImportResponses, GetRuleData, GetRuleErrors, GetRuleResponses, GetTransactionData, GetTransactionErrors, GetTransactionResponses, HealthData, HealthResponses, ListAccountsData, ListAccountsErrors, ListAccountsResponses, ListBalanceEntriesData, ListBalanceEntriesErrors, ListBalanceEntriesResponses, ListCategoriesData, ListCategoriesErrors, ListCategoriesResponses, ListConnectionsData, ListConnectionsErrors, ListConnectionsResponses, ListCorrectionLogData, ListCorrectionLogErrors, ListCorrectionLogResponses, ListImportProfilesData, ListImportProfilesErrors, ListImportProfilesResponses, ListImportRowsData, ListImportRowsErrors, ListImportRowsResponses, ListPatsData, ListPatsErrors, ListPatsResponses, ListRulesData, ListRulesErrors, ListRulesResponses, ListSessionsData, ListSessionsErrors, ListSessionsResponses, ListTagsData, ListTagsErrors, ListTagsResponses, ListTransactionsData, ListTransactionsErrors, ListTransactionsResponses, ListTransfersData, ListTransfersErrors, ListTransfersResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutResponses, MeData, MeResponses, PatchTransactionData, PatchTransactionErrors, PatchTransactionResponses, PreviewRuleData, PreviewRuleErrors, PreviewRuleResponses, PutSplitsData, PutSplitsErrors, PutSplitsResponses, RefreshConnectionData, RefreshConnectionErrors, RefreshConnectionResponses, RequestEmailVerificationData, RequestEmailVerificationResponses, RequestPasswordResetData, RequestPasswordResetErrors, RequestPasswordResetResponses, ReviewBatchData, ReviewBatchErrors, ReviewBatchResponses, ReviewTransactionData, ReviewTransactionErrors, ReviewTransactionResponses, RevokePatData, RevokePatErrors, RevokePatResponses, RevokeSessionData, RevokeSessionErrors, RevokeSessionResponses, SignupData, SignupErrors, SignupResponses, UpdateAccountLabelData, UpdateAccountLabelErrors, UpdateAccountLabelResponses, UpdateCategoryData, UpdateCategoryErrors, UpdateCategoryResponses, UpdateMeData, UpdateMeErrors, UpdateMeResponses, UpdateRuleData, UpdateRuleErrors, UpdateRuleResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -89,6 +89,23 @@ export const me = <ThrowOnError extends boolean = false>(options?: Options<MeDat
         }],
     url: '/api/v1/auth/me',
     ...options
+});
+
+/**
+ * UpdateMe
+ */
+export const updateMe = <ThrowOnError extends boolean = false>(options: Options<UpdateMeData, ThrowOnError>): RequestResult<UpdateMeResponses, UpdateMeErrors, ThrowOnError> => (options.client ?? client).patch<UpdateMeResponses, UpdateMeErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }, {
+            in: 'cookie',
+            name: 'pinch_session',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/auth/me',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**
@@ -781,6 +798,19 @@ export const createTransaction = <ThrowOnError extends boolean = false>(options:
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * CountUnreviewedTransactions
+ */
+export const countUnreviewedTransactions = <ThrowOnError extends boolean = false>(options?: Options<CountUnreviewedTransactionsData, ThrowOnError>): RequestResult<CountUnreviewedTransactionsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<CountUnreviewedTransactionsResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }, {
+            in: 'cookie',
+            name: 'pinch_session',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/transactions/unreviewed-count',
+    ...options
 });
 
 /**
