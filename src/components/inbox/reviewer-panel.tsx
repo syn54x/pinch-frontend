@@ -1,10 +1,5 @@
-import type {
-  CategoryOut,
-  CategoryRef,
-  TransactionOut,
-} from '@/api/generated/types.gen'
+import type { CategoryOut, TransactionOut } from '@/api/generated/types.gen'
 import { Button } from '@/components/ui/button'
-import type { InboxPanel } from '@/lib/inbox-reducer'
 import { formatMinorUnits } from '@/lib/money'
 import { type SplitDraftLine, splitStatus } from '@/lib/split-draft'
 import { cn } from '@/lib/utils'
@@ -13,31 +8,20 @@ import { CategoryPill, UncategorizedPill } from './category-pill'
 import { formatDay } from './day-label'
 import { PairCallout } from './pair-callout'
 import { ProvenanceBadge } from './provenance-badge'
+import { type Correction, payeeOf, type ReviewPanel } from './reviewer-model'
 import { SplitEditor } from './split-editor'
 import { TagEditor } from './tag-editor'
 
-// The Inspector (CONTEXT.md): the pane beside the queue where the focused
-// proposal is examined and corrected in place. In the Inbox it carries the
-// review verb. Corrections stage here and ride ONE review call on Accept —
-// there is no separate "save correction" motion (#18). CP3 adds the deep
-// verbs: the split editor (S) and transfer consent (T) — still the same
-// one-shot call; the decision SHAPES are exclusive (a review is a category
-// OR a split document OR a transfer, the API's 422), so staging one clears
-// the others upstream.
+// The ReviewerPanel (s7c): the self-contained body where the focused proposal
+// is examined and corrected in place — one fixed skeleton (identity, category,
+// tags, footer) whose middle content and footer verbs swap per state. Purely
+// presentational: every value and verb arrives via props (from
+// useReviewController), so the Inbox pane and the Dashboard Fix drawer mount the
+// same body. Corrections stage here and ride ONE review call on Accept — no
+// separate "save"; the decision SHAPES are exclusive (category OR split OR
+// transfer, the API's 422), so staging one clears the others upstream.
 
-/** Staged corrections for the focused transaction. An absent field means
- * "the proposal's value" — exactly the review contract's field-present
- * merge. (`category` keeps the full ref so the staged pill can render.) */
-export interface Correction {
-  category?: CategoryRef
-  tags?: string[]
-}
-
-export function payeeOf(txn: TransactionOut): string {
-  return txn.proposal?.display_name ?? txn.display_name ?? txn.description_raw
-}
-
-export function Inspector({
+export function ReviewerPanel({
   txn,
   correction,
   onCorrectionChange,
@@ -62,7 +46,7 @@ export function Inspector({
   txn: TransactionOut
   correction: Correction
   onCorrectionChange: (correction: Correction) => void
-  panel: InboxPanel | null
+  panel: ReviewPanel | null
   onOpenCategory: () => void
   onCloseCategory: () => void
   onAccept: () => void

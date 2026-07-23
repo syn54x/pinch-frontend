@@ -2,8 +2,8 @@ import type { TransactionOut } from '@/api/generated/types.gen'
 import { formatMinorUnits } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { CategoryPill, UncategorizedPill } from './category-pill'
-import { payeeOf } from './inspector'
 import { ProvenanceBadge } from './provenance-badge'
+import { payeeOf } from './reviewer-model'
 
 // One proposal in the queue (wireframe #7): payee over the catpill, then
 // the provenance badge and the amount — tabular, right-aligned, direction-
