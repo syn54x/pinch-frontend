@@ -5,6 +5,7 @@
     "includes": [
       "**",
       "!src/api/generated",
+      "!src/components/charts",
       "!src/routeTree.gen.ts",
       "!openapi.json",
       "!public",
