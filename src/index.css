@@ -18,6 +18,11 @@
     --color-sidebar-primary: var(--sidebar-primary);
     --color-sidebar-foreground: var(--sidebar-foreground);
     --color-sidebar: var(--sidebar);
+    --color-chart-10: var(--chart-10);
+    --color-chart-9: var(--chart-9);
+    --color-chart-8: var(--chart-8);
+    --color-chart-7: var(--chart-7);
+    --color-chart-6: var(--chart-6);
     --color-chart-5: var(--chart-5);
     --color-chart-4: var(--chart-4);
     --color-chart-3: var(--chart-3);
@@ -71,6 +76,21 @@
     --radius-4xl: calc(var(--radius) * 2.6);
     --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
     --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+    /* bklit chart chrome — mapped onto our tokens (see the :root block below).
+       Kept in sync with the vars the vendored charts read via Tailwind classes
+       (text-chart-label, text/bg-chart-tooltip-*) and var() (the rest). */
+    --color-chart-background: var(--chart-background);
+    --color-chart-foreground: var(--chart-foreground);
+    --color-chart-foreground-muted: var(--chart-foreground-muted);
+    --color-chart-grid: var(--chart-grid);
+    --color-chart-crosshair: var(--chart-crosshair);
+    --color-chart-label: var(--chart-label);
+    --color-chart-tooltip-background: var(--chart-tooltip-background);
+    --color-chart-tooltip-foreground: var(--chart-tooltip-foreground);
+    --color-chart-tooltip-muted: var(--chart-tooltip-muted);
+    --color-chart-marker-background: var(--chart-marker-background);
+    --color-chart-marker-border: var(--chart-marker-border);
+    --color-chart-marker-foreground: var(--chart-marker-foreground);
 }
 
 /*
@@ -136,6 +156,11 @@
   --chart-3: var(--cat-3);
   --chart-4: var(--cat-4);
   --chart-5: var(--cat-5);
+  --chart-6: var(--cat-6);
+  --chart-7: var(--cat-7);
+  --chart-8: var(--cat-8);
+  --chart-9: var(--cat-9);
+  --chart-10: var(--cat-10);
   --radius: 0.75rem;
   --sidebar: oklch(0.97 0.003 250);
   --sidebar-foreground: oklch(0.23 0.009 250);
@@ -145,6 +170,32 @@
   --sidebar-accent-foreground: oklch(0.23 0.009 250);
   --sidebar-border: oklch(0 0 0 / 9%);
   --sidebar-ring: oklch(0.27 0.012 250);
+  /* bklit chart chrome — mapped onto our semantic tokens so the graphite/purple
+     asymmetry and the Chrome/Data rule (DESIGN.md) hold: axes, grid, tooltip,
+     markers wear hueless ink (--border / --muted-foreground / --popover); only
+     the --chart-N series slots carry data hue. Re-declared verbatim in .dark
+     (var() bakes at the declaring element, so a single mapping can't retheme). */
+  --chart-background: var(--card);
+  --chart-foreground: var(--foreground);
+  --chart-foreground-muted: var(--muted-foreground);
+  --chart-label: var(--muted-foreground);
+  --chart-grid: var(--border);
+  --chart-crosshair: var(--muted-foreground);
+  --chart-brush-border: var(--border);
+  --chart-line-primary: var(--chart-1);
+  --chart-line-secondary: var(--chart-2);
+  --chart-indicator-color: var(--chart-1);
+  --chart-indicator-secondary-color: var(--chart-2);
+  --chart-tooltip-background: var(--popover);
+  --chart-tooltip-foreground: var(--popover-foreground);
+  --chart-tooltip-muted: var(--muted-foreground);
+  --chart-marker-background: var(--card);
+  --chart-marker-border: var(--border);
+  --chart-marker-foreground: var(--foreground);
+  --chart-marker-badge-background: var(--foreground);
+  --chart-marker-badge-foreground: var(--background);
+  --chart-segment-background: var(--muted);
+  --chart-segment-line: var(--border);
 }
 
 /* Dark: the wireframes' committed Penny-purple theme. Purple-navy canvas,
@@ -197,6 +248,11 @@
   --chart-3: var(--cat-3);
   --chart-4: var(--cat-4);
   --chart-5: var(--cat-5);
+  --chart-6: var(--cat-6);
+  --chart-7: var(--cat-7);
+  --chart-8: var(--cat-8);
+  --chart-9: var(--cat-9);
+  --chart-10: var(--cat-10);
   --sidebar: oklch(0.215 0.053 290);
   --sidebar-foreground: oklch(0.93 0.016 295);
   --sidebar-primary: oklch(0.67 0.175 295);
@@ -205,6 +261,32 @@
   --sidebar-accent-foreground: oklch(0.93 0.016 295);
   --sidebar-border: oklch(0.72 0.108 295 / 15%);
   --sidebar-ring: oklch(0.67 0.175 295);
+  /* Chart chrome, re-declared for dark. A var() inside a custom property is
+     resolved on the DECLARING element and the result inherits, so a single
+     :root mapping would bake the LIGHT tokens into dark. Re-declaring here (same
+     references) re-resolves them against dark --card/--border/--popover/etc.,
+     keeping chart surfaces Penny-purple and chrome hueless. Mirror of :root. */
+  --chart-background: var(--card);
+  --chart-foreground: var(--foreground);
+  --chart-foreground-muted: var(--muted-foreground);
+  --chart-label: var(--muted-foreground);
+  --chart-grid: var(--border);
+  --chart-crosshair: var(--muted-foreground);
+  --chart-brush-border: var(--border);
+  --chart-line-primary: var(--chart-1);
+  --chart-line-secondary: var(--chart-2);
+  --chart-indicator-color: var(--chart-1);
+  --chart-indicator-secondary-color: var(--chart-2);
+  --chart-tooltip-background: var(--popover);
+  --chart-tooltip-foreground: var(--popover-foreground);
+  --chart-tooltip-muted: var(--muted-foreground);
+  --chart-marker-background: var(--card);
+  --chart-marker-border: var(--border);
+  --chart-marker-foreground: var(--foreground);
+  --chart-marker-badge-background: var(--foreground);
+  --chart-marker-badge-foreground: var(--background);
+  --chart-segment-background: var(--muted);
+  --chart-segment-line: var(--border);
 }
 
 /* The Tabular Rule (DESIGN.md): every monetary amount uses this. */
