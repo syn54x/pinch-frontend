@@ -12,27 +12,22 @@ import {
 import { errorDetail } from '@/api/client'
 import {
   countUnreviewedTransactionsOptions,
-  countUnreviewedTransactionsQueryKey,
-  getTransactionOptions,
   listAccountsOptions,
-  listCategoriesOptions,
   listConnectionsOptions,
-  listTagsOptions,
   listTransactionsOptions,
-  listTransactionsQueryKey,
   reviewBatchMutation,
-  reviewTransactionMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
-import type { ReviewIn, TransactionOut } from '@/api/generated/types.gen'
+import type { TransactionOut } from '@/api/generated/types.gen'
 import { dayLabel } from '@/components/inbox/day-label'
-import {
-  type Correction,
-  Inspector,
-  payeeOf,
-} from '@/components/inbox/inspector'
 import { KeyboardLegend } from '@/components/inbox/keyboard-legend'
 import { PairCallout } from '@/components/inbox/pair-callout'
 import { ProposalRow, proposalRowDomId } from '@/components/inbox/proposal-row'
+import { payeeOf } from '@/components/inbox/reviewer-model'
+import { ReviewerPanel } from '@/components/inbox/reviewer-panel'
+import {
+  invalidateReviewData,
+  useReviewController,
+} from '@/components/inbox/use-review-controller'
 import {
   OnboardingWizard,
   onboardingSkippedThisLoad,
@@ -40,12 +35,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { dayGroups, inboxReducer, initialInboxState } from '@/lib/inbox-reducer'
-import {
-  initialSplitDraft,
-  type SplitDraftLine,
-  splitStatus,
-  splitsForReview,
-} from '@/lib/split-draft'
 
 export const Route = createFileRoute('/_authed/inbox')({
   staticData: { title: 'Inbox' },
@@ -60,82 +49,21 @@ const QUEUE_PAGE = 100
 const queueOptions = () =>
   listTransactionsOptions({ query: { reviewed: false, limit: QUEUE_PAGE } })
 
-/** The one-shot review body: null accepts as-is; staged corrections ride
- * the same single call (field-present merge, reviews API). A staged split
- * document is the decision shape and displaces a staged category (the API's
- * exclusivity, 422) — tags still ride along. */
-function reviewBody(
-  correction: Correction,
-  splits: ReviewIn['splits'] | null,
-): ReviewIn | null {
-  if (
-    splits == null &&
-    correction.category === undefined &&
-    correction.tags === undefined
-  ) {
-    return null
-  }
-  const body: ReviewIn = {}
-  if (splits != null) body.splits = splits
-  else if (correction.category !== undefined) {
-    body.category_id = correction.category.id
-  }
-  if (correction.tags !== undefined) body.tags = correction.tags
-  return body
-}
-
-/** Whether this review consumes the detected counterpart too: consenting to
- * the pairing (plain accept or an explicit transfer decision) reviews both
- * sides in one act; any other positive decision (category, splits) is the
- * DECLINE — it reviews one side and withdraws the mirror. */
-function consumesCounterpart(
-  txn: TransactionOut | undefined,
-  body: ReviewIn | null,
-): string | null {
-  const proposal = txn?.proposal
-  if (proposal?.proposed_transfer !== true) return null
-  if (proposal.counterpart_transaction_id == null) return null
-  const consent = body === null || body.transfer != null
-  return consent ? proposal.counterpart_transaction_id : null
-}
-
-// F3 CP2 (#18, wireframe #7): the Inbox's core loop. Proposals grouped by
-// day; accept one (A / the Inspector), a day, or all; correct category and
-// tags before accepting through the same one-shot review call. Selection
-// and keyboard live in the pure inbox reducer — this component dispatches
-// and renders. Liveness is invalidation + refocus, never polling.
+// F3 CP2 (#18, wireframe #7): the Inbox's core loop. Proposals grouped by day;
+// accept one (A / the reviewer), a day, or all; correct category and tags
+// before accepting through the same one-shot review call. Selection and
+// keyboard nav live in the pure inbox reducer; the per-item review orchestration
+// lives in useReviewController (F5 CP1) so the Dashboard Fix drawer can mount the
+// same ReviewerPanel. This page is the shell: the queue, the batch verbs, and
+// the keyboard. Liveness is invalidation + refocus, never polling.
 function InboxPage() {
   const queryClient = useQueryClient()
   const [state, dispatch] = useReducer(inboxReducer, initialInboxState)
-  // Corrections stage against ONE row (keyed by id, so they die the moment
-  // focus moves) and ride the accept call — never a separate save.
-  const [staged, setStaged] = useState<{
-    id: string
-    value: Correction
-  } | null>(null)
-  // The split draft, staged the same way — one document, one row (CP3).
-  const [splitDraft, setSplitDraft] = useState<{
-    id: string
-    lines: SplitDraftLine[]
-  } | null>(null)
-  // What Cancel restores: the draft as it stood when this editing session
-  // opened — null means the session started fresh (cancel un-splits).
-  const [splitBaseline, setSplitBaseline] = useState<SplitDraftLine[] | null>(
-    null,
-  )
   const listboxRef = useRef<HTMLDivElement>(null)
 
   const queue = useQuery(queueOptions())
   // The same cache entry as the nav badge — one number, told once.
   const count = useQuery(countUnreviewedTransactionsOptions())
-  const categories = useQuery({
-    ...listCategoriesOptions({ query: { limit: 100 } }),
-    enabled: state.panel === 'category' || state.panel === 'split',
-  })
-  const tags = useQuery({
-    ...listTagsOptions({ query: { limit: 100 } }),
-    enabled: state.rows.length > 0,
-  })
   // Account labels name the pair callout's other leg (wireframe: "pairs
   // with Ally Savings …"). Loaded once; a ledger has few accounts.
   const accounts = useQuery(listAccountsOptions({}))
@@ -184,23 +112,6 @@ function InboxPage() {
   )
   const focusId = state.focusId
   const focused = focusId !== null ? (byId.get(focusId) ?? null) : null
-  const correction: Correction =
-    staged !== null && staged.id === focusId ? staged.value : {}
-  const focusedSplitLines =
-    splitDraft !== null && splitDraft.id === focusId ? splitDraft.lines : null
-
-  // The detected pair's other leg. Usually it sits in the same unreviewed
-  // list; when the counterpart was already reviewed (the Thursday case — a
-  // proposal only mirrors on unreviewed sides) it is fetched on demand.
-  const counterpartId = focused?.proposal?.counterpart_transaction_id ?? null
-  const counterpartFetch = useQuery({
-    ...getTransactionOptions({ path: { txn_id: counterpartId ?? '' } }),
-    enabled: counterpartId !== null && !byId.has(counterpartId),
-  })
-  const focusedCounterpart =
-    counterpartId !== null
-      ? (byId.get(counterpartId) ?? counterpartFetch.data ?? null)
-      : null
 
   const accountLabels = useMemo(
     () =>
@@ -218,134 +129,36 @@ function InboxPage() {
     return accountLabels.get(counterpart.account_id) ?? payeeOf(counterpart)
   }
 
-  function invalidateReviewData() {
-    // Base keys match every variant (partial key matching), so the
-    // Register's transaction lists re-ask too — a review changes them.
-    queryClient.invalidateQueries({ queryKey: listTransactionsQueryKey() })
-    queryClient.invalidateQueries({
-      queryKey: countUnreviewedTransactionsQueryKey(),
-    })
-  }
-
-  const review = useMutation({
-    ...reviewTransactionMutation(),
-    onSuccess: (_data, variables) => {
-      // Consenting to a detected pair reviews BOTH sides in one act — the
-      // mirror leaves the queue with it (backend consumes at depth 2).
-      const counterpart = consumesCounterpart(
-        byId.get(variables.path.txn_id),
-        variables.body ?? null,
-      )
-      dispatch({
-        type: 'remove',
-        ids:
-          counterpart !== null
-            ? [variables.path.txn_id, counterpart]
-            : [variables.path.txn_id],
-      })
-      invalidateReviewData()
-    },
-    // Reality re-asserts (a 409 means the row is already reviewed).
-    onError: invalidateReviewData,
-  })
+  // Batch review (Accept day / Accept all) is a queue verb — it stays here;
+  // the per-item accept lives in the controller below.
   const reviewMany = useMutation({
     ...reviewBatchMutation(),
     onSuccess: (_data, variables) => {
       dispatch({ type: 'remove', ids: variables.body.ids })
-      invalidateReviewData()
+      invalidateReviewData(queryClient)
     },
-    onError: invalidateReviewData,
+    onError: () => invalidateReviewData(queryClient),
   })
-  const reviewing = review.isPending || reviewMany.isPending
 
-  function acceptFocused() {
-    if (focused === null || reviewing) return
-    let splits: ReviewIn['splits'] | null = null
-    if (focusedSplitLines !== null) {
-      // The lines-vs-total guard: a mismatched document never reaches the
-      // review call — A is inert until the lines balance (the cue says why).
-      if (!splitStatus(focusedSplitLines, focused).valid) return
-      splits = splitsForReview(focusedSplitLines, focused)
-    }
-    review.mutate({
-      path: { txn_id: focused.id },
-      body: reviewBody(correction, splits),
-    })
-  }
-
-  /** T (or the Confirm button): consent to the detected pairing. Accepting
-   * the det proposal as-is IS the consent shape — one empty-body review
-   * consumes both sides. Staged corrections belong to the decline path and
-   * never ride a consent. */
-  function consentTransfer() {
-    if (focused?.proposal?.proposed_transfer !== true || reviewing) return
-    review.mutate({ path: { txn_id: focused.id }, body: null })
-  }
+  const reviewer = useReviewController({
+    txn: focused,
+    queueById: byId,
+    accountLabel: (id) => accountLabels.get(id),
+    externalBusy: reviewMany.isPending,
+    onReviewed: (ids) => dispatch({ type: 'remove', ids }),
+    onReturnFocus: () => listboxRef.current?.focus(),
+  })
+  const reviewing = reviewer.busy
 
   function acceptIds(ids: string[]) {
     if (ids.length === 0 || reviewing) return
     reviewMany.mutate({ body: { ids } })
   }
 
-  function closePanel() {
-    dispatch({ type: 'closePanel' })
-    // Hand the keyboard back to the queue.
-    listboxRef.current?.focus()
-  }
-
-  /** S / Edit split: open the editor, drafting the document on first open.
-   * The split displaces a staged category — decision shapes are exclusive
-   * (the API's 422) — while staged tags survive to ride along. */
-  function openSplit() {
-    if (focused === null) return
-    if (splitDraft === null || splitDraft.id !== focused.id) {
-      setSplitDraft({ id: focused.id, lines: initialSplitDraft(focused) })
-      setSplitBaseline(null)
-      setStaged((prev) =>
-        prev !== null && prev.id === focused.id
-          ? { id: prev.id, value: { tags: prev.value.tags } }
-          : prev,
-      )
-    } else {
-      // Re-opening an already-staged document: Cancel restores this.
-      setSplitBaseline(splitDraft.lines)
-    }
-    dispatch({ type: 'openPanel', panel: 'split' })
-  }
-
-  /** ↩ / Save split: the valid document stays staged; the editor closes
-   * back to the resting summary — Accept sends it. */
-  function saveSplit() {
-    if (focused === null || focusedSplitLines === null) return
-    if (!splitStatus(focusedSplitLines, focused).valid) return
-    closePanel()
-  }
-
-  /** Escape / Cancel: discard this editing session's changes — back to the
-   * document as it stood on open, or to unsplit for a fresh session. */
-  function cancelSplit() {
-    setSplitDraft((prev) => {
-      if (prev === null || prev.id !== focusId) return prev
-      return splitBaseline === null
-        ? null
-        : { id: prev.id, lines: splitBaseline }
-    })
-    closePanel()
-  }
-
-  /** Merge back (wireframe): the draft collapses to the single unsplit
-   * line — a wrong split is reversible in place, nothing was sent. Also
-   * where ✕ lands when it removes the last split line. */
-  function mergeBack() {
-    setSplitDraft((prev) =>
-      prev !== null && prev.id === focusId ? null : prev,
-    )
-    closePanel()
-  }
-
   // The keyboard verbs, window-level so the loop works without hunting for
   // focus first. Typing surfaces (the picker's filter, the tag input) are
-  // exempt — keys there are text, not verbs.
+  // exempt — keys there are text, not verbs. Queue nav (J/K/⇧A) lives here;
+  // the per-item verbs delegate to the controller.
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.defaultPrevented) return
@@ -364,35 +177,34 @@ function InboxPage() {
           dispatch({ type: 'focusPrev' })
           break
         case 'a':
-          acceptFocused()
+          reviewer.accept()
           break
         case 'A':
           acceptIds(state.rows.map((row) => row.id))
           break
         case 'c':
         case 'C':
-          if (state.panel === 'category') closePanel()
-          else dispatch({ type: 'openPanel', panel: 'category' })
+          reviewer.toggleCategory()
           break
         case 's':
         case 'S':
           // While editing, the mode's own verbs exit (↩ save, Esc cancel).
-          if (state.panel !== 'split') openSplit()
+          if (reviewer.panel !== 'split') reviewer.openSplit()
           break
         case 'Enter':
-          if (state.panel === 'split') saveSplit()
+          if (reviewer.panel === 'split') reviewer.saveSplit()
           else return
           break
         case 't':
         case 'T':
           // Consent only exists where a pairing was detected — T is not a
           // dead verb elsewhere, it simply isn't one.
-          if (focused?.proposal?.proposed_transfer !== true) return
-          consentTransfer()
+          if (!reviewer.canConsentTransfer) return
+          reviewer.consentTransfer()
           break
         case 'Escape':
-          if (state.panel === 'split') cancelSplit()
-          else if (state.panel !== null) closePanel()
+          if (reviewer.panel === 'split') reviewer.cancelSplit()
+          else if (reviewer.panel !== null) reviewer.closeCategory()
           else return
           break
         default:
@@ -459,14 +271,15 @@ function InboxPage() {
   if (visible.length === 0) return <InboxZero showConnect={emptyLedger} />
 
   const groups = dayGroups(visible)
-  const reviewError = review.isError
-    ? { error: review.error, retry: () => acceptFocused() }
-    : reviewMany.isError
-      ? {
-          error: reviewMany.error,
-          retry: () => acceptIds(state.rows.map((row) => row.id)),
-        }
-      : null
+  const reviewError =
+    reviewer.reviewError !== null
+      ? { error: reviewer.reviewError, retry: () => reviewer.accept() }
+      : reviewMany.isError
+        ? {
+            error: reviewMany.error,
+            retry: () => acceptIds(state.rows.map((row) => row.id)),
+          }
+        : null
 
   return (
     <div className="flex h-full flex-col gap-3">
@@ -556,44 +369,27 @@ function InboxPage() {
           <KeyboardLegend />
         </div>
         {focused !== null && (
-          <Inspector
+          <ReviewerPanel
             txn={focused}
-            correction={correction}
-            onCorrectionChange={(value) => {
-              setStaged({ id: focused.id, value })
-              // A staged category displaces a staged split — exclusive
-              // decision shapes, the same law openSplit applies in reverse.
-              if (value.category !== undefined) {
-                setSplitDraft((prev) =>
-                  prev !== null && prev.id === focused.id ? null : prev,
-                )
-              }
-            }}
-            panel={state.panel}
-            onOpenCategory={() =>
-              dispatch({ type: 'openPanel', panel: 'category' })
-            }
-            onCloseCategory={closePanel}
-            onAccept={acceptFocused}
+            correction={reviewer.correction}
+            onCorrectionChange={reviewer.setCorrection}
+            panel={reviewer.panel}
+            onOpenCategory={reviewer.openCategory}
+            onCloseCategory={reviewer.closeCategory}
+            onAccept={reviewer.accept}
             accepting={reviewing}
-            categories={categories.data?.items ?? []}
-            categoriesPending={categories.isPending}
-            tagSuggestions={tags.data?.items.map((tag) => tag.name) ?? []}
-            splitLines={focusedSplitLines}
-            onSplitLinesChange={(lines) =>
-              setSplitDraft({ id: focused.id, lines })
-            }
-            onOpenSplit={openSplit}
-            onMergeBack={mergeBack}
-            onSaveSplit={saveSplit}
-            onCancelSplit={cancelSplit}
-            counterpart={focusedCounterpart}
-            counterpartLabel={
-              focusedCounterpart !== null
-                ? counterpartLabelFor(focusedCounterpart)
-                : null
-            }
-            onConfirmTransfer={consentTransfer}
+            categories={reviewer.categories}
+            categoriesPending={reviewer.categoriesPending}
+            tagSuggestions={reviewer.tagSuggestions}
+            splitLines={reviewer.splitLines}
+            onSplitLinesChange={reviewer.setSplitLines}
+            onOpenSplit={reviewer.openSplit}
+            onMergeBack={reviewer.mergeBack}
+            onSaveSplit={reviewer.saveSplit}
+            onCancelSplit={reviewer.cancelSplit}
+            counterpart={reviewer.counterpart}
+            counterpartLabel={reviewer.counterpartLabel}
+            onConfirmTransfer={reviewer.consentTransfer}
           />
         )}
       </div>

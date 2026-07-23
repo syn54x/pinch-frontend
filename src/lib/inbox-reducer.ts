@@ -1,12 +1,12 @@
 // The Inbox's selection/keyboard model as pure state (F3 CP2, wireframe #7):
-// row focus, day-grouped traversal, and the open correction panel. The DOM
-// layer only dispatches and renders — every transition is testable here
-// without a browser.
+// row focus and day-grouped traversal. The DOM layer only dispatches and
+// renders — every transition is testable here without a browser.
 //
 // Rows arrive in the server's visual order (newest-first; day groups derive
 // from `date`), and traversal is flat: J/K walk rows straight across group
-// boundaries. CP3 widened `InboxPanel` with the deep verbs (S split,
-// T transfer) — exactly the seam CP2 left; no other shape changed.
+// boundaries. The open correction panel is NOT here — it moved into
+// useReviewController (F5 CP1), so any reviewer host (Inbox pane, Dashboard
+// drawer) owns its own panel while this queue model stays host-agnostic.
 
 export interface InboxRow {
   id: string
@@ -14,16 +14,11 @@ export interface InboxRow {
   date: string
 }
 
-/** Which correction affordance is open in the Inspector: the category
- * picker (C), the split editor (S), or the transfer consent (T). */
-export type InboxPanel = 'category' | 'split' | 'transfer'
-
 export interface InboxState {
   rows: InboxRow[]
   /** The focused row id — a virtual focus the DOM mirrors (the listbox's
    * aria-activedescendant), never a second source of truth. */
   focusId: string | null
-  panel: InboxPanel | null
 }
 
 export type InboxAction =
@@ -38,14 +33,10 @@ export type InboxAction =
   /** Reviews landed: rows leave immediately (progress is felt before the
    * refetch), and a removed focus advances to its nearest survivor. */
   | { type: 'remove'; ids: string[] }
-  /** C / S / T — open a correction panel on the focused row. */
-  | { type: 'openPanel'; panel: InboxPanel }
-  | { type: 'closePanel' }
 
 export const initialInboxState: InboxState = {
   rows: [],
   focusId: null,
-  panel: null,
 }
 
 /** Where focus lands when its row leaves: the nearest survivor at-or-after
@@ -71,14 +62,10 @@ function resolveFocus(
   return nextRows[0].id
 }
 
-/** A focus move (or loss) closes any open panel — a correction targets one
- * row; it never silently retargets another. */
 function withRows(state: InboxState, nextRows: InboxRow[]): InboxState {
-  const focusId = resolveFocus(state.rows, nextRows, state.focusId)
   return {
     rows: nextRows,
-    focusId,
-    panel: focusId === state.focusId ? state.panel : null,
+    focusId: resolveFocus(state.rows, nextRows, state.focusId),
   }
 }
 
@@ -99,7 +86,7 @@ export function inboxReducer(
     case 'focus': {
       if (!state.rows.some((row) => row.id === action.id)) return state
       if (action.id === state.focusId) return state
-      return { ...state, focusId: action.id, panel: null }
+      return { ...state, focusId: action.id }
     }
     case 'focusNext':
     case 'focusPrev': {
@@ -108,14 +95,8 @@ export function inboxReducer(
       const next = action.type === 'focusNext' ? index + 1 : index - 1
       // Clamped, not wrapped: J at the last row (and K at the first) stays.
       if (index === -1 || next < 0 || next >= state.rows.length) return state
-      return { ...state, focusId: state.rows[next].id, panel: null }
+      return { ...state, focusId: state.rows[next].id }
     }
-    case 'openPanel':
-      if (state.focusId === null) return state
-      return { ...state, panel: action.panel }
-    case 'closePanel':
-      if (state.panel === null) return state
-      return { ...state, panel: null }
   }
 }
 
