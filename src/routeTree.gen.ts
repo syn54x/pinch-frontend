@@ -18,6 +18,7 @@ import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AuthedAccountsRouteImport } from './routes/_authed/accounts'
 import { Route as AuthedConnectionsRouteImport } from './routes/_authed/connections'
 import { Route as AuthedInboxRouteImport } from './routes/_authed/inbox'
+import { Route as AuthedNetWorthRouteImport } from './routes/_authed/net-worth'
 import { Route as AuthedRegisterRouteImport } from './routes/_authed/register'
 import { Route as ConnectOauthReturnRouteImport } from './routes/connect.oauth-return'
 
@@ -65,6 +66,11 @@ const AuthedInboxRoute = AuthedInboxRouteImport.update({
   path: '/inbox',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedNetWorthRoute = AuthedNetWorthRouteImport.update({
+  id: '/net-worth',
+  path: '/net-worth',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedRegisterRoute = AuthedRegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/accounts': typeof AuthedAccountsRoute
   '/connections': typeof AuthedConnectionsRoute
   '/inbox': typeof AuthedInboxRoute
+  '/net-worth': typeof AuthedNetWorthRoute
   '/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
 }
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/accounts': typeof AuthedAccountsRoute
   '/connections': typeof AuthedConnectionsRoute
   '/inbox': typeof AuthedInboxRoute
+  '/net-worth': typeof AuthedNetWorthRoute
   '/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
 }
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/_authed/accounts': typeof AuthedAccountsRoute
   '/_authed/connections': typeof AuthedConnectionsRoute
   '/_authed/inbox': typeof AuthedInboxRoute
+  '/_authed/net-worth': typeof AuthedNetWorthRoute
   '/_authed/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
 }
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/connections'
     | '/inbox'
+    | '/net-worth'
     | '/register'
     | '/connect/oauth-return'
   fileRoutesByTo: FileRoutesByTo
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/connections'
     | '/inbox'
+    | '/net-worth'
     | '/register'
     | '/connect/oauth-return'
   id:
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/_authed/accounts'
     | '/_authed/connections'
     | '/_authed/inbox'
+    | '/_authed/net-worth'
     | '/_authed/register'
     | '/connect/oauth-return'
   fileRoutesById: FileRoutesById
@@ -229,6 +241,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedInboxRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/net-worth': {
+      id: '/_authed/net-worth'
+      path: '/net-worth'
+      fullPath: '/net-worth'
+      preLoaderRoute: typeof AuthedNetWorthRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/register': {
       id: '/_authed/register'
       path: '/register'
@@ -250,6 +269,7 @@ interface AuthedRouteChildren {
   AuthedAccountsRoute: typeof AuthedAccountsRoute
   AuthedConnectionsRoute: typeof AuthedConnectionsRoute
   AuthedInboxRoute: typeof AuthedInboxRoute
+  AuthedNetWorthRoute: typeof AuthedNetWorthRoute
   AuthedRegisterRoute: typeof AuthedRegisterRoute
 }
 
@@ -257,6 +277,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAccountsRoute: AuthedAccountsRoute,
   AuthedConnectionsRoute: AuthedConnectionsRoute,
   AuthedInboxRoute: AuthedInboxRoute,
+  AuthedNetWorthRoute: AuthedNetWorthRoute,
   AuthedRegisterRoute: AuthedRegisterRoute,
 }
 
