@@ -35,7 +35,7 @@ test('logged out, / funnels through login and still lands in the Inbox', async (
   await expect(page).toHaveURL(/\/inbox$/)
 })
 
-test('the nav is exactly Inbox, Register, Accounts, Setup → Connections — no Penny, no ⌘K', async ({
+test('the nav is exactly Inbox, Register, Net Worth, Accounts, Setup → Connections — no Penny, no ⌘K', async ({
   page,
 }) => {
   const email = uniqueEmail('shell-lean')
@@ -43,11 +43,12 @@ test('the nav is exactly Inbox, Register, Accounts, Setup → Connections — no
   await loginViaUi(page, email, PASSWORD)
   await expect(page).toHaveURL(/\/accounts$/)
 
-  // Exactly these four destinations, in wireframe order — no disabled items,
+  // Exactly these destinations, in wireframe order — no disabled items,
   // no stubs.
   await expect(primaryNav(page).getByRole('link')).toHaveText([
     'Inbox',
     'Register',
+    'Net Worth',
     'Accounts',
     'Connections',
   ])
@@ -113,6 +114,10 @@ test('the nav is keyboard traversable with visible focus', async ({ page }) => {
   await page.keyboard.press('Tab')
   await expect(
     primaryNav(page).getByRole('link', { name: 'Register' }),
+  ).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(
+    primaryNav(page).getByRole('link', { name: 'Net Worth' }),
   ).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(
