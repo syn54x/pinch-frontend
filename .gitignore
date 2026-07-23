@@ -29,3 +29,9 @@ playwright-report/
 
 # CI backend checkout (cross-repo e2e)
 /pinch-backend/
+
+# Local agent & editor tooling (not shared)
+.claude/
+.cursor/
+.github/hooks/
+.github/skills/
