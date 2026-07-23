@@ -1106,7 +1106,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/AccountLabelIn"
+                                "$ref": "#/components/schemas/AccountPatchIn"
                             }
                         }
                     },
@@ -1374,6 +1374,113 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/BalanceEntryOut"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/v1/accounts/{account_id}/payoff": {
+            "get": {
+                "summary": "GetPayoff",
+                "operationId": "get_payoff",
+                "parameters": [
+                    {
+                        "name": "account_id",
+                        "in": "path",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true,
+                        "deprecated": false
+                    },
+                    {
+                        "name": "extra_monthly",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    },
+                    {
+                        "name": "as_of",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PayoffOut"
                                 }
                             }
                         }
@@ -3007,6 +3114,26 @@
                 "deprecated": false
             }
         },
+        "/api/v1/ledgers/current/stats": {
+            "get": {
+                "summary": "LedgerStats",
+                "operationId": "ledger_stats",
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LedgerStatsOut"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
         "/api/v1/rules": {
             "get": {
                 "summary": "ListRules",
@@ -4340,6 +4467,681 @@
                 "deprecated": false
             }
         },
+        "/api/v1/recurring": {
+            "get": {
+                "summary": "ListRecurring",
+                "operationId": "list_recurring",
+                "parameters": [
+                    {
+                        "name": "kind",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "$ref": "#/components/schemas/RecurringKind"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    },
+                    {
+                        "name": "unpaid",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    },
+                    {
+                        "name": "as_of",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Opaque page position from a previous `next_cursor`."
+                        },
+                        "description": "Opaque page position from a previous `next_cursor`.",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100.0,
+                            "minimum": 1.0,
+                            "description": "Page size, 1-100.",
+                            "default": 50
+                        },
+                        "description": "Page size, 1-100.",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Page_RecurringSeriesOut_"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/v1/recurring/{series_id}": {
+            "patch": {
+                "summary": "UpdateRecurring",
+                "operationId": "update_recurring",
+                "parameters": [
+                    {
+                        "name": "series_id",
+                        "in": "path",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true,
+                        "deprecated": false
+                    },
+                    {
+                        "name": "as_of",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RecurringPatchIn"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RecurringSeriesOut"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/v1/recurring/{series_id}/dismiss": {
+            "post": {
+                "summary": "DismissRecurring",
+                "operationId": "dismiss_recurring",
+                "parameters": [
+                    {
+                        "name": "series_id",
+                        "in": "path",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true,
+                        "deprecated": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/v1/reports/net-worth": {
+            "get": {
+                "summary": "NetWorthReport",
+                "operationId": "net_worth_report",
+                "parameters": [
+                    {
+                        "name": "range",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "1m",
+                                "6m",
+                                "1y",
+                                "all"
+                            ],
+                            "default": "6m"
+                        },
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    },
+                    {
+                        "name": "as_of",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NetWorthOut"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/v1/reports/spending": {
+            "get": {
+                "summary": "SpendingReport",
+                "operationId": "spending_report",
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    },
+                    {
+                        "name": "as_of",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SpendingOut"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/v1/reports/debt": {
+            "get": {
+                "summary": "DebtReport",
+                "operationId": "debt_report",
+                "parameters": [
+                    {
+                        "name": "as_of",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DebtOut"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/v1/reports/recurring": {
+            "get": {
+                "summary": "RecurringReport",
+                "operationId": "recurring_report",
+                "parameters": [
+                    {
+                        "name": "as_of",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RecurringSummaryOut"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
         "/api/v1/transfers": {
             "get": {
                 "summary": "ListTransfers",
@@ -4779,20 +5581,6 @@
                 ],
                 "title": "AccountKind"
             },
-            "AccountLabelIn": {
-                "properties": {
-                    "label": {
-                        "type": "string",
-                        "maxLength": 100,
-                        "minLength": 1
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "label"
-                ],
-                "title": "AccountLabelIn"
-            },
             "AccountOut": {
                 "properties": {
                     "id": {
@@ -4834,6 +5622,16 @@
                             }
                         ]
                     },
+                    "terms": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/TermsOut"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
                     "created_at": {
                         "type": "string",
                         "format": "date-time"
@@ -4849,9 +5647,137 @@
                     "kind",
                     "label",
                     "manual",
-                    "mask"
+                    "mask",
+                    "terms"
                 ],
                 "title": "AccountOut"
+            },
+            "AccountPatchIn": {
+                "properties": {
+                    "label": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "maxLength": 100,
+                        "minLength": 1
+                    },
+                    "apr": {
+                        "oneOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "maximum": 100,
+                        "description": "A percentage: 4.9 means 4.9%."
+                    },
+                    "minimum_payment_minor": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "origination_date": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "origination_amount_minor": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Account-signed like every amount: the loan's opening balance,\nnegative."
+                    },
+                    "maturity_date": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [],
+                "title": "AccountPatchIn"
+            },
+            "AccountReportOut": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/AccountKind"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "balance_minor": {
+                        "type": "integer"
+                    },
+                    "series": {
+                        "items": {
+                            "$ref": "#/components/schemas/AccountSeriesPoint"
+                        },
+                        "type": "array"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "balance_minor",
+                    "currency",
+                    "id",
+                    "kind",
+                    "label",
+                    "series"
+                ],
+                "title": "AccountReportOut"
+            },
+            "AccountSeriesPoint": {
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "balance_minor": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "balance_minor",
+                    "date"
+                ],
+                "title": "AccountSeriesPoint"
             },
             "BalanceEntryCreateIn": {
                 "properties": {
@@ -4941,6 +5867,29 @@
                     "provider"
                 ],
                 "title": "BalanceSource"
+            },
+            "BucketSlice": {
+                "properties": {
+                    "bucket": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "monthly_minor": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "bucket",
+                    "monthly_minor"
+                ],
+                "title": "BucketSlice"
             },
             "CategoryCreateIn": {
                 "properties": {
@@ -5039,6 +5988,72 @@
                     "name"
                 ],
                 "title": "CategoryRef"
+            },
+            "CategorySpendingRow": {
+                "properties": {
+                    "category_id": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "name": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "parent_id": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "direct_minor": {
+                        "type": "integer"
+                    },
+                    "rolled_up_minor": {
+                        "type": "integer"
+                    },
+                    "previous_minor": {
+                        "type": "integer"
+                    },
+                    "percent_change": {
+                        "oneOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "category_id",
+                    "direct_minor",
+                    "name",
+                    "parent_id",
+                    "percent_change",
+                    "previous_minor",
+                    "rolled_up_minor"
+                ],
+                "title": "CategorySpendingRow"
             },
             "CategoryUpdateIn": {
                 "properties": {
@@ -5460,6 +6475,333 @@
                 ],
                 "title": "CorrectionLogEntryOut"
             },
+            "CycleCard": {
+                "properties": {
+                    "paid": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "paid",
+                    "total"
+                ],
+                "title": "CycleCard"
+            },
+            "CycleStateOut": {
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "paid",
+                            "due",
+                            "overdue",
+                            "upcoming",
+                            "lapsed"
+                        ]
+                    },
+                    "last_paid_date": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "next_due_date": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "due_in_days": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "fixed": {
+                        "type": "boolean"
+                    },
+                    "est_amount_minor": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "monthly_minor": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "due_in_days",
+                    "est_amount_minor",
+                    "fixed",
+                    "last_paid_date",
+                    "monthly_minor",
+                    "next_due_date",
+                    "status"
+                ],
+                "title": "CycleStateOut"
+            },
+            "DaySpending": {
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "total_minor": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "date",
+                    "total_minor"
+                ],
+                "title": "DaySpending"
+            },
+            "DebtLoanRow": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/AccountKind"
+                    },
+                    "apr": {
+                        "oneOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "balance_minor": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "minimum_payment_minor": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "pace_payment_minor": {
+                        "type": "integer"
+                    },
+                    "payoff_percent": {
+                        "oneOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "payoff_date": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "apr",
+                    "balance_minor",
+                    "id",
+                    "kind",
+                    "label",
+                    "minimum_payment_minor",
+                    "pace_payment_minor",
+                    "payoff_date",
+                    "payoff_percent"
+                ],
+                "title": "DebtLoanRow"
+            },
+            "DebtOut": {
+                "properties": {
+                    "as_of": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "total_debt_minor": {
+                        "type": "integer"
+                    },
+                    "loan_count": {
+                        "type": "integer"
+                    },
+                    "monthly_minimums_minor": {
+                        "type": "integer"
+                    },
+                    "minimums_excluded_count": {
+                        "type": "integer"
+                    },
+                    "weighted_apr": {
+                        "oneOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "apr_excluded_count": {
+                        "type": "integer"
+                    },
+                    "debt_free_by": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "debt_free_excluded_count": {
+                        "type": "integer"
+                    },
+                    "loans": {
+                        "items": {
+                            "$ref": "#/components/schemas/DebtLoanRow"
+                        },
+                        "type": "array"
+                    },
+                    "excluded": {
+                        "items": {
+                            "$ref": "#/components/schemas/ExcludedBalance"
+                        },
+                        "type": "array"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "apr_excluded_count",
+                    "as_of",
+                    "currency",
+                    "debt_free_by",
+                    "debt_free_excluded_count",
+                    "excluded",
+                    "loan_count",
+                    "loans",
+                    "minimums_excluded_count",
+                    "monthly_minimums_minor",
+                    "total_debt_minor",
+                    "weighted_apr"
+                ],
+                "title": "DebtOut"
+            },
+            "Delta": {
+                "properties": {
+                    "delta_minor": {
+                        "type": "integer"
+                    },
+                    "percent": {
+                        "oneOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "delta_minor",
+                    "percent"
+                ],
+                "title": "Delta"
+            },
+            "ExcludedBalance": {
+                "properties": {
+                    "currency": {
+                        "type": "string"
+                    },
+                    "balance_minor": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "balance_minor",
+                    "currency"
+                ],
+                "title": "ExcludedBalance"
+            },
+            "ExcludedSpending": {
+                "properties": {
+                    "currency": {
+                        "type": "string"
+                    },
+                    "total_minor": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "currency",
+                    "total_minor"
+                ],
+                "title": "ExcludedSpending"
+            },
             "ImportOut": {
                 "properties": {
                     "id": {
@@ -5693,6 +7035,56 @@
                 ],
                 "title": "ImportUploadIn"
             },
+            "LedgerStatsOut": {
+                "properties": {
+                    "transactions_total": {
+                        "type": "integer"
+                    },
+                    "classified": {
+                        "type": "integer"
+                    },
+                    "unreviewed": {
+                        "type": "integer"
+                    },
+                    "unreviewed_by_provenance": {
+                        "additionalProperties": {
+                            "type": "integer"
+                        },
+                        "type": "object"
+                    },
+                    "recurring_found": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "last_synced_at": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "classified",
+                    "last_synced_at",
+                    "recurring_found",
+                    "transactions_total",
+                    "unreviewed",
+                    "unreviewed_by_provenance"
+                ],
+                "title": "LedgerStatsOut"
+            },
             "LinkTokenIn": {
                 "properties": {
                     "connection_id": {
@@ -5831,6 +7223,89 @@
                     "primary_currency"
                 ],
                 "title": "MePatchIn"
+            },
+            "NetWorthOut": {
+                "properties": {
+                    "as_of": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "range": {
+                        "type": "string",
+                        "enum": [
+                            "1m",
+                            "6m",
+                            "1y",
+                            "all"
+                        ]
+                    },
+                    "granularity": {
+                        "type": "string"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "net_worth_minor": {
+                        "type": "integer"
+                    },
+                    "assets_minor": {
+                        "type": "integer"
+                    },
+                    "liabilities_minor": {
+                        "type": "integer"
+                    },
+                    "month_to_date": {
+                        "$ref": "#/components/schemas/Delta"
+                    },
+                    "since_range_start": {
+                        "$ref": "#/components/schemas/Delta"
+                    },
+                    "series": {
+                        "items": {
+                            "$ref": "#/components/schemas/SeriesPoint"
+                        },
+                        "type": "array"
+                    },
+                    "projection": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/Projection"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "accounts": {
+                        "items": {
+                            "$ref": "#/components/schemas/AccountReportOut"
+                        },
+                        "type": "array"
+                    },
+                    "excluded": {
+                        "items": {
+                            "$ref": "#/components/schemas/ExcludedBalance"
+                        },
+                        "type": "array"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "accounts",
+                    "as_of",
+                    "assets_minor",
+                    "currency",
+                    "excluded",
+                    "granularity",
+                    "liabilities_minor",
+                    "month_to_date",
+                    "net_worth_minor",
+                    "projection",
+                    "range",
+                    "series",
+                    "since_range_start"
+                ],
+                "title": "NetWorthOut"
             },
             "Page_AccountOut_": {
                 "properties": {
@@ -6039,6 +7514,32 @@
                     "next_cursor"
                 ],
                 "title": "Page[PatOut]"
+            },
+            "Page_RecurringSeriesOut_": {
+                "properties": {
+                    "items": {
+                        "items": {
+                            "$ref": "#/components/schemas/RecurringSeriesOut"
+                        },
+                        "type": "array"
+                    },
+                    "next_cursor": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "items",
+                    "next_cursor"
+                ],
+                "title": "Page[RecurringSeriesOut]"
             },
             "Page_RuleOut_": {
                 "properties": {
@@ -6329,6 +7830,220 @@
                 "title": "PatScope",
                 "description": "v0 scopes, exactly two (PRD M3): a rank, not a set — write implies\nread, so one column holds the whole truth and a guard check is a single\ncomparison. Per-resource scopes later are new machinery, not new values\nhere (deliberately deferred in #8)."
             },
+            "PayoffHeadline": {
+                "properties": {
+                    "months_earlier": {
+                        "type": "integer"
+                    },
+                    "interest_saved_minor": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "interest_saved_minor",
+                    "months_earlier"
+                ],
+                "title": "PayoffHeadline"
+            },
+            "PayoffOut": {
+                "properties": {
+                    "account_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "as_of": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "balance_minor": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "apr": {
+                        "oneOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "minimum_payment_minor": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "pace_payment_minor": {
+                        "type": "integer"
+                    },
+                    "payoff_percent": {
+                        "oneOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "projections": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PayoffProjections"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "scenario": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PayoffScenario"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "account_id",
+                    "apr",
+                    "as_of",
+                    "balance_minor",
+                    "currency",
+                    "minimum_payment_minor",
+                    "pace_payment_minor",
+                    "payoff_percent",
+                    "projections",
+                    "scenario"
+                ],
+                "title": "PayoffOut"
+            },
+            "PayoffPoint": {
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "balance_minor": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "balance_minor",
+                    "date"
+                ],
+                "title": "PayoffPoint"
+            },
+            "PayoffProjections": {
+                "properties": {
+                    "at_pace": {
+                        "$ref": "#/components/schemas/SimulationOut"
+                    },
+                    "at_minimum": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/SimulationOut"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "headline": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PayoffHeadline"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "at_minimum",
+                    "at_pace",
+                    "headline"
+                ],
+                "title": "PayoffProjections"
+            },
+            "PayoffScenario": {
+                "properties": {
+                    "extra_monthly_minor": {
+                        "type": "integer"
+                    },
+                    "months_sooner": {
+                        "type": "integer"
+                    },
+                    "interest_saved_minor": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "extra_monthly_minor",
+                    "interest_saved_minor",
+                    "months_sooner"
+                ],
+                "title": "PayoffScenario"
+            },
+            "PreviousMonth": {
+                "properties": {
+                    "month": {
+                        "type": "string"
+                    },
+                    "total_minor": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "month",
+                    "total_minor"
+                ],
+                "title": "PreviousMonth"
+            },
+            "Projection": {
+                "properties": {
+                    "series": {
+                        "items": {
+                            "$ref": "#/components/schemas/SeriesPoint"
+                        },
+                        "type": "array"
+                    },
+                    "endpoint": {
+                        "$ref": "#/components/schemas/SeriesPoint"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "endpoint",
+                    "series"
+                ],
+                "title": "Projection"
+            },
             "ProposalOut": {
                 "properties": {
                     "category": {
@@ -6396,6 +8111,178 @@
                 ],
                 "title": "ProposalProvenance",
                 "description": "Who decided the proposal (PRD M5 D11/D13; M7 #31): a rule, exact\npayee history, the AI classifier (unreachable until M9's Penny — v0\ndeterministically abstains), the transfer detector (M7 CP4 — it matched\na counterpart transaction), or nobody (the empty proposal). Contributing\nrules for tags/rename ride in provenance_detail regardless."
+            },
+            "RecurringCadence": {
+                "type": "string",
+                "enum": [
+                    "weekly",
+                    "biweekly",
+                    "monthly",
+                    "quarterly",
+                    "yearly"
+                ],
+                "title": "RecurringCadence",
+                "description": "How often a recurring series recurs (PRD M8 #45, CP3)."
+            },
+            "RecurringKind": {
+                "type": "string",
+                "enum": [
+                    "bill",
+                    "subscription",
+                    "income"
+                ],
+                "title": "RecurringKind",
+                "description": "The Recurring screen's segments. Income is sign-inferred and never\nuser-flippable; bill vs subscription is taste, so it is the user's."
+            },
+            "RecurringPatchIn": {
+                "properties": {
+                    "kind": {
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "enum": [
+                            "bill",
+                            "subscription",
+                            null
+                        ]
+                    },
+                    "display_name": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "maxLength": 100,
+                        "minLength": 1
+                    }
+                },
+                "type": "object",
+                "required": [],
+                "title": "RecurringPatchIn"
+            },
+            "RecurringSeriesOut": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "account_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "payee": {
+                        "type": "string"
+                    },
+                    "direction": {
+                        "type": "integer"
+                    },
+                    "amount_minor": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "cadence": {
+                        "$ref": "#/components/schemas/RecurringCadence"
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/RecurringKind"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/RecurringStatus"
+                    },
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "bucket": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "state": {
+                        "$ref": "#/components/schemas/CycleStateOut"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "account_id",
+                    "amount_minor",
+                    "bucket",
+                    "cadence",
+                    "direction",
+                    "display_name",
+                    "id",
+                    "kind",
+                    "payee",
+                    "state",
+                    "status"
+                ],
+                "title": "RecurringSeriesOut"
+            },
+            "RecurringStatus": {
+                "type": "string",
+                "enum": [
+                    "active",
+                    "dismissed"
+                ],
+                "title": "RecurringStatus",
+                "description": "Dismissed is the user's verdict and permanent (the rejection-memory\nanalog). Lapse — the data's verdict — is computed at read time, never\nstored."
+            },
+            "RecurringSummaryOut": {
+                "properties": {
+                    "as_of": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "monthly_recurring_minor": {
+                        "type": "integer"
+                    },
+                    "due_next_7_days_minor": {
+                        "type": "integer"
+                    },
+                    "due_next_7_days": {
+                        "items": {
+                            "$ref": "#/components/schemas/UpcomingBill"
+                        },
+                        "type": "array"
+                    },
+                    "subscriptions": {
+                        "$ref": "#/components/schemas/SubscriptionsCard"
+                    },
+                    "by_bucket": {
+                        "items": {
+                            "$ref": "#/components/schemas/BucketSlice"
+                        },
+                        "type": "array"
+                    },
+                    "cycle": {
+                        "$ref": "#/components/schemas/CycleCard"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "as_of",
+                    "by_bucket",
+                    "cycle",
+                    "due_next_7_days",
+                    "due_next_7_days_minor",
+                    "monthly_recurring_minor",
+                    "subscriptions"
+                ],
+                "title": "RecurringSummaryOut"
             },
             "ReviewBatchIn": {
                 "properties": {
@@ -6776,6 +8663,23 @@
                 "title": "RuleStatus",
                 "description": "Only ACTIVE rules are law (evaluated by the pipeline). PROPOSED and\nDISMISSED exist for CP4's promotion: a proposed rule awaits consent, a\ndismissed one is a tombstone that prevents eternal re-proposal."
             },
+            "SeriesPoint": {
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "net_worth_minor": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "date",
+                    "net_worth_minor"
+                ],
+                "title": "SeriesPoint"
+            },
             "SessionOut": {
                 "properties": {
                     "id": {
@@ -6848,6 +8752,108 @@
                     "password"
                 ],
                 "title": "SignupRequest"
+            },
+            "SimulationOut": {
+                "properties": {
+                    "never_pays_off": {
+                        "type": "boolean"
+                    },
+                    "months": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "payoff_date": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "total_interest_minor": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "series": {
+                        "items": {
+                            "$ref": "#/components/schemas/PayoffPoint"
+                        },
+                        "type": "array"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "months",
+                    "never_pays_off",
+                    "payoff_date",
+                    "series",
+                    "total_interest_minor"
+                ],
+                "title": "SimulationOut"
+            },
+            "SpendingOut": {
+                "properties": {
+                    "month": {
+                        "type": "string"
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "total_minor": {
+                        "type": "integer"
+                    },
+                    "by_day": {
+                        "items": {
+                            "$ref": "#/components/schemas/DaySpending"
+                        },
+                        "type": "array"
+                    },
+                    "by_category": {
+                        "items": {
+                            "$ref": "#/components/schemas/CategorySpendingRow"
+                        },
+                        "type": "array"
+                    },
+                    "previous": {
+                        "$ref": "#/components/schemas/PreviousMonth"
+                    },
+                    "change": {
+                        "$ref": "#/components/schemas/Delta"
+                    },
+                    "excluded": {
+                        "items": {
+                            "$ref": "#/components/schemas/ExcludedSpending"
+                        },
+                        "type": "array"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "by_category",
+                    "by_day",
+                    "change",
+                    "currency",
+                    "excluded",
+                    "month",
+                    "previous",
+                    "total_minor"
+                ],
+                "title": "SpendingOut"
             },
             "SplitLineIn": {
                 "properties": {
@@ -6923,6 +8929,22 @@
                 ],
                 "title": "SplitLineOut"
             },
+            "SubscriptionsCard": {
+                "properties": {
+                    "monthly_minor": {
+                        "type": "integer"
+                    },
+                    "count": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "count",
+                    "monthly_minor"
+                ],
+                "title": "SubscriptionsCard"
+            },
             "TagCreateIn": {
                 "properties": {
                     "name": {
@@ -6975,6 +8997,71 @@
                     "name"
                 ],
                 "title": "TagRef"
+            },
+            "TermsOut": {
+                "properties": {
+                    "apr": {
+                        "oneOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "minimum_payment_minor": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "origination_date": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "origination_amount_minor": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "maturity_date": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "apr",
+                    "maturity_date",
+                    "minimum_payment_minor",
+                    "origination_amount_minor",
+                    "origination_date"
+                ],
+                "title": "TermsOut"
             },
             "TokenIn": {
                 "properties": {
@@ -7399,6 +9486,27 @@
                     "count"
                 ],
                 "title": "UnreviewedCountOut"
+            },
+            "UpcomingBill": {
+                "properties": {
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "due_date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "amount_minor": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "amount_minor",
+                    "display_name",
+                    "due_date"
+                ],
+                "title": "UpcomingBill"
             },
             "UserOut": {
                 "properties": {

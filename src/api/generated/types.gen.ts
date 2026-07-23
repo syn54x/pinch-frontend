@@ -22,13 +22,6 @@ export type AccountCreateIn = {
 export type AccountKind = 'depository' | 'credit' | 'investment' | 'loan' | 'asset';
 
 /**
- * AccountLabelIn
- */
-export type AccountLabelIn = {
-    label: string;
-};
-
-/**
  * AccountOut
  */
 export type AccountOut = {
@@ -40,7 +33,47 @@ export type AccountOut = {
     manual: boolean;
     archived: boolean;
     balance: BalanceOut | null;
+    terms: TermsOut | null;
     created_at: string;
+};
+
+/**
+ * AccountPatchIn
+ */
+export type AccountPatchIn = {
+    label?: string | null;
+    /**
+     * A percentage: 4.9 means 4.9%.
+     */
+    apr?: number | null;
+    minimum_payment_minor?: number | null;
+    origination_date?: string | null;
+    /**
+     * Account-signed like every amount: the loan's opening balance,
+     * negative.
+     */
+    origination_amount_minor?: number | null;
+    maturity_date?: string | null;
+};
+
+/**
+ * AccountReportOut
+ */
+export type AccountReportOut = {
+    id: string;
+    label: string;
+    kind: AccountKind;
+    currency: string;
+    balance_minor: number;
+    series: Array<AccountSeriesPoint>;
+};
+
+/**
+ * AccountSeriesPoint
+ */
+export type AccountSeriesPoint = {
+    date: string;
+    balance_minor: number;
 };
 
 /**
@@ -86,6 +119,14 @@ export type BalanceOut = {
 export type BalanceSource = 'manual' | 'provider';
 
 /**
+ * BucketSlice
+ */
+export type BucketSlice = {
+    bucket: string | null;
+    monthly_minor: number;
+};
+
+/**
  * CategoryCreateIn
  */
 export type CategoryCreateIn = {
@@ -125,6 +166,19 @@ export type CategoryOut = {
 export type CategoryRef = {
     id: string;
     name: string;
+};
+
+/**
+ * CategorySpendingRow
+ */
+export type CategorySpendingRow = {
+    category_id: string | null;
+    name: string | null;
+    parent_id: string | null;
+    direct_minor: number;
+    rolled_up_minor: number;
+    previous_minor: number;
+    percent_change: number | null;
 };
 
 /**
@@ -248,6 +302,92 @@ export type CorrectionLogEntryOut = {
 };
 
 /**
+ * CycleCard
+ */
+export type CycleCard = {
+    paid: number;
+    total: number;
+};
+
+/**
+ * CycleStateOut
+ */
+export type CycleStateOut = {
+    status: 'paid' | 'due' | 'overdue' | 'upcoming' | 'lapsed';
+    last_paid_date: string | null;
+    next_due_date: string | null;
+    due_in_days: number | null;
+    fixed: boolean;
+    est_amount_minor: number | null;
+    monthly_minor: number | null;
+};
+
+/**
+ * DaySpending
+ */
+export type DaySpending = {
+    date: string;
+    total_minor: number;
+};
+
+/**
+ * DebtLoanRow
+ */
+export type DebtLoanRow = {
+    id: string;
+    label: string;
+    kind: AccountKind;
+    apr: number | null;
+    balance_minor: number | null;
+    minimum_payment_minor: number | null;
+    pace_payment_minor: number;
+    payoff_percent: number | null;
+    payoff_date: string | null;
+};
+
+/**
+ * DebtOut
+ */
+export type DebtOut = {
+    as_of: string;
+    currency: string;
+    total_debt_minor: number;
+    loan_count: number;
+    monthly_minimums_minor: number;
+    minimums_excluded_count: number;
+    weighted_apr: number | null;
+    apr_excluded_count: number;
+    debt_free_by: string | null;
+    debt_free_excluded_count: number;
+    loans: Array<DebtLoanRow>;
+    excluded: Array<ExcludedBalance>;
+};
+
+/**
+ * Delta
+ */
+export type Delta = {
+    delta_minor: number;
+    percent: number | null;
+};
+
+/**
+ * ExcludedBalance
+ */
+export type ExcludedBalance = {
+    currency: string;
+    balance_minor: number;
+};
+
+/**
+ * ExcludedSpending
+ */
+export type ExcludedSpending = {
+    currency: string;
+    total_minor: number;
+};
+
+/**
  * ImportOut
  */
 export type ImportOut = {
@@ -308,6 +448,20 @@ export type ImportStatus = 'uploaded' | 'mapped' | 'previewed' | 'committed';
 export type ImportUploadIn = {
     account_id: string;
     file: Blob | File;
+};
+
+/**
+ * LedgerStatsOut
+ */
+export type LedgerStatsOut = {
+    transactions_total: number;
+    classified: number;
+    unreviewed: number;
+    unreviewed_by_provenance: {
+        [key: string]: number;
+    };
+    recurring_found: number | null;
+    last_synced_at: string | null;
 };
 
 /**
@@ -389,6 +543,25 @@ export type MePatchIn = {
 };
 
 /**
+ * NetWorthOut
+ */
+export type NetWorthOut = {
+    as_of: string;
+    range: '1m' | '6m' | '1y' | 'all';
+    granularity: string;
+    currency: string;
+    net_worth_minor: number;
+    assets_minor: number;
+    liabilities_minor: number;
+    month_to_date: Delta;
+    since_range_start: Delta;
+    series: Array<SeriesPoint>;
+    projection: Projection | null;
+    accounts: Array<AccountReportOut>;
+    excluded: Array<ExcludedBalance>;
+};
+
+/**
  * Page[AccountOut]
  */
 export type PageAccountOut = {
@@ -449,6 +622,14 @@ export type PageImportRowOut = {
  */
 export type PagePatOut = {
     items: Array<PatOut>;
+    next_cursor: string | null;
+};
+
+/**
+ * Page[RecurringSeriesOut]
+ */
+export type PageRecurringSeriesOut = {
+    items: Array<RecurringSeriesOut>;
     next_cursor: string | null;
 };
 
@@ -566,6 +747,72 @@ export type PatOut = {
 export type PatScope = 'read' | 'write';
 
 /**
+ * PayoffHeadline
+ */
+export type PayoffHeadline = {
+    months_earlier: number;
+    interest_saved_minor: number;
+};
+
+/**
+ * PayoffOut
+ */
+export type PayoffOut = {
+    account_id: string;
+    as_of: string;
+    currency: string;
+    balance_minor: number | null;
+    apr: number | null;
+    minimum_payment_minor: number | null;
+    pace_payment_minor: number;
+    payoff_percent: number | null;
+    projections: PayoffProjections | null;
+    scenario: PayoffScenario | null;
+};
+
+/**
+ * PayoffPoint
+ */
+export type PayoffPoint = {
+    date: string;
+    balance_minor: number;
+};
+
+/**
+ * PayoffProjections
+ */
+export type PayoffProjections = {
+    at_pace: SimulationOut;
+    at_minimum: SimulationOut | null;
+    headline: PayoffHeadline | null;
+};
+
+/**
+ * PayoffScenario
+ */
+export type PayoffScenario = {
+    extra_monthly_minor: number;
+    months_sooner: number;
+    interest_saved_minor: number;
+};
+
+/**
+ * PreviousMonth
+ */
+export type PreviousMonth = {
+    month: string;
+    total_minor: number;
+};
+
+/**
+ * Projection
+ */
+export type Projection = {
+    series: Array<SeriesPoint>;
+    endpoint: SeriesPoint;
+};
+
+/**
  * ProposalOut
  */
 export type ProposalOut = {
@@ -587,6 +834,68 @@ export type ProposalOut = {
  * rules for tags/rename ride in provenance_detail regardless.
  */
 export type ProposalProvenance = 'rule' | 'history' | 'ai' | 'detection' | 'none';
+
+/**
+ * RecurringCadence
+ *
+ * How often a recurring series recurs (PRD M8 #45, CP3).
+ */
+export type RecurringCadence = 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly';
+
+/**
+ * RecurringKind
+ *
+ * The Recurring screen's segments. Income is sign-inferred and never
+ * user-flippable; bill vs subscription is taste, so it is the user's.
+ */
+export type RecurringKind = 'bill' | 'subscription' | 'income';
+
+/**
+ * RecurringPatchIn
+ */
+export type RecurringPatchIn = {
+    kind?: 'bill' | 'subscription' | null;
+    display_name?: string | null;
+};
+
+/**
+ * RecurringSeriesOut
+ */
+export type RecurringSeriesOut = {
+    id: string;
+    account_id: string;
+    payee: string;
+    direction: number;
+    amount_minor: number | null;
+    cadence: RecurringCadence;
+    kind: RecurringKind;
+    status: RecurringStatus;
+    display_name: string;
+    bucket: string | null;
+    state: CycleStateOut;
+};
+
+/**
+ * RecurringStatus
+ *
+ * Dismissed is the user's verdict and permanent (the rejection-memory
+ * analog). Lapse — the data's verdict — is computed at read time, never
+ * stored.
+ */
+export type RecurringStatus = 'active' | 'dismissed';
+
+/**
+ * RecurringSummaryOut
+ */
+export type RecurringSummaryOut = {
+    as_of: string;
+    monthly_recurring_minor: number;
+    due_next_7_days_minor: number;
+    due_next_7_days: Array<UpcomingBill>;
+    subscriptions: SubscriptionsCard;
+    by_bucket: Array<BucketSlice>;
+    cycle: CycleCard;
+};
 
 /**
  * ReviewBatchIn
@@ -704,6 +1013,14 @@ export type RulePreviewOut = {
 export type RuleStatus = 'proposed' | 'active' | 'disabled' | 'dismissed';
 
 /**
+ * SeriesPoint
+ */
+export type SeriesPoint = {
+    date: string;
+    net_worth_minor: number;
+};
+
+/**
  * SessionOut
  */
 export type SessionOut = {
@@ -735,6 +1052,31 @@ export type SignupRequest = {
 };
 
 /**
+ * SimulationOut
+ */
+export type SimulationOut = {
+    never_pays_off: boolean;
+    months: number | null;
+    payoff_date: string | null;
+    total_interest_minor: number | null;
+    series: Array<PayoffPoint>;
+};
+
+/**
+ * SpendingOut
+ */
+export type SpendingOut = {
+    month: string;
+    currency: string;
+    total_minor: number;
+    by_day: Array<DaySpending>;
+    by_category: Array<CategorySpendingRow>;
+    previous: PreviousMonth;
+    change: Delta;
+    excluded: Array<ExcludedSpending>;
+};
+
+/**
  * SplitLineIn
  */
 export type SplitLineIn = {
@@ -763,6 +1105,14 @@ export type SplitLineOut = {
 };
 
 /**
+ * SubscriptionsCard
+ */
+export type SubscriptionsCard = {
+    monthly_minor: number;
+    count: number;
+};
+
+/**
  * TagCreateIn
  */
 export type TagCreateIn = {
@@ -784,6 +1134,17 @@ export type TagOut = {
 export type TagRef = {
     id: string;
     name: string;
+};
+
+/**
+ * TermsOut
+ */
+export type TermsOut = {
+    apr: number | null;
+    minimum_payment_minor: number | null;
+    origination_date: string | null;
+    origination_amount_minor: number | null;
+    maturity_date: string | null;
 };
 
 /**
@@ -907,6 +1268,15 @@ export type TransferRef = {
  */
 export type UnreviewedCountOut = {
     count: number;
+};
+
+/**
+ * UpcomingBill
+ */
+export type UpcomingBill = {
+    display_name: string;
+    due_date: string;
+    amount_minor: number;
 };
 
 /**
@@ -1451,7 +1821,7 @@ export type GetAccountResponses = {
 export type GetAccountResponse = GetAccountResponses[keyof GetAccountResponses];
 
 export type UpdateAccountLabelData = {
-    body: AccountLabelIn;
+    body: AccountPatchIn;
     path: {
         account_id: string;
     };
@@ -1590,6 +1960,42 @@ export type CreateBalanceEntryResponses = {
 };
 
 export type CreateBalanceEntryResponse = CreateBalanceEntryResponses[keyof CreateBalanceEntryResponses];
+
+export type GetPayoffData = {
+    body?: never;
+    path: {
+        account_id: string;
+    };
+    query?: {
+        extra_monthly?: number | null;
+        as_of?: string | null;
+    };
+    url: '/api/v1/accounts/{account_id}/payoff';
+};
+
+export type GetPayoffErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type GetPayoffError = GetPayoffErrors[keyof GetPayoffErrors];
+
+export type GetPayoffResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: PayoffOut;
+};
+
+export type GetPayoffResponse = GetPayoffResponses[keyof GetPayoffResponses];
 
 export type ListCategoriesData = {
     body?: never;
@@ -2281,6 +2687,22 @@ export type DeleteImportProfileResponses = {
 
 export type DeleteImportProfileResponse = DeleteImportProfileResponses[keyof DeleteImportProfileResponses];
 
+export type LedgerStatsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/ledgers/current/stats';
+};
+
+export type LedgerStatsResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: LedgerStatsOut;
+};
+
+export type LedgerStatsResponse = LedgerStatsResponses[keyof LedgerStatsResponses];
+
 export type ListRulesData = {
     body?: never;
     path?: never;
@@ -2819,6 +3241,253 @@ export type PutSplitsResponses = {
 };
 
 export type PutSplitsResponse = PutSplitsResponses[keyof PutSplitsResponses];
+
+export type ListRecurringData = {
+    body?: never;
+    path?: never;
+    query?: {
+        kind?: RecurringKind | null;
+        unpaid?: boolean | null;
+        as_of?: string | null;
+        /**
+         * Opaque page position from a previous `next_cursor`.
+         */
+        cursor?: string | null;
+        /**
+         * Page size, 1-100.
+         */
+        limit?: number;
+    };
+    url: '/api/v1/recurring';
+};
+
+export type ListRecurringErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type ListRecurringError = ListRecurringErrors[keyof ListRecurringErrors];
+
+export type ListRecurringResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: PageRecurringSeriesOut;
+};
+
+export type ListRecurringResponse = ListRecurringResponses[keyof ListRecurringResponses];
+
+export type UpdateRecurringData = {
+    body: RecurringPatchIn;
+    path: {
+        series_id: string;
+    };
+    query?: {
+        as_of?: string | null;
+    };
+    url: '/api/v1/recurring/{series_id}';
+};
+
+export type UpdateRecurringErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type UpdateRecurringError = UpdateRecurringErrors[keyof UpdateRecurringErrors];
+
+export type UpdateRecurringResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: RecurringSeriesOut;
+};
+
+export type UpdateRecurringResponse = UpdateRecurringResponses[keyof UpdateRecurringResponses];
+
+export type DismissRecurringData = {
+    body?: never;
+    path: {
+        series_id: string;
+    };
+    query?: never;
+    url: '/api/v1/recurring/{series_id}/dismiss';
+};
+
+export type DismissRecurringErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type DismissRecurringError = DismissRecurringErrors[keyof DismissRecurringErrors];
+
+export type DismissRecurringResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: {
+        [key: string]: string;
+    };
+};
+
+export type DismissRecurringResponse = DismissRecurringResponses[keyof DismissRecurringResponses];
+
+export type NetWorthReportData = {
+    body?: never;
+    path?: never;
+    query?: {
+        range?: '1m' | '6m' | '1y' | 'all';
+        as_of?: string | null;
+    };
+    url: '/api/v1/reports/net-worth';
+};
+
+export type NetWorthReportErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type NetWorthReportError = NetWorthReportErrors[keyof NetWorthReportErrors];
+
+export type NetWorthReportResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: NetWorthOut;
+};
+
+export type NetWorthReportResponse = NetWorthReportResponses[keyof NetWorthReportResponses];
+
+export type SpendingReportData = {
+    body?: never;
+    path?: never;
+    query?: {
+        month?: string | null;
+        as_of?: string | null;
+    };
+    url: '/api/v1/reports/spending';
+};
+
+export type SpendingReportErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type SpendingReportError = SpendingReportErrors[keyof SpendingReportErrors];
+
+export type SpendingReportResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: SpendingOut;
+};
+
+export type SpendingReportResponse = SpendingReportResponses[keyof SpendingReportResponses];
+
+export type DebtReportData = {
+    body?: never;
+    path?: never;
+    query?: {
+        as_of?: string | null;
+    };
+    url: '/api/v1/reports/debt';
+};
+
+export type DebtReportErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type DebtReportError = DebtReportErrors[keyof DebtReportErrors];
+
+export type DebtReportResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: DebtOut;
+};
+
+export type DebtReportResponse = DebtReportResponses[keyof DebtReportResponses];
+
+export type RecurringReportData = {
+    body?: never;
+    path?: never;
+    query?: {
+        as_of?: string | null;
+    };
+    url: '/api/v1/reports/recurring';
+};
+
+export type RecurringReportErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type RecurringReportError = RecurringReportErrors[keyof RecurringReportErrors];
+
+export type RecurringReportResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: RecurringSummaryOut;
+};
+
+export type RecurringReportResponse = RecurringReportResponses[keyof RecurringReportResponses];
 
 export type ListTransfersData = {
     body?: never;
