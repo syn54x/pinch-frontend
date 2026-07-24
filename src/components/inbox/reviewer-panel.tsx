@@ -42,6 +42,11 @@ export function ReviewerPanel({
   counterpart,
   counterpartLabel,
   onConfirmTransfer,
+  canMarkTransfer,
+  transferChoices,
+  onOpenTransfer,
+  onMarkTransfer,
+  onCloseTransfer,
 }: {
   txn: TransactionOut
   correction: Correction
@@ -67,6 +72,14 @@ export function ReviewerPanel({
   counterpart: TransactionOut | null
   counterpartLabel: string | null
   onConfirmTransfer: () => void
+  /** The manual transfer verb — rows with NO detected pairing. */
+  canMarkTransfer: boolean
+  /** Linkable queue rows for the manual picker, with their account labels. */
+  transferChoices: { txn: TransactionOut; label: string }[]
+  onOpenTransfer: () => void
+  /** A picked counterpart id links both legs; null marks it untracked. */
+  onMarkTransfer: (counterpartId: string | null) => void
+  onCloseTransfer: () => void
 }) {
   const proposal = txn.proposal
   const category = correction.category ?? proposal?.category ?? null
@@ -150,6 +163,64 @@ export function ReviewerPanel({
         </div>
       )}
 
+      {panel === 'transfer' && (
+        <div data-testid="transfer-picker" className="mt-5">
+          <div className="label-caps">Mark as transfer</div>
+          {transferChoices.length > 0 ? (
+            <>
+              <p className="mt-1.5 text-[11.5px] text-muted-foreground">
+                Link the other leg — same amount, the other direction:
+              </p>
+              <div className="mt-1.5 flex flex-col gap-1.5">
+                {transferChoices.map(({ txn: candidate, label }) => (
+                  <Button
+                    key={candidate.id}
+                    variant="outline"
+                    size="sm"
+                    className="justify-between"
+                    disabled={accepting}
+                    onClick={() => onMarkTransfer(candidate.id)}
+                    data-testid="transfer-choice"
+                  >
+                    <span className="truncate">
+                      {label} · {formatDay(candidate.date)}
+                    </span>
+                    <span className="amount">
+                      {formatMinorUnits(
+                        candidate.amount_minor,
+                        candidate.currency,
+                      )}
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="mt-1.5 text-[11.5px] text-muted-foreground">
+              No linkable leg in the queue — a linked pair needs the same amount
+              in the other direction, on another account.
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              disabled={accepting}
+              onClick={() => onMarkTransfer(null)}
+              data-testid="transfer-untracked"
+            >
+              The other side isn't in Pinch
+            </Button>
+            <Button variant="outline" size="sm" onClick={onCloseTransfer}>
+              Cancel · Esc
+            </Button>
+          </div>
+          <p className="mt-1.5 text-[11.5px] text-muted-foreground">
+            Transfers are excluded from spending. Linking a leg reviews both
+            sides in one act.
+          </p>
+        </div>
+      )}
+
       {panel === 'split' || (splitting && panel !== 'category') ? (
         <SplitEditor
           txn={txn}
@@ -217,14 +288,21 @@ export function ReviewerPanel({
       )}
 
       {!splitting && !detected && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="mt-3 self-start"
-          onClick={onOpenSplit}
-        >
-          Split · S
-        </Button>
+        <div className="mt-3 flex gap-2 self-start">
+          <Button variant="outline" size="sm" onClick={onOpenSplit}>
+            Split · S
+          </Button>
+          {canMarkTransfer && panel !== 'transfer' && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onOpenTransfer}
+              data-testid="mark-transfer"
+            >
+              Transfer · T
+            </Button>
+          )}
+        </div>
       )}
 
       <div className="label-caps mt-5">Tags</div>

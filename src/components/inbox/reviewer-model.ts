@@ -17,9 +17,9 @@ export interface Correction {
 }
 
 /** Which correction affordance is open in the reviewer: the category picker
- * (C) or the split editor (S). Transfer consent is inline buttons, not a
- * panel. */
-export type ReviewPanel = 'category' | 'split'
+ * (C), the split editor (S), or the manual transfer picker (T on a row with
+ * no detected pairing). Transfer CONSENT stays inline buttons, not a panel. */
+export type ReviewPanel = 'category' | 'split' | 'transfer'
 
 export function payeeOf(txn: TransactionOut): string {
   return txn.proposal?.display_name ?? txn.display_name ?? txn.description_raw
@@ -49,17 +49,48 @@ export function reviewBody(
   return body
 }
 
-/** Whether this review consumes the detected counterpart too: consenting to the
- * pairing (plain accept or an explicit transfer decision) reviews both sides in
- * one act; any other positive decision (category, splits) is the DECLINE — it
- * reviews one side and withdraws the mirror. */
+/** Whether this review consumes another queue row too. An explicit counterpart
+ * decision consumes that row (proposal or not — the backend reviews both sides
+ * at depth 2). On a detected pairing, plain accept IS the consent and consumes
+ * the proposed mirror; any other positive decision (category, splits,
+ * untracked) reviews one side — for a det row that is the DECLINE, and the
+ * mirror is withdrawn. */
 export function consumesCounterpart(
   txn: TransactionOut | undefined,
   body: ReviewIn | null,
 ): string | null {
+  if (body?.transfer?.counterpart != null) return body.transfer.counterpart
+  if (body !== null) return null
   const proposal = txn?.proposal
   if (proposal?.proposed_transfer !== true) return null
-  if (proposal.counterpart_transaction_id == null) return null
-  const consent = body === null || body.transfer != null
-  return consent ? proposal.counterpart_transaction_id : null
+  return proposal.counterpart_transaction_id ?? null
+}
+
+/** Queue rows the backend would accept as this row's linked counterpart —
+ * mirror of `establish_transfer`'s 422/409 gates so the picker never offers a
+ * link the API rejects: equal magnitude, opposite sign, same currency,
+ * different account, not a split member, not already in a transfer. Sorted by
+ * date proximity to the focused row. (The detector needs mutual uniqueness and
+ * a ±5-day window on top of these; the manual verb exists precisely for the
+ * pairs it therefore abstains on.) */
+export function transferCandidates(
+  txn: TransactionOut,
+  queue: Iterable<TransactionOut>,
+): TransactionOut[] {
+  const focusTime = Date.parse(txn.date)
+  return [...queue]
+    .filter(
+      (candidate) =>
+        candidate.id !== txn.id &&
+        candidate.account_id !== txn.account_id &&
+        candidate.currency === txn.currency &&
+        candidate.amount_minor === -txn.amount_minor &&
+        (candidate.splits === null || candidate.splits.length === 0) &&
+        candidate.transfer === null,
+    )
+    .sort(
+      (a, b) =>
+        Math.abs(Date.parse(a.date) - focusTime) -
+        Math.abs(Date.parse(b.date) - focusTime),
+    )
 }

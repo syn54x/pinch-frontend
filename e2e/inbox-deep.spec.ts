@@ -284,3 +284,78 @@ test('declining a pairing: a category instead withdraws the mirror, both sides r
   await page.keyboard.press('a')
   await expect(rows(page)).toHaveCount(1)
 })
+
+test('manual transfer: T without a detected pairing opens the picker — link an ambiguous pair, untracked a lone leg', async ({
+  page,
+}) => {
+  test.setTimeout(120_000)
+  const email = uniqueEmail('inbox-manual-transfer')
+  await seedUser(email, PASSWORD)
+  const seed = await RegisterSeeder.login(email, PASSWORD)
+  const checking = await seed.createAccount('Chase Checking')
+  const savings = await seed.createAccount('Ally Savings')
+  const brokerage = await seed.createAccount('E2E Brokerage')
+  // TWO same-magnitude inflows → the detector abstains (mutual uniqueness);
+  // the pairing decision falls to the user — exactly the manual verb's case.
+  // The outflow lands LAST: an existing detection proposal is never withdrawn
+  // by a later sweep, so no intermediate sweep may ever see the outflow with
+  // only one inflow present (it would propose, and the proposal would stick).
+  await seed.createTxn(savings, {
+    date: daysAgo(0),
+    amountMinor: 12000,
+    description: 'VENMO CASHOUT',
+  })
+  await seed.createTxn(brokerage, {
+    date: daysAgo(3),
+    amountMinor: 12000,
+    description: 'BROKERAGE SWEEP',
+  })
+  await seed.createTxn(checking, {
+    date: daysAgo(1),
+    amountMinor: -12000,
+    description: 'VENMO PAYMENT ALEX',
+  })
+  await seed.dispose()
+
+  await openInbox(page, email)
+  await expect(rows(page)).toHaveCount(3)
+
+  // No consent card (nothing was detected) — but T is not a dead verb.
+  await rows(page).filter({ hasText: 'VENMO PAYMENT' }).click()
+  await expect(page.getByTestId('transfer-consent')).toHaveCount(0)
+  await page.keyboard.press('t')
+  const picker = page.getByTestId('transfer-picker')
+  await expect(picker).toBeVisible()
+
+  // Both same-magnitude legs offered, nearest date first.
+  await expect(picker.getByTestId('transfer-choice')).toHaveCount(2)
+  await expect(picker.getByTestId('transfer-choice').first()).toContainText(
+    'Ally Savings',
+  )
+
+  // Picking a leg reviews BOTH sides in one act.
+  await picker.getByTestId('transfer-choice').first().click()
+  await expect(rows(page)).toHaveCount(1)
+  await expect(rows(page)).toContainText('BROKERAGE SWEEP')
+
+  // The survivor has no linkable leg left — T offers the untracked form.
+  await rows(page).click()
+  await page.keyboard.press('t')
+  await expect(page.getByTestId('transfer-picker')).toContainText(
+    'No linkable leg',
+  )
+  await page.getByTestId('transfer-untracked').click()
+  await expect(page.getByTestId('inbox-empty')).toBeVisible()
+
+  // The Register wears the exclusion on all three rows.
+  await page.getByRole('link', { name: 'Register' }).click()
+  await expect(page).toHaveURL(/\/register$/)
+  for (const text of ['VENMO PAYMENT', 'VENMO CASHOUT', 'BROKERAGE SWEEP']) {
+    await expect(
+      page
+        .getByTestId('txn-row')
+        .filter({ hasText: text })
+        .getByTitle('Transfer — excluded from spending'),
+    ).toBeVisible()
+  }
+})

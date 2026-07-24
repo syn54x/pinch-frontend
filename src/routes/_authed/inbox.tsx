@@ -197,10 +197,11 @@ function InboxPage() {
           break
         case 't':
         case 'T':
-          // Consent only exists where a pairing was detected — T is not a
-          // dead verb elsewhere, it simply isn't one.
-          if (!reviewer.canConsentTransfer) return
-          reviewer.consentTransfer()
+          // On a detected pairing T is the consent; anywhere else it opens
+          // the manual picker — the verb the keyboard legend promises.
+          if (reviewer.canConsentTransfer) reviewer.consentTransfer()
+          else if (reviewer.canMarkTransfer) reviewer.openTransfer()
+          else return
           break
         case 'Escape':
           if (reviewer.panel === 'split') reviewer.cancelSplit()
@@ -390,6 +391,11 @@ function InboxPage() {
             counterpart={reviewer.counterpart}
             counterpartLabel={reviewer.counterpartLabel}
             onConfirmTransfer={reviewer.consentTransfer}
+            canMarkTransfer={reviewer.canMarkTransfer}
+            transferChoices={reviewer.transferChoices}
+            onOpenTransfer={reviewer.openTransfer}
+            onMarkTransfer={reviewer.markTransfer}
+            onCloseTransfer={reviewer.closeTransfer}
           />
         )}
       </div>
