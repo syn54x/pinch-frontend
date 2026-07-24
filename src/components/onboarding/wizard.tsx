@@ -5,6 +5,8 @@ import { createConnection, createLinkToken } from '@/api/generated'
 import {
   countUnreviewedTransactionsQueryKey,
   createAccountMutation,
+  ledgerStatsOptions,
+  ledgerStatsQueryKey,
   listAccountsQueryKey,
   listConnectionsOptions,
   listConnectionsQueryKey,
@@ -17,6 +19,7 @@ import type { AccountKind } from '@/api/generated/types.gen'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { onboardingStatsLine } from '@/lib/onboarding'
 import { PlaidExitError, usePlaidConnect } from '@/lib/plaid'
 import { cn } from '@/lib/utils'
 
@@ -448,10 +451,15 @@ function ProgressStep({
   const queryClient = useQueryClient()
   const [landed, setLanded] = useState(false)
   // The F2 sync-watch seam: poll the connection while its first sync runs.
-  // Progress here is honest — the connection's status and nothing else; no
-  // classification counts, no recurring counts (#20 cuts the theater).
   const connections = useQuery({
     ...listConnectionsOptions(),
+    refetchInterval: landed ? undefined : 3_000,
+  })
+  // The classification counts ride the SAME bounded poll (F5 CP6, #33): real
+  // "Categorizing 234/342 · found 7 recurring" numbers, stopping the instant
+  // sync lands — no new polling surface. Zero until the first transactions flow.
+  const stats = useQuery({
+    ...ledgerStatsOptions(),
     refetchInterval: landed ? undefined : 3_000,
   })
   const connection = connections.data?.items.find(
@@ -460,8 +468,10 @@ function ProgressStep({
   const accountCount = connection?.accounts.length ?? 0
   const synced = connection !== undefined && connection.last_synced_at !== null
 
-  // First sync complete: the pipeline has already classified — the queue
-  // and count re-ask, and the wizard lands the user in finished work.
+  // First sync complete: the pipeline has classified. Re-ask the queue, count,
+  // accounts, and stats one last time so the landing card is accurate — then
+  // the user lands with an explicit "Review N transactions →" (not an
+  // auto-dismiss), the wizard's hand-off into a full Inbox of finished work.
   useEffect(() => {
     if (!synced || landed) return
     setLanded(true)
@@ -470,10 +480,48 @@ function ProgressStep({
       queryKey: countUnreviewedTransactionsQueryKey(),
     })
     queryClient.invalidateQueries({ queryKey: listAccountsQueryKey() })
-    onSynced()
-  }, [synced, landed, queryClient, onSynced])
+    queryClient.invalidateQueries({ queryKey: ledgerStatsQueryKey() })
+  }, [synced, landed, queryClient])
 
   const failed = connection !== undefined && connection.status === 'error'
+  const statsLine =
+    stats.data !== undefined && stats.data.transactions_total > 0
+      ? onboardingStatsLine(stats.data)
+      : null
+  const unreviewed = stats.data?.unreviewed ?? 0
+
+  // The landing card (deck hand-note): finished work, one clear next step.
+  if (landed && !failed) {
+    return (
+      <div
+        className="flex flex-1 flex-col items-center pt-8 text-center"
+        data-testid="onboarding-progress"
+      >
+        <div aria-hidden className="size-12 rounded-full bg-penny" />
+        <h2 className="mt-4 font-semibold text-lg">
+          Penny finished reading your history
+        </h2>
+        {statsLine !== null && (
+          <p
+            className="mt-1.5 text-muted-foreground text-sm"
+            data-testid="onboarding-stats"
+          >
+            {statsLine}
+          </p>
+        )}
+        <div className="flex-1" />
+        <Button
+          className="mt-5 w-full"
+          data-testid="onboarding-review-cta"
+          onClick={onSynced}
+        >
+          {unreviewed > 0
+            ? `Review ${unreviewed} transactions →`
+            : 'Go to your Inbox →'}
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -496,9 +544,10 @@ function ProgressStep({
         {failed
           ? (connection.error_detail ??
             'The connection reported an error — it can be repaired from Connections.')
-          : accountCount > 0
-            ? `${accountCount} ${accountCount === 1 ? 'account' : 'accounts'} linked — pulling their history. Your Inbox fills the moment it lands.`
-            : 'Linking your accounts and pulling their history. Your Inbox fills the moment it lands.'}
+          : (statsLine ??
+            (accountCount > 0
+              ? `${accountCount} ${accountCount === 1 ? 'account' : 'accounts'} linked — pulling their history. Your Inbox fills the moment it lands.`
+              : 'Linking your accounts and pulling their history. Your Inbox fills the moment it lands.'))}
       </p>
       {!failed && (
         <div

@@ -55,18 +55,25 @@ test('signup → wizard → currency saves → connect → honest progress → a
     .getByRole('button', { name: /Connect a bank/ })
     .click()
 
-  // Honest progress: the connection's own status voice, and none of the
-  // wireframe's classification theater (#20 cuts it until M8).
+  // Real progress now (F5 CP6): the connection's status voice, and — riding the
+  // same bounded poll — the classification counts F3's #20 cut come back real.
   const progress = page.getByTestId('onboarding-progress')
   await expect(progress).toBeVisible()
-  await expect(progress).toContainText(/Syncing/)
-  await expect(progress).not.toContainText(/Categorizing/)
-  await expect(progress).not.toContainText(/recurring/)
+  await expect(progress).toContainText(/Syncing|Penny finished/)
 
-  // First sync completion lands straight in a full Inbox — finished work,
-  // no reload, seeded proposals visible immediately.
+  // Sync completes onto the landing card: the real stats, and an explicit
+  // "Review N transactions →" hand-off (the poll has stopped — the card only
+  // renders once sync lands).
+  const cta = page.getByTestId('onboarding-review-cta')
+  await expect(cta).toBeVisible({ timeout: 90_000 })
+  await expect(page.getByTestId('onboarding-stats')).toContainText(
+    /Categorizing \d+\/\d+/,
+  )
+
+  // Clicking it lands the user straight in a full Inbox of finished work.
+  await cta.click()
   await expect(page.getByTestId('inbox-row').first()).toBeVisible({
-    timeout: 90_000,
+    timeout: 30_000,
   })
   await expect(wizard(page)).toHaveCount(0)
   await expect(page.getByTestId('inbox-count')).not.toHaveText('0')
