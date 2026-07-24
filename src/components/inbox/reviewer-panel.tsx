@@ -197,8 +197,8 @@ export function ReviewerPanel({
             </>
           ) : (
             <p className="mt-1.5 text-[11.5px] text-muted-foreground">
-              No linkable leg in the queue — a linked pair needs the same
-              amount in the other direction, on another account.
+              No linkable leg in the queue — a linked pair needs the same amount
+              in the other direction, on another account.
             </p>
           )}
           <div className="mt-2 flex flex-wrap gap-2">

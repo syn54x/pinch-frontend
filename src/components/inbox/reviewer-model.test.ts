@@ -35,7 +35,12 @@ describe('transferCandidates', () => {
       match,
       txn({ id: 'same-sign', account_id: 'savings', amount_minor: -12000 }),
       txn({ id: 'off-by-one', account_id: 'savings', amount_minor: 11999 }),
-      txn({ id: 'other-currency', account_id: 'savings', amount_minor: 12000, currency: 'EUR' }),
+      txn({
+        id: 'other-currency',
+        account_id: 'savings',
+        amount_minor: 12000,
+        currency: 'EUR',
+      }),
       txn({ id: 'same-account', account_id: 'checking', amount_minor: 12000 }),
     ]
     expect(transferCandidates(outflow, queue).map((t) => t.id)).toEqual(['in'])
@@ -65,8 +70,18 @@ describe('transferCandidates', () => {
   })
 
   it('sorts by date proximity to the focused row', () => {
-    const near = txn({ id: 'near', account_id: 'savings', amount_minor: 12000, date: '2026-07-21' })
-    const far = txn({ id: 'far', account_id: 'brokerage', amount_minor: 12000, date: '2026-07-01' })
+    const near = txn({
+      id: 'near',
+      account_id: 'savings',
+      amount_minor: 12000,
+      date: '2026-07-21',
+    })
+    const far = txn({
+      id: 'far',
+      account_id: 'brokerage',
+      amount_minor: 12000,
+      date: '2026-07-01',
+    })
     expect(transferCandidates(outflow, [far, near]).map((t) => t.id)).toEqual([
       'near',
       'far',
@@ -98,7 +113,9 @@ describe('consumesCounterpart', () => {
       }),
     ).toBe('picked')
     expect(
-      consumesCounterpart(proposalPair, { transfer: { counterpart: 'picked' } }),
+      consumesCounterpart(proposalPair, {
+        transfer: { counterpart: 'picked' },
+      }),
     ).toBe('picked')
   })
 
