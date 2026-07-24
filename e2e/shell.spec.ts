@@ -3,25 +3,25 @@ import { PASSWORD, seedUser, uniqueEmail } from './helpers/api'
 import { loginViaUi } from './helpers/ui'
 
 // The App shell (F3 CP0, wireframe #24): persistent sidebar + top bar around
-// every authed surface, a lean nav, and `/` landing in the Inbox.
+// every authed surface, a lean nav, and `/` landing on the Dashboard (F5 CP5).
 
 function primaryNav(page: Page) {
   return page.getByRole('navigation', { name: 'Primary' })
 }
 
-test('/ redirects an authed user into the Inbox', async ({ page }) => {
+test('/ redirects an authed user onto the Dashboard', async ({ page }) => {
   const email = uniqueEmail('shell-root')
   await seedUser(email, PASSWORD)
   await loginViaUi(page, email, PASSWORD)
   await expect(page).toHaveURL(/\/accounts$/)
 
   await page.goto('/')
-  await expect(page).toHaveURL(/\/inbox$/)
+  await expect(page).toHaveURL(/\/dashboard$/)
   // The top bar carries the screen title.
-  await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
 })
 
-test('logged out, / funnels through login and still lands in the Inbox', async ({
+test('logged out, / funnels through login and still lands on the Dashboard', async ({
   page,
 }) => {
   const email = uniqueEmail('shell-funnel')
@@ -32,10 +32,10 @@ test('logged out, / funnels through login and still lands in the Inbox', async (
   await page.getByLabel('Email').fill(email)
   await page.getByLabel('Password').fill(PASSWORD)
   await page.getByRole('button', { name: 'Log in' }).click()
-  await expect(page).toHaveURL(/\/inbox$/)
+  await expect(page).toHaveURL(/\/dashboard$/)
 })
 
-test('the nav is exactly Inbox, Register, Net Worth, Recurring, Accounts, Setup → Connections — no Penny, no ⌘K', async ({
+test('the nav is exactly Dashboard, Inbox, Register, Net Worth, Recurring, Accounts, Setup → Connections — no Penny, no ⌘K', async ({
   page,
 }) => {
   const email = uniqueEmail('shell-lean')
@@ -46,6 +46,7 @@ test('the nav is exactly Inbox, Register, Net Worth, Recurring, Accounts, Setup 
   // Exactly these destinations, in wireframe order — no disabled items,
   // no stubs.
   await expect(primaryNav(page).getByRole('link')).toHaveText([
+    'Dashboard',
     'Inbox',
     'Register',
     'Net Worth',
@@ -111,7 +112,11 @@ test('the nav is keyboard traversable with visible focus', async ({ page }) => {
   await expect(page).toHaveURL(/\/accounts$/)
 
   // Tab walks the nav in order; each stop is the real focused element.
-  await primaryNav(page).getByRole('link', { name: 'Inbox' }).focus()
+  await primaryNav(page).getByRole('link', { name: 'Dashboard' }).focus()
+  await page.keyboard.press('Tab')
+  await expect(
+    primaryNav(page).getByRole('link', { name: 'Inbox' }),
+  ).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(
     primaryNav(page).getByRole('link', { name: 'Register' }),
