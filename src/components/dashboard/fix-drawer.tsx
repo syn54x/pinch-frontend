@@ -103,6 +103,11 @@ export function FixDrawer({
               counterpart={reviewer.counterpart}
               counterpartLabel={reviewer.counterpartLabel}
               onConfirmTransfer={reviewer.consentTransfer}
+              canMarkTransfer={reviewer.canMarkTransfer}
+              transferChoices={reviewer.transferChoices}
+              onOpenTransfer={reviewer.openTransfer}
+              onMarkTransfer={reviewer.markTransfer}
+              onCloseTransfer={reviewer.closeTransfer}
             />
           )}
         </div>

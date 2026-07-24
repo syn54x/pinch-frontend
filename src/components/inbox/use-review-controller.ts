@@ -26,6 +26,7 @@ import {
   payeeOf,
   type ReviewPanel,
   reviewBody,
+  transferCandidates,
 } from './reviewer-model'
 
 /** A review changes the transaction lists (Inbox and Register) and the count.
@@ -198,6 +199,38 @@ export function useReviewController({
     review.mutate({ path: { txn_id: txn.id }, body: null })
   }
 
+  const canConsentTransfer = txn?.proposal?.proposed_transfer === true
+  // The manual verb exists where consent doesn't: no detected pairing, and a
+  // row the backend can link at all (non-zero, unsplit, not already linked).
+  const canMarkTransfer =
+    txn !== null &&
+    !canConsentTransfer &&
+    txn.amount_minor !== 0 &&
+    (txn.splits === null || txn.splits.length === 0) &&
+    txn.transfer === null &&
+    splitLines === null
+
+  /** T on a row with no detected pairing: open the manual picker. */
+  function openTransfer() {
+    if (!canMarkTransfer) return
+    setPanel('transfer')
+  }
+
+  /** The manual transfer decision — a picked counterpart links both legs in
+   * one review; null means the other side isn't in Pinch (untracked). Staged
+   * tags ride along; a staged category can't (exclusive decision shapes). */
+  function markTransfer(counterpartId: string | null) {
+    if (txn === null || busy) return
+    const body: ReviewIn = {
+      transfer:
+        counterpartId !== null
+          ? { counterpart: counterpartId }
+          : { untracked: true },
+    }
+    if (correction.tags !== undefined) body.tags = correction.tags
+    review.mutate({ path: { txn_id: txn.id }, body })
+  }
+
   function openCategory() {
     setPanel('category')
   }
@@ -268,12 +301,24 @@ export function useReviewController({
     busy,
     splitValid,
     reviewError: review.isError ? review.error : null,
-    canConsentTransfer: txn?.proposal?.proposed_transfer === true,
+    canConsentTransfer,
+    canMarkTransfer,
+    /** Linkable queue rows for the manual picker, with their account labels. */
+    transferChoices:
+      panel === 'transfer' && txn !== null
+        ? transferCandidates(txn, queueById.values()).map((candidate) => ({
+            txn: candidate,
+            label: accountLabel(candidate.account_id) ?? payeeOf(candidate),
+          }))
+        : [],
     // verbs
     setCorrection,
     setSplitLines,
     accept,
     consentTransfer,
+    openTransfer,
+    markTransfer,
+    closeTransfer: closePanel,
     openCategory,
     closeCategory: closePanel,
     toggleCategory,
