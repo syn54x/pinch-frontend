@@ -8,36 +8,19 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   accountBalanceMinor,
+  accountSubline,
   groupAccounts,
+  isDebtAccount,
   primaryCurrency,
   totalBalanceMinor,
 } from '@/lib/accounts'
 import { formatMinorUnits } from '@/lib/money'
-import { relativeTime } from '@/lib/time'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_authed/accounts')({
   staticData: { title: 'Accounts' },
   component: AccountsPage,
 })
-
-function isDebtAccount(account: AccountOut): boolean {
-  return account.kind === 'loan' || account.kind === 'credit'
-}
-
-/** The row's honest sub-line from the fields we actually have: a loan's APR, and
- * when the balance was last observed (entered by hand vs synced). */
-function accountSubline(account: AccountOut): string {
-  const parts: string[] = []
-  if (isDebtAccount(account) && account.terms?.apr != null) {
-    parts.push(`${account.terms.apr}% APR`)
-  }
-  if (account.balance !== null) {
-    const when = relativeTime(account.balance.as_of)
-    parts.push(account.manual ? `manual · ${when}` : `synced ${when}`)
-  }
-  return parts.join(' · ')
-}
 
 // The Accounts surface (wireframe s-Accounts): every account grouped by category
 // with a subtotal, over a running total. Debt lives under Accounts now — the
