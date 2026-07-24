@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useRouter, useRouterState } from '@tanstack/react-router'
 import {
   CreditCard,
+  Home,
   Inbox as InboxIcon,
   Link as LinkIcon,
   List,
@@ -48,6 +49,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="font-semibold text-sm">Pinch</span>
         </div>
         <nav aria-label="Primary" className="flex flex-col gap-[3px]">
+          <NavItem to="/dashboard" icon={Home}>
+            Dashboard
+          </NavItem>
           <NavItem to="/inbox" icon={InboxIcon}>
             Inbox
             <InboxCount />

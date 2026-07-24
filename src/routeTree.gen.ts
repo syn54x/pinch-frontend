@@ -17,6 +17,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AuthedAccountsRouteImport } from './routes/_authed/accounts'
 import { Route as AuthedConnectionsRouteImport } from './routes/_authed/connections'
+import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedInboxRouteImport } from './routes/_authed/inbox'
 import { Route as AuthedNetWorthRouteImport } from './routes/_authed/net-worth'
 import { Route as AuthedRecurringRouteImport } from './routes/_authed/recurring'
@@ -64,6 +65,11 @@ const AuthedAccountsRoute = AuthedAccountsRouteImport.update({
 const AuthedConnectionsRoute = AuthedConnectionsRouteImport.update({
   id: '/connections',
   path: '/connections',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedInboxRoute = AuthedInboxRouteImport.update({
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof VerifyEmailRoute
   '/accounts': typeof AuthedAccountsRoute
   '/connections': typeof AuthedConnectionsRoute
+  '/dashboard': typeof AuthedDashboardRoute
   '/inbox': typeof AuthedInboxRoute
   '/net-worth': typeof AuthedNetWorthRoute
   '/recurring': typeof AuthedRecurringRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/verify-email': typeof VerifyEmailRoute
   '/accounts': typeof AuthedAccountsRoute
   '/connections': typeof AuthedConnectionsRoute
+  '/dashboard': typeof AuthedDashboardRoute
   '/inbox': typeof AuthedInboxRoute
   '/net-worth': typeof AuthedNetWorthRoute
   '/recurring': typeof AuthedRecurringRoute
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/verify-email': typeof VerifyEmailRoute
   '/_authed/accounts': typeof AuthedAccountsRoute
   '/_authed/connections': typeof AuthedConnectionsRoute
+  '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/inbox': typeof AuthedInboxRoute
   '/_authed/net-worth': typeof AuthedNetWorthRoute
   '/_authed/recurring': typeof AuthedRecurringRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/accounts'
     | '/connections'
+    | '/dashboard'
     | '/inbox'
     | '/net-worth'
     | '/recurring'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/accounts'
     | '/connections'
+    | '/dashboard'
     | '/inbox'
     | '/net-worth'
     | '/recurring'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/_authed/accounts'
     | '/_authed/connections'
+    | '/_authed/dashboard'
     | '/_authed/inbox'
     | '/_authed/net-worth'
     | '/_authed/recurring'
@@ -294,6 +306,13 @@ declare module '@tanstack/react-router' {
       path: '/connections'
       fullPath: '/connections'
       preLoaderRoute: typeof AuthedConnectionsRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/dashboard': {
+      id: '/_authed/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthedDashboardRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/inbox': {
@@ -391,6 +410,7 @@ const AuthedAccountsDebtAccountIdRouteWithChildren =
 interface AuthedRouteChildren {
   AuthedAccountsRoute: typeof AuthedAccountsRoute
   AuthedConnectionsRoute: typeof AuthedConnectionsRoute
+  AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedInboxRoute: typeof AuthedInboxRoute
   AuthedNetWorthRoute: typeof AuthedNetWorthRoute
   AuthedRecurringRoute: typeof AuthedRecurringRoute
@@ -402,6 +422,7 @@ interface AuthedRouteChildren {
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAccountsRoute: AuthedAccountsRoute,
   AuthedConnectionsRoute: AuthedConnectionsRoute,
+  AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedInboxRoute: AuthedInboxRoute,
   AuthedNetWorthRoute: AuthedNetWorthRoute,
   AuthedRecurringRoute: AuthedRecurringRoute,

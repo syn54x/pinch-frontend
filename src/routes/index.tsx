@@ -1,9 +1,9 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
-// Opening Pinch drops the user into the daily loop: `/` redirects to the
-// Inbox until a Dashboard exists (F5).
+// Opening Pinch lands on the Dashboard (F5 CP5): net worth, what's due, and
+// what needs review — the look-ahead story, before the daily queue.
 export const Route = createFileRoute('/')({
   beforeLoad: () => {
-    throw redirect({ to: '/inbox' })
+    throw redirect({ to: '/dashboard' })
   },
 })
