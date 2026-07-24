@@ -1,4 +1,5 @@
 import type * as React from 'react'
+import { TONE_CLASS } from '@/lib/tone'
 import { cn } from '@/lib/utils'
 
 // The KPI unit shared by every F5 surface's tile row: a mono-caps label, a big
@@ -7,12 +8,6 @@ import { cn } from '@/lib/utils'
 // layout and type, not number formatting.
 
 type DeltaTone = 'positive' | 'negative' | 'muted'
-
-const DELTA_TONE: Record<DeltaTone, string> = {
-  positive: 'text-success',
-  negative: 'text-destructive',
-  muted: 'text-muted-foreground',
-}
 
 function StatTile({
   label,
@@ -50,7 +45,7 @@ function StatTile({
         </span>
         {delta != null && (
           <span
-            className={cn('text-xs font-medium', DELTA_TONE[deltaTone])}
+            className={cn('text-xs font-medium', TONE_CLASS[deltaTone])}
             data-slot="stat-tile-delta"
           >
             {delta}

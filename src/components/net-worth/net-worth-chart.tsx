@@ -5,17 +5,9 @@ import { Area } from '@/components/charts/area'
 import { AreaChart } from '@/components/charts/area-chart'
 import { Grid } from '@/components/charts/grid'
 import { ProjectionLine } from '@/components/charts/projection-line'
+import { formatMonthYear } from '@/lib/dates'
 import { formatMinorUnits } from '@/lib/money'
 import { showProjection } from '@/lib/net-worth'
-
-const monthYear = new Intl.DateTimeFormat(undefined, {
-  month: 'short',
-  year: 'numeric',
-})
-
-function labelFor(iso: string): string {
-  return monthYear.format(new Date(iso))
-}
 
 // The Net Worth chart (s11 / s11e): a solid history area with Penny's dashed
 // run-rate projection past a "now" divider. History is always real; the
@@ -64,8 +56,8 @@ export function NetWorthChart({
       : null
 
   const summary = projecting
-    ? `Net worth from ${labelFor(first.date)} to ${labelFor(last.date)}, currently ${formatMinorUnits(last.net_worth_minor, currency)}, with Penny's run-rate projection to ${labelFor(endpoint?.date ?? last.date)}.`
-    : `Net worth from ${labelFor(first.date)} to ${labelFor(last.date)}, currently ${formatMinorUnits(last.net_worth_minor, currency)}. History is still collecting — no projection yet.`
+    ? `Net worth from ${formatMonthYear(first.date)} to ${formatMonthYear(last.date)}, currently ${formatMinorUnits(last.net_worth_minor, currency)}, with Penny's run-rate projection to ${formatMonthYear(endpoint?.date ?? last.date)}.`
+    : `Net worth from ${formatMonthYear(first.date)} to ${formatMonthYear(last.date)}, currently ${formatMinorUnits(last.net_worth_minor, currency)}. History is still collecting — no projection yet.`
 
   return (
     <div className="flex flex-col gap-2">
@@ -109,11 +101,11 @@ export function NetWorthChart({
           </div>
         </ChartA11y>
         <div className="mt-2 flex justify-between text-[11.5px] text-muted-foreground">
-          <span>{labelFor(first.date)}</span>
+          <span>{formatMonthYear(first.date)}</span>
           <span>now</span>
           {projecting && endpoint !== undefined ? (
             <span className="text-success">
-              projected · {labelFor(endpoint.date)}
+              projected · {formatMonthYear(endpoint.date)}
             </span>
           ) : (
             <span aria-hidden />

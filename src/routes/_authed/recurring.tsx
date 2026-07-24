@@ -3,12 +3,14 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import {
   listRecurringOptions,
+  meOptions,
   recurringReportOptions,
 } from '@/api/generated/@tanstack/react-query.gen'
 import type { RecurringKind } from '@/api/generated/types.gen'
 import { CurationDrawer } from '@/components/recurring/curation-drawer'
 import { CycleRow } from '@/components/recurring/cycle-row'
 import { RecurringDonut } from '@/components/recurring/recurring-donut'
+import { SegmentedControl } from '@/components/ui/segmented-control'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatTile } from '@/components/ui/stat-tile'
 import { formatMinorUnits } from '@/lib/money'
@@ -54,6 +56,7 @@ function RecurringPage() {
     ...recurringReportOptions(),
     throwOnError: true,
   })
+  const me = useQuery(meOptions())
   const list = useQuery({
     ...listRecurringOptions({
       query: { kind: search.kind, unpaid: search.unpaid, limit: 100 },
@@ -64,7 +67,9 @@ function RecurringPage() {
 
   const summary = report.data
   if (summary === undefined) return <RecurringSkeleton />
-  const currency = 'USD'
+  // The recurring summary has no currency of its own (backend wart) — the
+  // user's primary currency is the honest source.
+  const currency = me.data?.primary_currency ?? 'USD'
 
   // Nothing detected yet (s12e): no active series at all. Real $0 still renders;
   // this is the "no pattern found" state, not an empty wallet.
@@ -102,7 +107,7 @@ function RecurringPage() {
       <section className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-baseline gap-2">
-            <h2 className="label-caps">This cycle</h2>
+            <h2 className="font-semibold text-sm">This cycle</h2>
             <span className="text-[11.5px] text-muted-foreground">
               {summary.cycle.paid} of {summary.cycle.total} paid
             </span>
@@ -137,39 +142,23 @@ function RecurringPage() {
                 )
               })}
             </div>
-            <fieldset
+            <SegmentedControl
               aria-label="Paid filter"
-              className="flex items-center gap-0.5 rounded-lg bg-muted p-0.5"
-            >
-              {[
-                { unpaid: undefined, label: 'All' },
-                { unpaid: true as const, label: 'Unpaid' },
-              ].map((opt) => {
-                const active =
-                  (search.unpaid ?? false) === (opt.unpaid ?? false)
-                return (
-                  <button
-                    key={opt.label}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() =>
-                      navigate({
-                        search: (prev) => ({ ...prev, unpaid: opt.unpaid }),
-                        replace: true,
-                      })
-                    }
-                    className={cn(
-                      'rounded-md px-2.5 py-1 font-medium text-xs transition-colors',
-                      active
-                        ? 'bg-card text-foreground shadow-sm ring-1 ring-foreground/10'
-                        : 'text-muted-foreground hover:text-foreground',
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                )
-              })}
-            </fieldset>
+              value={search.unpaid === true ? 'unpaid' : 'all'}
+              options={[
+                { value: 'all', label: 'All' },
+                { value: 'unpaid', label: 'Unpaid' },
+              ]}
+              onChange={(next) =>
+                navigate({
+                  search: (prev) => ({
+                    ...prev,
+                    unpaid: next === 'unpaid' ? true : undefined,
+                  }),
+                  replace: true,
+                })
+              }
+            />
           </div>
         </div>
 
@@ -191,7 +180,11 @@ function RecurringPage() {
         </div>
       </section>
 
-      <CurationDrawer series={selected} onClose={() => setSelectedId(null)} />
+      <CurationDrawer
+        series={selected}
+        currency={currency}
+        onClose={() => setSelectedId(null)}
+      />
     </div>
   )
 }

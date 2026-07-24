@@ -14,7 +14,9 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatTile } from '@/components/ui/stat-tile'
 import { WarnChip } from '@/components/ui/warn-chip'
-import { deriveTermMonths, formatMonthYear } from '@/lib/debt'
+import { isDebtAccount } from '@/lib/accounts'
+import { formatMonthYear } from '@/lib/dates'
+import { deriveTermMonths } from '@/lib/debt'
 import { formatMinorUnits } from '@/lib/money'
 import { cn } from '@/lib/utils'
 
@@ -74,9 +76,7 @@ function LoanDetailPage() {
   if (payoff === undefined || account === undefined) return <DetailSkeleton />
 
   const currency = payoff.currency
-  const siblings = (accountsQuery.data?.items ?? []).filter(
-    (a) => a.kind === 'loan' || a.kind === 'credit',
-  )
+  const siblings = (accountsQuery.data?.items ?? []).filter(isDebtAccount)
   const projections = payoff.projections
 
   return (
@@ -108,7 +108,7 @@ function LoanDetailPage() {
         )}
       </div>
 
-      <h1 className="font-heading font-medium text-xl">{account.label}</h1>
+      <h1 className="font-heading font-semibold text-xl">{account.label}</h1>
 
       {projections === null ? (
         <TermsNotSet
@@ -164,7 +164,11 @@ function LoanDetailPage() {
             </div>
           )}
 
-          <TermsCard terms={account.terms} accountId={accountId} />
+          <TermsCard
+            terms={account.terms}
+            accountId={accountId}
+            currency={currency}
+          />
 
           <PayoffCurves projections={projections} currency={currency} />
 
@@ -191,9 +195,11 @@ function LoanDetailPage() {
 function TermsCard({
   terms,
   accountId,
+  currency,
 }: {
   terms: TermsOut | null
   accountId: string
+  currency: string
 }) {
   const term = deriveTermMonths(
     terms?.origination_date ?? null,
@@ -218,7 +224,7 @@ function TermsCard({
           label="Minimum payment"
           value={
             terms?.minimum_payment_minor != null
-              ? `${formatMinorUnits(terms.minimum_payment_minor, 'USD')} / mo`
+              ? `${formatMinorUnits(terms.minimum_payment_minor, currency)} / mo`
               : '—'
           }
         />
@@ -226,7 +232,7 @@ function TermsCard({
           label="Original principal"
           value={
             terms?.origination_amount_minor != null
-              ? formatMinorUnits(terms.origination_amount_minor, 'USD')
+              ? formatMinorUnits(terms.origination_amount_minor, currency)
               : '—'
           }
         />
@@ -314,9 +320,11 @@ function TermsNotSet({
   accountId: string
   currency: string
 }) {
+  // Payments on a loan are transfers from another account (#31 s15b) — a
+  // non-transfer credit (refund, interest reversal) is not a "Payment".
   const payments = useQuery({
     ...listTransactionsOptions({
-      query: { account_id: [accountId], limit: 5 },
+      query: { account_id: [accountId], is_transfer: true, limit: 5 },
     }),
   })
   const recent = (payments.data?.items ?? []).filter((t) => t.amount_minor > 0)

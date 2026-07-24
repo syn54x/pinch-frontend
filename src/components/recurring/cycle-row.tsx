@@ -1,20 +1,10 @@
 import type { RecurringSeriesOut } from '@/api/generated/types.gen'
 import { WarnChip } from '@/components/ui/warn-chip'
+import { monthLabel } from '@/lib/dates'
 import { formatMinorUnits } from '@/lib/money'
-import {
-  cycleStatusText,
-  cycleStatusTone,
-  isPaidDimmed,
-  monthLabel,
-} from '@/lib/recurring'
+import { cycleStatusText, cycleStatusTone, isPaidDimmed } from '@/lib/recurring'
+import { TONE_CLASS } from '@/lib/tone'
 import { cn } from '@/lib/utils'
-
-const TONE_CLASS = {
-  muted: 'text-muted-foreground',
-  foreground: 'text-foreground',
-  destructive: 'text-destructive',
-  warning: 'text-warning',
-} as const
 
 // The stacked date badge on the left of a cycle row — the cycle's anchor date
 // (last paid for a settled/lapsed row, next due otherwise).
@@ -82,6 +72,11 @@ export function CycleRow({
           <span className="rounded-[4px] bg-muted px-1.5 py-px text-muted-foreground">
             {series.bucket ?? 'Uncategorized'}
           </span>
+          {state.fixed && !income && state.status !== 'lapsed' && (
+            <span className="shrink-0 rounded-full border px-1.5 py-px text-[10px] text-muted-foreground">
+              fixed
+            </span>
+          )}
           <span className={TONE_CLASS[tone]}>
             {cycleStatusText(series, currency)}
           </span>

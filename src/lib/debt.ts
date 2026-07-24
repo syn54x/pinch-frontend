@@ -5,21 +5,6 @@
 // on save (Decision 2, "term months derived, never stored"), and derive the
 // term back from the two dates for display. Kept here so the math is unit-tested.
 
-const monthYear = new Intl.DateTimeFormat(undefined, {
-  month: 'short',
-  year: 'numeric',
-})
-
-/** ISO date at LOCAL midnight so month/year labels never slip across an offset. */
-function localDate(iso: string): Date {
-  return new Date(`${iso}T00:00:00`)
-}
-
-/** "Mar 2024" for a terms/payoff date. */
-export function formatMonthYear(iso: string): string {
-  return monthYear.format(localDate(iso))
-}
-
 /** Add `months` to an ISO date, clamping the day to the target month's length. */
 export function addMonths(iso: string, months: number): string {
   const [y, m, d] = iso.split('-').map(Number)

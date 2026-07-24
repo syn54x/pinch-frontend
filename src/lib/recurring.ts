@@ -1,49 +1,11 @@
-import type {
-  RecurringCadence,
-  RecurringSeriesOut,
-} from '@/api/generated/types.gen'
+import type { RecurringSeriesOut } from '@/api/generated/types.gen'
+import { formatMonthDay, monthLabel } from './dates'
 import { formatMinorUnits } from './money'
 
 // Recurring's presentation logic as pure functions — the "This cycle" row's
 // status line reads differently for each of the five cycle states, and income
 // (sign-inferred) phrases differently from a bill. Kept here so every state is
 // unit-tested without a browser (PRD Testing: vitest for pure logic).
-
-const monthDay = new Intl.DateTimeFormat(undefined, {
-  month: 'short',
-  day: 'numeric',
-})
-const monthOnly = new Intl.DateTimeFormat(undefined, { month: 'short' })
-
-/** Parse an ISO date (YYYY-MM-DD) at LOCAL midnight so the label never slips a
- * day across a timezone offset. */
-function localDate(iso: string): Date {
-  return new Date(`${iso}T00:00:00`)
-}
-
-export function formatMonthDay(iso: string): string {
-  return monthDay.format(localDate(iso))
-}
-
-export function monthLabel(iso: string): string {
-  return monthOnly.format(localDate(iso))
-}
-
-/** The cadence as a plain adverb ("monthly"), the upcoming-row's resting label. */
-export function cadenceLabel(cadence: RecurringCadence): string {
-  switch (cadence) {
-    case 'weekly':
-      return 'weekly'
-    case 'biweekly':
-      return 'biweekly'
-    case 'monthly':
-      return 'monthly'
-    case 'quarterly':
-      return 'quarterly'
-    case 'yearly':
-      return 'yearly'
-  }
-}
 
 /** Paid rows recede — the charge already happened this cycle. */
 export function isPaidDimmed(series: RecurringSeriesOut): boolean {
@@ -73,8 +35,9 @@ export function cycleStatusText(
         ? `${Math.abs(state.due_in_days)}d overdue`
         : 'overdue'
     case 'upcoming':
+      // The cadence values already read as plain adverbs ("monthly").
       return state.fixed
-        ? cadenceLabel(series.cadence)
+        ? series.cadence
         : `est. ${formatMinorUnits(state.est_amount_minor ?? 0, currency)}`
     case 'lapsed':
       return state.last_paid_date !== null
@@ -87,7 +50,7 @@ export function cycleStatusText(
  * overdue is a problem; lapsed is a gentle warning. */
 export function cycleStatusTone(
   status: RecurringSeriesOut['state']['status'],
-): 'muted' | 'foreground' | 'destructive' | 'warning' {
+): 'muted' | 'foreground' | 'negative' | 'warning' {
   switch (status) {
     case 'paid':
     case 'upcoming':
@@ -95,7 +58,7 @@ export function cycleStatusTone(
     case 'due':
       return 'foreground'
     case 'overdue':
-      return 'destructive'
+      return 'negative'
     case 'lapsed':
       return 'warning'
   }

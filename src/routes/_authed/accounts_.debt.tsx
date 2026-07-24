@@ -8,7 +8,7 @@ import { ProgressRing } from '@/components/ui/progress-ring'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatTile } from '@/components/ui/stat-tile'
 import { WarnChip } from '@/components/ui/warn-chip'
-import { formatMonthYear } from '@/lib/debt'
+import { formatMonthYear } from '@/lib/dates'
 import { formatMinorUnits } from '@/lib/money'
 import { cn } from '@/lib/utils'
 
@@ -111,6 +111,14 @@ function DebtListPage() {
                 minimum payment to include{' '}
                 {missing.map((l) => l.label).join(', ')}.
               </p>
+              <Button asChild size="sm" className="shrink-0">
+                <Link
+                  to="/accounts/debt/$accountId"
+                  params={{ accountId: missing[0].id }}
+                >
+                  Add terms
+                </Link>
+              </Button>
             </div>
           )}
 
@@ -154,7 +162,7 @@ function LoanRow({ loan, currency }: { loan: DebtLoanRow; currency: string }) {
               ? '—'
               : formatMinorUnits(loan.balance_minor, currency)}
           </span>
-          <span>
+          <span className="amount">
             {loan.minimum_payment_minor === null
               ? 'min —'
               : `${formatMinorUnits(loan.minimum_payment_minor, currency)}/mo`}

@@ -7,6 +7,16 @@ import type { Delta, Projection, SeriesPoint } from '@/api/generated/types.gen'
 
 const DAY_MS = 86_400_000
 
+/** The report ranges, shared by the Net Worth page (URL-backed) and the
+ * Dashboard mini-card (local state). */
+export type NetWorthRange = '1m' | '6m' | '1y' | 'all'
+export const NET_WORTH_RANGES: { value: NetWorthRange; label: string }[] = [
+  { value: '1m', label: '1M' },
+  { value: '6m', label: '6M' },
+  { value: '1y', label: '1Y' },
+  { value: 'all', label: 'All' },
+]
+
 /** History span in days (last − first date). 0 for an empty or single point. */
 export function spanDays(series: SeriesPoint[]): number {
   if (series.length < 2) return 0
@@ -72,7 +82,7 @@ export function formatDeltaPercent(delta: Delta): string | null {
 }
 
 /** How the since-range delta is phrased under the hero, by range. */
-export function rangeSinceLabel(range: '1m' | '6m' | '1y' | 'all'): string {
+export function rangeSinceLabel(range: NetWorthRange): string {
   switch (range) {
     case '1m':
       return 'past month'

@@ -5,8 +5,16 @@ import { ChartA11y } from '@/components/chart-a11y'
 import { Area } from '@/components/charts/area'
 import { AreaChart } from '@/components/charts/area-chart'
 import { Skeleton } from '@/components/ui/skeleton'
+import { formatMonthYear } from '@/lib/dates'
 import { formatMinorUnits } from '@/lib/money'
-import { deltaGlyph, deltaTone, formatDeltaPercent } from '@/lib/net-worth'
+import {
+  deltaGlyph,
+  deltaTone,
+  formatDeltaPercent,
+  NET_WORTH_RANGES,
+  type NetWorthRange,
+} from '@/lib/net-worth'
+import { TONE_CLASS } from '@/lib/tone'
 import { cn } from '@/lib/utils'
 
 // The Dashboard's net-worth mini-card (wireframe s6): a hero balance, a
@@ -16,28 +24,8 @@ import { cn } from '@/lib/utils'
 // that resets on navigation (PRD Decision 8), deliberately NOT URL-backed like
 // the Net Worth page's control.
 
-type Range = '1m' | '6m' | '1y' | 'all'
-
-const RANGES: { value: Range; label: string }[] = [
-  { value: '1m', label: '1M' },
-  { value: '6m', label: '6M' },
-  { value: '1y', label: '1Y' },
-  { value: 'all', label: 'All' },
-]
-
-const TONE_CLASS = {
-  positive: 'text-success',
-  negative: 'text-destructive',
-  muted: 'text-muted-foreground',
-} as const
-
-const monthYear = new Intl.DateTimeFormat(undefined, {
-  month: 'short',
-  year: 'numeric',
-})
-
 export function NetWorthCard() {
-  const [range, setRange] = useState<Range>('6m')
+  const [range, setRange] = useState<NetWorthRange>('6m')
   const report = useQuery({
     ...netWorthReportOptions({ query: { range } }),
     placeholderData: keepPreviousData,
@@ -59,10 +47,10 @@ export function NetWorthCard() {
           id="dashboard-nw-range"
           aria-label="Net worth range"
           value={range}
-          onChange={(event) => setRange(event.target.value as Range)}
+          onChange={(event) => setRange(event.target.value as NetWorthRange)}
           className="rounded-full bg-muted px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          {RANGES.map((option) => (
+          {NET_WORTH_RANGES.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
@@ -134,7 +122,7 @@ function MiniArea({
 }: {
   series: { date: string; net_worth_minor: number }[]
   currency: string
-  range: Range
+  range: NetWorthRange
 }) {
   const points = series.map((point) => ({
     date: new Date(point.date),
@@ -142,7 +130,7 @@ function MiniArea({
   }))
   const first = series[0]
   const last = series[series.length - 1]
-  const summary = `Net worth over the ${RANGES.find((r) => r.value === range)?.label ?? range} range, from ${monthYear.format(new Date(first.date))} to ${monthYear.format(new Date(last.date))}, currently ${formatMinorUnits(last.net_worth_minor, currency)}.`
+  const summary = `Net worth over the ${NET_WORTH_RANGES.find((r) => r.value === range)?.label ?? range} range, from ${formatMonthYear(first.date)} to ${formatMonthYear(last.date)}, currently ${formatMinorUnits(last.net_worth_minor, currency)}.`
 
   return (
     <ChartA11y

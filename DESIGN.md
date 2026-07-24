@@ -78,7 +78,7 @@ Two registers of the same discipline. Light: restrained graphite chrome around e
 ### Named Rules
 **The Tabular Rule.** Every monetary amount renders in tabular figures, right-aligned when in columns. A proportional-figure dollar amount is a bug.
 
-**The Label Voice Rule.** Structural labels are small mono caps (`label-caps`); headings are the sans. Never mix the two roles.
+**The Label Voice Rule.** Structural labels are small mono caps (`label-caps`); headings are the sans. Never mix the two roles. Which voice a given card header speaks is settled by its wireframe (§5 ground truth): page-level section titles ("By account", "This cycle") are H2 sans, while dense detail cards (the loan detail's "Loan terms" / "Recent payments") set their headers as labels — there the label *is* the structure.
 
 ## 4. Elevation
 
