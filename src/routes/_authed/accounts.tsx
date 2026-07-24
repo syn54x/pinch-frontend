@@ -3,90 +3,162 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import { listAccountsOptions } from '@/api/generated/@tanstack/react-query.gen'
 import type { AccountOut } from '@/api/generated/types.gen'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  accountBalanceMinor,
+  groupAccounts,
+  primaryCurrency,
+  totalBalanceMinor,
+} from '@/lib/accounts'
 import { formatMinorUnits } from '@/lib/money'
-
-function isDebtAccount(account: AccountOut): boolean {
-  return account.kind === 'loan' || account.kind === 'credit'
-}
+import { relativeTime } from '@/lib/time'
+import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_authed/accounts')({
   staticData: { title: 'Accounts' },
   component: AccountsPage,
 })
 
+function isDebtAccount(account: AccountOut): boolean {
+  return account.kind === 'loan' || account.kind === 'credit'
+}
+
+/** The row's honest sub-line from the fields we actually have: a loan's APR, and
+ * when the balance was last observed (entered by hand vs synced). */
+function accountSubline(account: AccountOut): string {
+  const parts: string[] = []
+  if (isDebtAccount(account) && account.terms?.apr != null) {
+    parts.push(`${account.terms.apr}% APR`)
+  }
+  if (account.balance !== null) {
+    const when = relativeTime(account.balance.as_of)
+    parts.push(account.manual ? `manual · ${when}` : `synced ${when}`)
+  }
+  return parts.join(' · ')
+}
+
+// The Accounts surface (wireframe s-Accounts): every account grouped by category
+// with a subtotal, over a running total. Debt lives under Accounts now — the
+// Liabilities section and each loan row open the Debt view.
 function AccountsPage() {
-  // Non-401 failures (the interceptor owns those) throw to the _authed
-  // error boundary rather than rendering a silent empty page.
+  // Non-401 failures (the interceptor owns those) throw to the _authed error
+  // boundary rather than rendering a silent empty page.
   const accounts = useQuery({ ...listAccountsOptions(), throwOnError: true })
 
-  return (
-    <div className="mx-auto w-full max-w-3xl">
-      <div className="space-y-3">
-        {accounts.isPending ? (
-          <AccountSkeletons />
-        ) : accounts.data && accounts.data.items.length > 0 ? (
-          <>
-            {accounts.data.items.some(isDebtAccount) && (
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="w-full justify-between"
-              >
-                <Link to="/accounts/debt">
-                  Debt view — payoff &amp; scenarios
-                  <ChevronRight aria-hidden />
-                </Link>
-              </Button>
-            )}
-            {accounts.data.items.map((account) => (
-              <AccountCard key={account.id} account={account} />
-            ))}
-          </>
-        ) : (
-          <EmptyState />
-        )}
+  if (accounts.isPending) {
+    return (
+      <div className="mx-auto w-full max-w-3xl space-y-3">
+        <AccountSkeletons />
       </div>
+    )
+  }
+
+  const items = accounts.data?.items ?? []
+  if (items.length === 0) {
+    return (
+      <div className="mx-auto w-full max-w-3xl">
+        <EmptyState />
+      </div>
+    )
+  }
+
+  const currency = primaryCurrency(items)
+  const groups = groupAccounts(items)
+
+  return (
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="label-caps">Total across {items.length} accounts</div>
+          <div className="amount mt-0.5 font-semibold text-3xl">
+            {formatMinorUnits(totalBalanceMinor(items), currency)}
+          </div>
+        </div>
+        <Button asChild size="sm">
+          <Link to="/connections">Connect bank</Link>
+        </Button>
+      </div>
+
+      {groups.map((group) => (
+        <section key={group.key} className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="flex items-baseline gap-2 font-medium text-sm">
+              {group.label}
+              <span className="amount text-muted-foreground text-xs">
+                {formatMinorUnits(group.subtotalMinor, currency)}
+              </span>
+            </h2>
+            {group.key === 'liabilities' && (
+              <Link
+                to="/accounts/debt"
+                className="text-muted-foreground text-xs hover:text-foreground"
+              >
+                Debt view — payoff &amp; scenarios →
+              </Link>
+            )}
+          </div>
+          <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
+            {group.accounts.map((account) => (
+              <AccountRow key={account.id} account={account} />
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   )
 }
 
-function AccountCard({ account }: { account: AccountOut }) {
+function AccountRow({ account }: { account: AccountOut }) {
   const debt = isDebtAccount(account)
-  const card = (
-    <Card
+  const amount = accountBalanceMinor(account)
+  const subline = accountSubline(account)
+
+  const inner = (
+    <div
       data-testid="account-card"
-      className={debt ? 'transition-colors hover:bg-muted/40' : undefined}
+      className={cn(
+        'flex items-center gap-3 border-b p-4 last:border-b-0',
+        debt && 'transition-colors hover:bg-muted/40',
+      )}
     >
-      <CardContent className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <span className="font-medium">{account.label}</span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="truncate font-medium text-sm">{account.label}</span>
           {account.mask && (
-            <span className="text-muted-foreground text-sm">
+            <span className="shrink-0 text-muted-foreground text-xs">
               ···{account.mask}
             </span>
           )}
-          <Badge variant="secondary">{account.kind}</Badge>
-          {account.manual && <Badge variant="outline">manual</Badge>}
         </div>
-        {account.balance ? (
-          <span className="amount ml-auto text-sm">
-            {formatMinorUnits(
-              account.balance.amount_minor,
-              account.balance.currency,
-            )}
-          </span>
-        ) : (
-          <span className="ml-auto text-muted-foreground text-sm">
-            No balance yet
-          </span>
+        {subline !== '' && (
+          <div className="mt-0.5 text-[11.5px] text-muted-foreground">
+            {subline}
+          </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+      {account.balance ? (
+        <span
+          className={cn(
+            'amount shrink-0 text-sm',
+            amount < 0 && 'text-destructive',
+          )}
+        >
+          {formatMinorUnits(amount, account.balance.currency)}
+        </span>
+      ) : (
+        <span className="shrink-0 text-muted-foreground text-sm">
+          No balance yet
+        </span>
+      )}
+      {debt && (
+        <ChevronRight
+          className="size-4 shrink-0 text-muted-foreground"
+          aria-hidden
+        />
+      )}
+    </div>
   )
 
   // Loans & cards deep-link into the Debt view for their payoff timeline.
@@ -96,10 +168,10 @@ function AccountCard({ account }: { account: AccountOut }) {
       params={{ accountId: account.id }}
       className="block"
     >
-      {card}
+      {inner}
     </Link>
   ) : (
-    card
+    inner
   )
 }
 

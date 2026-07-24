@@ -6,7 +6,7 @@ function cardFor(page: Page, label: string) {
   return page.getByTestId('account-card').filter({ hasText: label })
 }
 
-test('accounts render as cards with kind badges and formatted balances', async ({
+test('accounts group by category with subtotals, a running total, and the debt link', async ({
   page,
 }) => {
   const email = uniqueEmail('cards')
@@ -28,13 +28,22 @@ test('accounts render as cards with kind badges and formatted balances', async (
   await loginViaUi(page, email, PASSWORD)
   await expect(page).toHaveURL(/\/accounts$/)
 
-  const checking = cardFor(page, 'Everyday Checking')
-  await expect(checking.getByText('depository')).toBeVisible()
-  await expect(checking.getByText('$1,234.56')).toBeVisible()
+  // Running total: 1,234.56 − 500.00 = 734.56.
+  await expect(page.getByText('Total across 2 accounts')).toBeVisible()
+  await expect(page.getByText('$734.56')).toBeVisible()
 
-  const travel = cardFor(page, 'Travel Card')
-  await expect(travel.getByText('credit')).toBeVisible()
-  await expect(travel.getByText('-$500.00')).toBeVisible()
+  // Grouped into Cash and Liabilities, each with its section header.
+  await expect(page.getByRole('heading', { name: /Cash/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Liabilities/ })).toBeVisible()
+
+  // Balances land in the right rows.
+  await expect(
+    cardFor(page, 'Everyday Checking').getByText('$1,234.56'),
+  ).toBeVisible()
+  await expect(cardFor(page, 'Travel Card').getByText('-$500.00')).toBeVisible()
+
+  // The Liabilities section opens the Debt view.
+  await expect(page.getByRole('link', { name: /Debt view/ })).toBeVisible()
 })
 
 test('an account without a balance says so instead of showing zero', async ({
