@@ -106,6 +106,13 @@ test('warn markers: excluded aggregates say why', async ({ page }) => {
   )
   await expect(page.getByText('Weighted APR')).toBeVisible()
   await expect(page.getByText('add terms to project')).toBeVisible()
+
+  // The banner carries the wireframe's [Add terms] action → the loan's detail.
+  await page
+    .getByTestId('debt-missing-banner')
+    .getByRole('link', { name: 'Add terms' })
+    .click()
+  await expect(page).toHaveURL(/\/accounts\/debt\/[^/]+$/)
 })
 
 test('debt holds AA contrast in both themes', async ({ page }) => {

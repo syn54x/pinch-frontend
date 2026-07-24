@@ -11,6 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { isDebtAccount } from '@/lib/accounts'
 
 export const Route = createFileRoute('/_authed/accounts_/debt/add')({
   staticData: { title: 'Add loan' },
@@ -26,9 +27,7 @@ function AddLoanPage() {
   const [pickedId, setPickedId] = useState('')
 
   const close = () => navigate({ to: '/accounts/debt' })
-  const loans = (accounts.data?.items ?? []).filter(
-    (a) => a.kind === 'loan' || a.kind === 'credit',
-  )
+  const loans = (accounts.data?.items ?? []).filter(isDebtAccount)
   const picked = loans.find((a) => a.id === pickedId) ?? null
 
   return (

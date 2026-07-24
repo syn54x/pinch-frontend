@@ -3,13 +3,7 @@ import type {
   CycleStateOut,
   RecurringSeriesOut,
 } from '@/api/generated/types.gen'
-import {
-  cadenceLabel,
-  cycleStatusText,
-  cycleStatusTone,
-  isPaidDimmed,
-  monthLabel,
-} from './recurring'
+import { cycleStatusText, cycleStatusTone, isPaidDimmed } from './recurring'
 
 function series(
   state: Partial<CycleStateOut>,
@@ -120,7 +114,7 @@ describe('cycleStatusTone', () => {
     expect(cycleStatusTone('paid')).toBe('muted')
     expect(cycleStatusTone('upcoming')).toBe('muted')
     expect(cycleStatusTone('due')).toBe('foreground')
-    expect(cycleStatusTone('overdue')).toBe('destructive')
+    expect(cycleStatusTone('overdue')).toBe('negative')
     expect(cycleStatusTone('lapsed')).toBe('warning')
   })
 })
@@ -129,17 +123,5 @@ describe('isPaidDimmed', () => {
   it('dims only paid rows', () => {
     expect(isPaidDimmed(series({ status: 'paid' }))).toBe(true)
     expect(isPaidDimmed(series({ status: 'due' }))).toBe(false)
-  })
-})
-
-describe('cadenceLabel / monthLabel', () => {
-  it('names cadences', () => {
-    expect(cadenceLabel('weekly')).toBe('weekly')
-    expect(cadenceLabel('quarterly')).toBe('quarterly')
-  })
-
-  it('names the month of an ISO date without timezone slippage', () => {
-    expect(monthLabel('2026-05-02')).toBe('May')
-    expect(monthLabel('2026-01-31')).toBe('Jan')
   })
 })

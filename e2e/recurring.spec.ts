@@ -87,6 +87,9 @@ test('a detected series surfaces with the tiles, donut, and cycle list', async (
 
   await expect(page.getByTestId('recurring-row')).toHaveCount(1)
   await expect(page.getByTestId('recurring-row')).toContainText(/netflix/i)
+  // A steady amount wears the wireframe's `fixed` chip (varying ones say
+  // "~ varies" instead).
+  await expect(page.getByTestId('recurring-row')).toContainText('fixed')
   // Tiles render real money (the $15.49/mo bill).
   await expect(page.getByTestId('recurring-tiles')).toContainText('$15.49')
   // The donut exposes its data at the accessibility seam.

@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { Check } from 'lucide-react'
 import { useEffect, useReducer, useRef, useState } from 'react'
 import {
+  ledgerStatsOptions,
   ledgerStatsQueryKey,
   listAccountsOptions,
   listTransactionsOptions,
@@ -49,6 +50,10 @@ export function ToReviewCard() {
     listTransactionsOptions({ query: { reviewed: false, limit: QUEUE_PAGE } }),
   )
   const accounts = useQuery(listAccountsOptions({}))
+  // The server's unreviewed count — the same number the To-review tile above
+  // shows. The loaded queue caps at QUEUE_PAGE, so "N left" must not read from
+  // it or the two contradict each other past 100.
+  const stats = useQuery(ledgerStatsOptions())
 
   const items = queue.data?.items
   useEffect(() => {
@@ -216,7 +221,7 @@ export function ToReviewCard() {
               data-testid="to-review-left"
               className="text-[11.5px] text-muted-foreground"
             >
-              {visible.length} left
+              {stats.data?.unreviewed ?? visible.length} left
             </span>
             <Button
               size="sm"

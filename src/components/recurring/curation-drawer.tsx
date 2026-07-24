@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { SegmentedControl } from '@/components/ui/segmented-control'
 import {
   Sheet,
   SheetContent,
@@ -29,8 +30,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { formatMinorUnits } from '@/lib/money'
-import { cadenceLabel, cycleStatusText } from '@/lib/recurring'
-import { cn } from '@/lib/utils'
+import { cycleStatusText } from '@/lib/recurring'
 
 // The "Recurring series" curation drawer (s12b/s12c). What the user can shape is
 // narrow and honest: rename, and (for a bill/subscription, never income) flip
@@ -38,9 +38,11 @@ import { cn } from '@/lib/utils'
 // Dismiss is one-way — the confirm copy says so plainly.
 export function CurationDrawer({
   series,
+  currency,
   onClose,
 }: {
   series: RecurringSeriesOut | null
+  currency: string
   onClose: () => void
 }) {
   return (
@@ -51,7 +53,12 @@ export function CurationDrawer({
       }}
     >
       {series !== null && (
-        <CurationBody key={series.id} series={series} onClose={onClose} />
+        <CurationBody
+          key={series.id}
+          series={series}
+          currency={currency}
+          onClose={onClose}
+        />
       )}
     </Sheet>
   )
@@ -59,15 +66,16 @@ export function CurationDrawer({
 
 function CurationBody({
   series,
+  currency,
   onClose,
 }: {
   series: RecurringSeriesOut
+  currency: string
   onClose: () => void
 }) {
   const queryClient = useQueryClient()
   const [name, setName] = useState(series.display_name)
   const income = series.direction > 0
-  const currency = 'USD'
 
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: recurringReportQueryKey() })
@@ -98,7 +106,10 @@ function CurationBody({
         <span className="label-caps">Recurring series</span>
         <SheetTitle>{series.display_name}</SheetTitle>
         <SheetDescription className="amount text-base text-foreground">
-          {formatMinorUnits(series.state.est_amount_minor ?? 0, currency)}
+          {formatMinorUnits(
+            series.state.est_amount_minor ?? series.amount_minor ?? 0,
+            currency,
+          )}
           <span className="ml-1 text-muted-foreground text-xs">/ mo</span>
         </SheetDescription>
       </SheetHeader>
@@ -134,44 +145,34 @@ function CurationBody({
       ) : (
         <div className="flex flex-col gap-1.5">
           <span className="label-caps">Type</span>
-          <fieldset className="flex w-fit items-center gap-0.5 rounded-lg bg-muted p-0.5">
-            {(['bill', 'subscription'] as const).map((k) => {
-              const active = series.kind === k
-              return (
-                <button
-                  key={k}
-                  type="button"
-                  aria-pressed={active}
-                  disabled={busy}
-                  onClick={() =>
-                    !active &&
-                    update.mutate({
-                      path: { series_id: series.id },
-                      body: { kind: k },
-                    })
-                  }
-                  className={cn(
-                    'rounded-md px-3 py-1 font-medium text-xs capitalize transition-colors',
-                    active
-                      ? 'bg-card text-foreground shadow-sm ring-1 ring-foreground/10'
-                      : 'text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  {k}
-                </button>
-              )
-            })}
-          </fieldset>
+          <SegmentedControl
+            aria-label="Type"
+            className="w-fit"
+            // The control renders only for outflows, so income never reaches it.
+            value={series.kind === 'subscription' ? 'subscription' : 'bill'}
+            disabled={busy}
+            options={[
+              { value: 'bill', label: 'Bill' },
+              { value: 'subscription', label: 'Subscription' },
+            ]}
+            onChange={(kind) =>
+              kind !== series.kind &&
+              update.mutate({
+                path: { series_id: series.id },
+                body: { kind },
+              })
+            }
+          />
         </div>
       )}
 
       <div className="flex flex-col gap-1.5">
         <span className="label-caps">Detected from history</span>
         <dl className="rounded-xl bg-muted/40 p-3 text-[13px]">
-          <Fact term="Cadence" value={cadenceLabel(series.cadence)} />
+          <Fact term="Cadence" value={series.cadence} />
           <Fact
             term="Amount"
-            value={`${formatMinorUnits(series.state.est_amount_minor ?? 0, currency)} · ${series.state.fixed ? 'fixed' : 'varies'}`}
+            value={`${formatMinorUnits(series.state.est_amount_minor ?? series.amount_minor ?? 0, currency)} · ${series.state.fixed ? 'fixed' : 'varies'}`}
           />
           <Fact term="Category" value={series.bucket ?? 'Uncategorized'} />
         </dl>

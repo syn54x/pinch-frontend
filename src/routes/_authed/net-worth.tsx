@@ -5,6 +5,7 @@ import type { AccountReportOut, Delta } from '@/api/generated/types.gen'
 import { NetWorthChart } from '@/components/net-worth/net-worth-chart'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { SegmentedControl } from '@/components/ui/segmented-control'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Sparkline } from '@/components/ui/sparkline'
 import { StatTile } from '@/components/ui/stat-tile'
@@ -14,19 +15,14 @@ import {
   deltaTone,
   formatDeltaPercent,
   momReady,
+  NET_WORTH_RANGES,
+  type NetWorthRange,
   rangeSinceLabel,
 } from '@/lib/net-worth'
+import { TONE_CLASS } from '@/lib/tone'
 import { cn } from '@/lib/utils'
 
-type Range = '1m' | '6m' | '1y' | 'all'
-const RANGES: { value: Range; label: string }[] = [
-  { value: '1m', label: '1M' },
-  { value: '6m', label: '6M' },
-  { value: '1y', label: '1Y' },
-  { value: 'all', label: 'All' },
-]
-
-type NetWorthSearch = { range?: Range }
+type NetWorthSearch = { range?: NetWorthRange }
 
 export const Route = createFileRoute('/_authed/net-worth')({
   staticData: { title: 'Net Worth' },
@@ -41,12 +37,6 @@ export const Route = createFileRoute('/_authed/net-worth')({
   component: NetWorthPage,
 })
 
-const TONE_CLASS = {
-  positive: 'text-success',
-  negative: 'text-destructive',
-  muted: 'text-muted-foreground',
-} as const
-
 // F5 CP2 (#29, wireframe s11/s11e): net worth, its direction, and Penny's
 // run-rate projection. Every number is real from the report; the projection and
 // the MoM tile gate honestly when there isn't enough history yet. Range lives in
@@ -54,7 +44,7 @@ const TONE_CLASS = {
 function NetWorthPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
-  const range: Range = search.range ?? '6m'
+  const range: NetWorthRange = search.range ?? '6m'
 
   const report = useQuery({
     ...netWorthReportOptions({ query: { range } }),
@@ -128,7 +118,7 @@ function NetWorthPage() {
           </div>
 
           <section className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-            <h2 className="label-caps">By account</h2>
+            <h2 className="font-semibold text-sm">By account</h2>
             <div className="mt-2 flex flex-col">
               {data.accounts.map((account, i) => (
                 <ByAccountRow
@@ -164,7 +154,7 @@ function HeroDelta({
   currency,
 }: {
   delta: Delta
-  range: Range
+  range: NetWorthRange
   currency: string
 }) {
   const tone = deltaTone(delta.delta_minor)
@@ -259,34 +249,17 @@ function RangeControl({
   range,
   onChange,
 }: {
-  range: Range
-  onChange: (range: Range) => void
+  range: NetWorthRange
+  onChange: (range: NetWorthRange) => void
 }) {
   return (
-    <fieldset
+    <SegmentedControl
       aria-label="Range"
-      className="flex shrink-0 items-center gap-0.5 rounded-lg bg-muted p-0.5"
-    >
-      {RANGES.map((r) => {
-        const active = r.value === range
-        return (
-          <button
-            key={r.value}
-            type="button"
-            aria-pressed={active}
-            onClick={() => onChange(r.value)}
-            className={cn(
-              'rounded-md px-2.5 py-1 font-medium text-xs transition-colors',
-              active
-                ? 'bg-card text-foreground shadow-sm ring-1 ring-foreground/10'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {r.label}
-          </button>
-        )
-      })}
-    </fieldset>
+      className="shrink-0"
+      value={range}
+      options={NET_WORTH_RANGES}
+      onChange={onChange}
+    />
   )
 }
 
@@ -307,7 +280,7 @@ function EmptyNetWorth() {
   )
 }
 
-function NetWorthSkeleton({ range }: { range: Range }) {
+function NetWorthSkeleton({ range }: { range: NetWorthRange }) {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
       <div className="flex items-start justify-between gap-4">
