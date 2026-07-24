@@ -5,6 +5,7 @@ import {
   Inbox as InboxIcon,
   Link as LinkIcon,
   List,
+  RefreshCw,
   TrendingUp,
 } from 'lucide-react'
 import { type ComponentType, type ReactNode, useState } from 'react'
@@ -56,6 +57,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </NavItem>
           <NavItem to="/net-worth" icon={TrendingUp}>
             Net Worth
+          </NavItem>
+          <NavItem to="/recurring" icon={RefreshCw}>
+            Recurring
           </NavItem>
           <NavItem to="/accounts" icon={CreditCard}>
             Accounts
