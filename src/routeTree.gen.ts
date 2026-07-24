@@ -22,6 +22,10 @@ import { Route as AuthedNetWorthRouteImport } from './routes/_authed/net-worth'
 import { Route as AuthedRecurringRouteImport } from './routes/_authed/recurring'
 import { Route as AuthedRegisterRouteImport } from './routes/_authed/register'
 import { Route as ConnectOauthReturnRouteImport } from './routes/connect.oauth-return'
+import { Route as AuthedAccountsDebtRouteImport } from './routes/_authed/accounts_.debt'
+import { Route as AuthedAccountsDebtAddRouteImport } from './routes/_authed/accounts_.debt.add'
+import { Route as AuthedAccountsDebtAccountIdRouteImport } from './routes/_authed/accounts_.debt_.$accountId'
+import { Route as AuthedAccountsDebtAccountIdTermsRouteImport } from './routes/_authed/accounts_.debt_.$accountId.terms'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -87,6 +91,28 @@ const ConnectOauthReturnRoute = ConnectOauthReturnRouteImport.update({
   path: '/connect/oauth-return',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedAccountsDebtRoute = AuthedAccountsDebtRouteImport.update({
+  id: '/accounts_/debt',
+  path: '/accounts/debt',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedAccountsDebtAddRoute = AuthedAccountsDebtAddRouteImport.update({
+  id: '/add',
+  path: '/add',
+  getParentRoute: () => AuthedAccountsDebtRoute,
+} as any)
+const AuthedAccountsDebtAccountIdRoute =
+  AuthedAccountsDebtAccountIdRouteImport.update({
+    id: '/accounts_/debt_/$accountId',
+    path: '/accounts/debt/$accountId',
+    getParentRoute: () => AuthedRoute,
+  } as any)
+const AuthedAccountsDebtAccountIdTermsRoute =
+  AuthedAccountsDebtAccountIdTermsRouteImport.update({
+    id: '/terms',
+    path: '/terms',
+    getParentRoute: () => AuthedAccountsDebtAccountIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -101,6 +127,10 @@ export interface FileRoutesByFullPath {
   '/recurring': typeof AuthedRecurringRoute
   '/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
+  '/accounts/debt': typeof AuthedAccountsDebtRouteWithChildren
+  '/accounts/debt/add': typeof AuthedAccountsDebtAddRoute
+  '/accounts/debt/$accountId': typeof AuthedAccountsDebtAccountIdRouteWithChildren
+  '/accounts/debt/$accountId/terms': typeof AuthedAccountsDebtAccountIdTermsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -115,6 +145,10 @@ export interface FileRoutesByTo {
   '/recurring': typeof AuthedRecurringRoute
   '/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
+  '/accounts/debt': typeof AuthedAccountsDebtRouteWithChildren
+  '/accounts/debt/add': typeof AuthedAccountsDebtAddRoute
+  '/accounts/debt/$accountId': typeof AuthedAccountsDebtAccountIdRouteWithChildren
+  '/accounts/debt/$accountId/terms': typeof AuthedAccountsDebtAccountIdTermsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -131,6 +165,10 @@ export interface FileRoutesById {
   '/_authed/recurring': typeof AuthedRecurringRoute
   '/_authed/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
+  '/_authed/accounts_/debt': typeof AuthedAccountsDebtRouteWithChildren
+  '/_authed/accounts_/debt/add': typeof AuthedAccountsDebtAddRoute
+  '/_authed/accounts_/debt_/$accountId': typeof AuthedAccountsDebtAccountIdRouteWithChildren
+  '/_authed/accounts_/debt_/$accountId/terms': typeof AuthedAccountsDebtAccountIdTermsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -147,6 +185,10 @@ export interface FileRouteTypes {
     | '/recurring'
     | '/register'
     | '/connect/oauth-return'
+    | '/accounts/debt'
+    | '/accounts/debt/add'
+    | '/accounts/debt/$accountId'
+    | '/accounts/debt/$accountId/terms'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -161,6 +203,10 @@ export interface FileRouteTypes {
     | '/recurring'
     | '/register'
     | '/connect/oauth-return'
+    | '/accounts/debt'
+    | '/accounts/debt/add'
+    | '/accounts/debt/$accountId'
+    | '/accounts/debt/$accountId/terms'
   id:
     | '__root__'
     | '/'
@@ -176,6 +222,10 @@ export interface FileRouteTypes {
     | '/_authed/recurring'
     | '/_authed/register'
     | '/connect/oauth-return'
+    | '/_authed/accounts_/debt'
+    | '/_authed/accounts_/debt/add'
+    | '/_authed/accounts_/debt_/$accountId'
+    | '/_authed/accounts_/debt_/$accountId/terms'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -281,8 +331,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConnectOauthReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/accounts_/debt': {
+      id: '/_authed/accounts_/debt'
+      path: '/accounts/debt'
+      fullPath: '/accounts/debt'
+      preLoaderRoute: typeof AuthedAccountsDebtRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/accounts_/debt/add': {
+      id: '/_authed/accounts_/debt/add'
+      path: '/add'
+      fullPath: '/accounts/debt/add'
+      preLoaderRoute: typeof AuthedAccountsDebtAddRouteImport
+      parentRoute: typeof AuthedAccountsDebtRoute
+    }
+    '/_authed/accounts_/debt_/$accountId': {
+      id: '/_authed/accounts_/debt_/$accountId'
+      path: '/accounts/debt/$accountId'
+      fullPath: '/accounts/debt/$accountId'
+      preLoaderRoute: typeof AuthedAccountsDebtAccountIdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/accounts_/debt_/$accountId/terms': {
+      id: '/_authed/accounts_/debt_/$accountId/terms'
+      path: '/terms'
+      fullPath: '/accounts/debt/$accountId/terms'
+      preLoaderRoute: typeof AuthedAccountsDebtAccountIdTermsRouteImport
+      parentRoute: typeof AuthedAccountsDebtAccountIdRoute
+    }
   }
 }
+
+interface AuthedAccountsDebtRouteChildren {
+  AuthedAccountsDebtAddRoute: typeof AuthedAccountsDebtAddRoute
+}
+
+const AuthedAccountsDebtRouteChildren: AuthedAccountsDebtRouteChildren = {
+  AuthedAccountsDebtAddRoute: AuthedAccountsDebtAddRoute,
+}
+
+const AuthedAccountsDebtRouteWithChildren =
+  AuthedAccountsDebtRoute._addFileChildren(AuthedAccountsDebtRouteChildren)
+
+interface AuthedAccountsDebtAccountIdRouteChildren {
+  AuthedAccountsDebtAccountIdTermsRoute: typeof AuthedAccountsDebtAccountIdTermsRoute
+}
+
+const AuthedAccountsDebtAccountIdRouteChildren: AuthedAccountsDebtAccountIdRouteChildren =
+  {
+    AuthedAccountsDebtAccountIdTermsRoute:
+      AuthedAccountsDebtAccountIdTermsRoute,
+  }
+
+const AuthedAccountsDebtAccountIdRouteWithChildren =
+  AuthedAccountsDebtAccountIdRoute._addFileChildren(
+    AuthedAccountsDebtAccountIdRouteChildren,
+  )
 
 interface AuthedRouteChildren {
   AuthedAccountsRoute: typeof AuthedAccountsRoute
@@ -291,6 +395,8 @@ interface AuthedRouteChildren {
   AuthedNetWorthRoute: typeof AuthedNetWorthRoute
   AuthedRecurringRoute: typeof AuthedRecurringRoute
   AuthedRegisterRoute: typeof AuthedRegisterRoute
+  AuthedAccountsDebtRoute: typeof AuthedAccountsDebtRouteWithChildren
+  AuthedAccountsDebtAccountIdRoute: typeof AuthedAccountsDebtAccountIdRouteWithChildren
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
@@ -300,6 +406,9 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedNetWorthRoute: AuthedNetWorthRoute,
   AuthedRecurringRoute: AuthedRecurringRoute,
   AuthedRegisterRoute: AuthedRegisterRoute,
+  AuthedAccountsDebtRoute: AuthedAccountsDebtRouteWithChildren,
+  AuthedAccountsDebtAccountIdRoute:
+    AuthedAccountsDebtAccountIdRouteWithChildren,
 }
 
 const AuthedRouteWithChildren =

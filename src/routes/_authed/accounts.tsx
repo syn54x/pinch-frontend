@@ -1,11 +1,17 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { ChevronRight } from 'lucide-react'
 import { listAccountsOptions } from '@/api/generated/@tanstack/react-query.gen'
 import type { AccountOut } from '@/api/generated/types.gen'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatMinorUnits } from '@/lib/money'
+
+function isDebtAccount(account: AccountOut): boolean {
+  return account.kind === 'loan' || account.kind === 'credit'
+}
 
 export const Route = createFileRoute('/_authed/accounts')({
   staticData: { title: 'Accounts' },
@@ -23,9 +29,24 @@ function AccountsPage() {
         {accounts.isPending ? (
           <AccountSkeletons />
         ) : accounts.data && accounts.data.items.length > 0 ? (
-          accounts.data.items.map((account) => (
-            <AccountCard key={account.id} account={account} />
-          ))
+          <>
+            {accounts.data.items.some(isDebtAccount) && (
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="w-full justify-between"
+              >
+                <Link to="/accounts/debt">
+                  Debt view — payoff &amp; scenarios
+                  <ChevronRight aria-hidden />
+                </Link>
+              </Button>
+            )}
+            {accounts.data.items.map((account) => (
+              <AccountCard key={account.id} account={account} />
+            ))}
+          </>
         ) : (
           <EmptyState />
         )}
@@ -35,8 +56,12 @@ function AccountsPage() {
 }
 
 function AccountCard({ account }: { account: AccountOut }) {
-  return (
-    <Card data-testid="account-card">
+  const debt = isDebtAccount(account)
+  const card = (
+    <Card
+      data-testid="account-card"
+      className={debt ? 'transition-colors hover:bg-muted/40' : undefined}
+    >
       <CardContent className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="font-medium">{account.label}</span>
@@ -62,6 +87,19 @@ function AccountCard({ account }: { account: AccountOut }) {
         )}
       </CardContent>
     </Card>
+  )
+
+  // Loans & cards deep-link into the Debt view for their payoff timeline.
+  return debt ? (
+    <Link
+      to="/accounts/debt/$accountId"
+      params={{ accountId: account.id }}
+      className="block"
+    >
+      {card}
+    </Link>
+  ) : (
+    card
   )
 }
 
