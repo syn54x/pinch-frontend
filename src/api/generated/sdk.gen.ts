@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ArchiveAccountData, ArchiveAccountErrors, ArchiveAccountResponses, CommitImportData, CommitImportErrors, CommitImportResponses, ConfirmEmailVerificationData, ConfirmEmailVerificationErrors, ConfirmEmailVerificationResponses, ConfirmMappingData, ConfirmMappingErrors, ConfirmMappingResponses, ConfirmPasswordResetData, ConfirmPasswordResetErrors, ConfirmPasswordResetResponses, CountUnreviewedTransactionsData, CountUnreviewedTransactionsResponses, CreateAccountData, CreateAccountErrors, CreateAccountResponses, CreateBalanceEntryData, CreateBalanceEntryErrors, CreateBalanceEntryResponses, CreateCategoryData, CreateCategoryErrors, CreateCategoryResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateImportData, CreateImportErrors, CreateImportResponses, CreateLinkTokenData, CreateLinkTokenErrors, CreateLinkTokenResponses, CreatePatData, CreatePatErrors, CreatePatResponses, CreateRuleData, CreateRuleErrors, CreateRuleResponses, CreateTagData, CreateTagErrors, CreateTagResponses, CreateTransactionData, CreateTransactionErrors, CreateTransactionResponses, CreateTransferData, CreateTransferErrors, CreateTransferResponses, DebtReportData, DebtReportErrors, DebtReportResponses, DeleteCategoryData, DeleteCategoryErrors, DeleteCategoryResponses, DeleteConnectionData, DeleteConnectionErrors, DeleteConnectionResponses, DeleteImportData, DeleteImportErrors, DeleteImportProfileData, DeleteImportProfileErrors, DeleteImportProfileResponses, DeleteImportResponses, DeleteRuleData, DeleteRuleErrors, DeleteRuleResponses, DeleteSplitsData, DeleteSplitsErrors, DeleteSplitsResponses, DeleteTagData, DeleteTagErrors, DeleteTagResponses, DismissRecurringData, DismissRecurringErrors, DismissRecurringResponses, DissolveTransferData, DissolveTransferErrors, DissolveTransferResponses, GetAccountData, GetAccountErrors, GetAccountResponses, GetCategoryData, GetCategoryErrors, GetCategoryResponses, GetConnectionData, GetConnectionErrors, GetConnectionResponses, GetImportData, GetImportErrors, GetImportResponses, GetPayoffData, GetPayoffErrors, GetPayoffResponses, GetRuleData, GetRuleErrors, GetRuleResponses, GetTransactionData, GetTransactionErrors, GetTransactionResponses, HealthData, HealthResponses, LedgerStatsData, LedgerStatsResponses, ListAccountsData, ListAccountsErrors, ListAccountsResponses, ListBalanceEntriesData, ListBalanceEntriesErrors, ListBalanceEntriesResponses, ListCategoriesData, ListCategoriesErrors, ListCategoriesResponses, ListConnectionsData, ListConnectionsErrors, ListConnectionsResponses, ListCorrectionLogData, ListCorrectionLogErrors, ListCorrectionLogResponses, ListImportProfilesData, ListImportProfilesErrors, ListImportProfilesResponses, ListImportRowsData, ListImportRowsErrors, ListImportRowsResponses, ListPatsData, ListPatsErrors, ListPatsResponses, ListRecurringData, ListRecurringErrors, ListRecurringResponses, ListRulesData, ListRulesErrors, ListRulesResponses, ListSessionsData, ListSessionsErrors, ListSessionsResponses, ListTagsData, ListTagsErrors, ListTagsResponses, ListTransactionsData, ListTransactionsErrors, ListTransactionsResponses, ListTransfersData, ListTransfersErrors, ListTransfersResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutResponses, MeData, MeResponses, NetWorthReportData, NetWorthReportErrors, NetWorthReportResponses, PatchTransactionData, PatchTransactionErrors, PatchTransactionResponses, PreviewRuleData, PreviewRuleErrors, PreviewRuleResponses, PutSplitsData, PutSplitsErrors, PutSplitsResponses, RecurringReportData, RecurringReportErrors, RecurringReportResponses, RefreshConnectionData, RefreshConnectionErrors, RefreshConnectionResponses, RequestEmailVerificationData, RequestEmailVerificationResponses, RequestPasswordResetData, RequestPasswordResetErrors, RequestPasswordResetResponses, ReviewBatchData, ReviewBatchErrors, ReviewBatchResponses, ReviewTransactionData, ReviewTransactionErrors, ReviewTransactionResponses, RevokePatData, RevokePatErrors, RevokePatResponses, RevokeSessionData, RevokeSessionErrors, RevokeSessionResponses, SignupData, SignupErrors, SignupResponses, SpendingReportData, SpendingReportErrors, SpendingReportResponses, UpdateAccountLabelData, UpdateAccountLabelErrors, UpdateAccountLabelResponses, UpdateCategoryData, UpdateCategoryErrors, UpdateCategoryResponses, UpdateMeData, UpdateMeErrors, UpdateMeResponses, UpdateRecurringData, UpdateRecurringErrors, UpdateRecurringResponses, UpdateRuleData, UpdateRuleErrors, UpdateRuleResponses } from './types.gen';
+import type { ArchiveAccountData, ArchiveAccountErrors, ArchiveAccountResponses, CommitImportData, CommitImportErrors, CommitImportResponses, ConfirmEmailVerificationData, ConfirmEmailVerificationErrors, ConfirmEmailVerificationResponses, ConfirmMappingData, ConfirmMappingErrors, ConfirmMappingResponses, ConfirmPasswordResetData, ConfirmPasswordResetErrors, ConfirmPasswordResetResponses, CountUnreviewedTransactionsData, CountUnreviewedTransactionsResponses, CreateAccountData, CreateAccountErrors, CreateAccountResponses, CreateBalanceEntryData, CreateBalanceEntryErrors, CreateBalanceEntryResponses, CreateCategoryData, CreateCategoryErrors, CreateCategoryResponses, CreateConnectionData, CreateConnectionErrors, CreateConnectionResponses, CreateImportData, CreateImportErrors, CreateImportResponses, CreateLinkTokenData, CreateLinkTokenErrors, CreateLinkTokenResponses, CreatePatData, CreatePatErrors, CreatePatResponses, CreateRuleData, CreateRuleErrors, CreateRuleResponses, CreateTagData, CreateTagErrors, CreateTagResponses, CreateTransactionData, CreateTransactionErrors, CreateTransactionResponses, CreateTransferData, CreateTransferErrors, CreateTransferResponses, DebtReportData, DebtReportErrors, DebtReportResponses, DeleteCategoryData, DeleteCategoryErrors, DeleteCategoryResponses, DeleteConnectionData, DeleteConnectionErrors, DeleteConnectionResponses, DeleteConversationData, DeleteConversationErrors, DeleteConversationResponses, DeleteImportData, DeleteImportErrors, DeleteImportProfileData, DeleteImportProfileErrors, DeleteImportProfileResponses, DeleteImportResponses, DeleteRuleData, DeleteRuleErrors, DeleteRuleResponses, DeleteSplitsData, DeleteSplitsErrors, DeleteSplitsResponses, DeleteTagData, DeleteTagErrors, DeleteTagResponses, DismissRecurringData, DismissRecurringErrors, DismissRecurringResponses, DissolveTransferData, DissolveTransferErrors, DissolveTransferResponses, GetAccountData, GetAccountErrors, GetAccountResponses, GetCategoryData, GetCategoryErrors, GetCategoryResponses, GetConnectionData, GetConnectionErrors, GetConnectionResponses, GetConversationData, GetConversationErrors, GetConversationResponses, GetImportData, GetImportErrors, GetImportResponses, GetPayoffData, GetPayoffErrors, GetPayoffResponses, GetRuleData, GetRuleErrors, GetRuleResponses, GetTransactionData, GetTransactionErrors, GetTransactionResponses, HealthData, HealthResponses, LedgerStatsData, LedgerStatsResponses, ListAccountsData, ListAccountsErrors, ListAccountsResponses, ListBalanceEntriesData, ListBalanceEntriesErrors, ListBalanceEntriesResponses, ListCategoriesData, ListCategoriesErrors, ListCategoriesResponses, ListConnectionsData, ListConnectionsErrors, ListConnectionsResponses, ListConversationsData, ListConversationsErrors, ListConversationsResponses, ListCorrectionLogData, ListCorrectionLogErrors, ListCorrectionLogResponses, ListImportProfilesData, ListImportProfilesErrors, ListImportProfilesResponses, ListImportRowsData, ListImportRowsErrors, ListImportRowsResponses, ListPatsData, ListPatsErrors, ListPatsResponses, ListRecurringData, ListRecurringErrors, ListRecurringResponses, ListRulesData, ListRulesErrors, ListRulesResponses, ListSessionsData, ListSessionsErrors, ListSessionsResponses, ListTagsData, ListTagsErrors, ListTagsResponses, ListTransactionsData, ListTransactionsErrors, ListTransactionsResponses, ListTransfersData, ListTransfersErrors, ListTransfersResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutResponses, MeData, MeResponses, NetWorthReportData, NetWorthReportErrors, NetWorthReportResponses, PatchTransactionData, PatchTransactionErrors, PatchTransactionResponses, PennyChatData, PennyChatResponses, PennyStatusData, PennyStatusResponses, PreviewRuleData, PreviewRuleErrors, PreviewRuleResponses, PutSplitsData, PutSplitsErrors, PutSplitsResponses, RecurringReportData, RecurringReportErrors, RecurringReportResponses, RefreshConnectionData, RefreshConnectionErrors, RefreshConnectionResponses, RequestEmailVerificationData, RequestEmailVerificationResponses, RequestPasswordResetData, RequestPasswordResetErrors, RequestPasswordResetResponses, ReviewBatchData, ReviewBatchErrors, ReviewBatchResponses, ReviewTransactionData, ReviewTransactionErrors, ReviewTransactionResponses, RevokePatData, RevokePatErrors, RevokePatResponses, RevokeSessionData, RevokeSessionErrors, RevokeSessionResponses, SignupData, SignupErrors, SignupResponses, SpendingReportData, SpendingReportErrors, SpendingReportResponses, UpdateAccountLabelData, UpdateAccountLabelErrors, UpdateAccountLabelResponses, UpdateCategoryData, UpdateCategoryErrors, UpdateCategoryResponses, UpdateMeData, UpdateMeErrors, UpdateMeResponses, UpdateRecurringData, UpdateRecurringErrors, UpdateRecurringResponses, UpdateRuleData, UpdateRuleErrors, UpdateRuleResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -660,6 +660,71 @@ export const ledgerStats = <ThrowOnError extends boolean = false>(options?: Opti
             type: 'apiKey'
         }],
     url: '/api/v1/ledgers/current/stats',
+    ...options
+});
+
+/**
+ * PennyStatus
+ */
+export const pennyStatus = <ThrowOnError extends boolean = false>(options?: Options<PennyStatusData, ThrowOnError>): RequestResult<PennyStatusResponses, unknown, ThrowOnError> => (options?.client ?? client).get<PennyStatusResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }, {
+            in: 'cookie',
+            name: 'pinch_session',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/penny/status',
+    ...options
+});
+
+/**
+ * PennyChat
+ */
+export const pennyChat = <ThrowOnError extends boolean = false>(options?: Options<PennyChatData, ThrowOnError>): RequestResult<PennyChatResponses, unknown, ThrowOnError> => (options?.client ?? client).post<PennyChatResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }, {
+            in: 'cookie',
+            name: 'pinch_session',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/penny/chat',
+    ...options
+});
+
+/**
+ * ListConversations
+ */
+export const listConversations = <ThrowOnError extends boolean = false>(options?: Options<ListConversationsData, ThrowOnError>): RequestResult<ListConversationsResponses, ListConversationsErrors, ThrowOnError> => (options?.client ?? client).get<ListConversationsResponses, ListConversationsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }, {
+            in: 'cookie',
+            name: 'pinch_session',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/penny/conversations',
+    ...options
+});
+
+/**
+ * DeleteConversation
+ */
+export const deleteConversation = <ThrowOnError extends boolean = false>(options: Options<DeleteConversationData, ThrowOnError>): RequestResult<DeleteConversationResponses, DeleteConversationErrors, ThrowOnError> => (options.client ?? client).delete<DeleteConversationResponses, DeleteConversationErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }, {
+            in: 'cookie',
+            name: 'pinch_session',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/penny/conversations/{conversation_id}',
+    ...options
+});
+
+/**
+ * GetConversation
+ */
+export const getConversation = <ThrowOnError extends boolean = false>(options: Options<GetConversationData, ThrowOnError>): RequestResult<GetConversationResponses, GetConversationErrors, ThrowOnError> => (options.client ?? client).get<GetConversationResponses, GetConversationErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }, {
+            in: 'cookie',
+            name: 'pinch_session',
+            type: 'apiKey'
+        }],
+    url: '/api/v1/penny/conversations/{conversation_id}',
     ...options
 });
 
