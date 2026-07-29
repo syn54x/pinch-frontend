@@ -77,6 +77,14 @@ export type AccountSeriesPoint = {
 };
 
 /**
+ * AgentAvailability
+ */
+export type AgentAvailability = {
+    available: boolean;
+    reason?: string | null;
+};
+
+/**
  * BalanceEntryCreateIn
  */
 export type BalanceEntryCreateIn = {
@@ -246,6 +254,29 @@ export type ConnectionProvider = 'plaid';
  * ConnectionStatus
  */
 export type ConnectionStatus = 'active' | 'error' | 'reauth_required';
+
+/**
+ * ConversationOut
+ */
+export type ConversationOut = {
+    id: string;
+    title: string | null;
+    created_at: string;
+    updated_at: string;
+    messages: Array<{
+        [key: string]: unknown;
+    }>;
+};
+
+/**
+ * ConversationSummaryOut
+ */
+export type ConversationSummaryOut = {
+    id: string;
+    title: string | null;
+    created_at: string;
+    updated_at: string;
+};
 
 /**
  * CorrectionActor
@@ -594,6 +625,14 @@ export type PageConnectionOut = {
 };
 
 /**
+ * Page[ConversationSummaryOut]
+ */
+export type PageConversationSummaryOut = {
+    items: Array<ConversationSummaryOut>;
+    next_cursor: string | null;
+};
+
+/**
  * Page[CorrectionLogEntryOut]
  */
 export type PageCorrectionLogEntryOut = {
@@ -705,8 +744,10 @@ export type PatCreateIn = {
      */
     name: string;
     /**
-     * The requested grant. Write implies read (PRD M3): the stored scope
+     * The requested grant. Write implies read (PRD M3): the stored rank
      * is the strongest one requested, and responses render the full grant.
+     * ``penny`` (PRD M9) is orthogonal — granted iff requested, and never
+     * widens the rank: a penny-only token reads.
      */
     scopes: Array<PatScope>;
 };
@@ -739,12 +780,14 @@ export type PatOut = {
 /**
  * PatScope
  *
- * v0 scopes, exactly two (PRD M3): a rank, not a set — write implies
- * read, so one column holds the whole truth and a guard check is a single
- * comparison. Per-resource scopes later are new machinery, not new values
- * here (deliberately deferred in #8).
+ * v0 scopes (PRD M3): READ/WRITE are a rank — write implies read, so
+ * one column holds that truth and a guard check is a single comparison.
+ * PENNY (PRD M9) is the first orthogonal grant, a wire value only: it
+ * gates the chat endpoint (chat spends money, so no automation token gets
+ * it implicitly) and is stored as its own flag, never in the rank column.
+ * Per-resource scopes later are new machinery, not new values here.
  */
-export type PatScope = 'read' | 'write';
+export type PatScope = 'read' | 'write' | 'penny';
 
 /**
  * PayoffHeadline
@@ -794,6 +837,17 @@ export type PayoffScenario = {
     extra_monthly_minor: number;
     months_sooner: number;
     interest_saved_minor: number;
+};
+
+/**
+ * PennyStatusOut
+ */
+export type PennyStatusOut = {
+    available: boolean;
+    reason: string | null;
+    agents: {
+        [key: string]: AgentAvailability;
+    };
 };
 
 /**
@@ -2702,6 +2756,142 @@ export type LedgerStatsResponses = {
 };
 
 export type LedgerStatsResponse = LedgerStatsResponses[keyof LedgerStatsResponses];
+
+export type PennyStatusData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/penny/status';
+};
+
+export type PennyStatusResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: PennyStatusOut;
+};
+
+export type PennyStatusResponse = PennyStatusResponses[keyof PennyStatusResponses];
+
+export type PennyChatData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/penny/chat';
+};
+
+export type PennyChatResponses = {
+    /**
+     * Stream Response
+     */
+    200: unknown;
+};
+
+export type ListConversationsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Opaque page position from a previous `next_cursor`.
+         */
+        cursor?: string | null;
+        /**
+         * Page size, 1-100.
+         */
+        limit?: number;
+    };
+    url: '/api/v1/penny/conversations';
+};
+
+export type ListConversationsErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type ListConversationsError = ListConversationsErrors[keyof ListConversationsErrors];
+
+export type ListConversationsResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: PageConversationSummaryOut;
+};
+
+export type ListConversationsResponse = ListConversationsResponses[keyof ListConversationsResponses];
+
+export type DeleteConversationData = {
+    body?: never;
+    path: {
+        conversation_id: string;
+    };
+    query?: never;
+    url: '/api/v1/penny/conversations/{conversation_id}';
+};
+
+export type DeleteConversationErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type DeleteConversationError = DeleteConversationErrors[keyof DeleteConversationErrors];
+
+export type DeleteConversationResponses = {
+    /**
+     * Request fulfilled, nothing follows
+     */
+    204: void;
+};
+
+export type DeleteConversationResponse = DeleteConversationResponses[keyof DeleteConversationResponses];
+
+export type GetConversationData = {
+    body?: never;
+    path: {
+        conversation_id: string;
+    };
+    query?: never;
+    url: '/api/v1/penny/conversations/{conversation_id}';
+};
+
+export type GetConversationErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type GetConversationError = GetConversationErrors[keyof GetConversationErrors];
+
+export type GetConversationResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: ConversationOut;
+};
+
+export type GetConversationResponse = GetConversationResponses[keyof GetConversationResponses];
 
 export type ListRulesData = {
     body?: never;

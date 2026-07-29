@@ -3134,6 +3134,286 @@
                 "deprecated": false
             }
         },
+        "/api/v1/penny/status": {
+            "get": {
+                "tags": [
+                    "penny"
+                ],
+                "summary": "PennyStatus",
+                "operationId": "penny_status",
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PennyStatusOut"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/v1/penny/chat": {
+            "post": {
+                "tags": [
+                    "penny"
+                ],
+                "summary": "PennyChat",
+                "operationId": "penny_chat",
+                "responses": {
+                    "200": {
+                        "description": "Stream Response",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/v1/penny/conversations": {
+            "get": {
+                "tags": [
+                    "penny"
+                ],
+                "summary": "ListConversations",
+                "operationId": "list_conversations",
+                "parameters": [
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Opaque page position from a previous `next_cursor`."
+                        },
+                        "description": "Opaque page position from a previous `next_cursor`.",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100.0,
+                            "minimum": 1.0,
+                            "description": "Page size, 1-100.",
+                            "default": 50
+                        },
+                        "description": "Page size, 1-100.",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Page_ConversationSummaryOut_"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/v1/penny/conversations/{conversation_id}": {
+            "get": {
+                "tags": [
+                    "penny"
+                ],
+                "summary": "GetConversation",
+                "operationId": "get_conversation",
+                "parameters": [
+                    {
+                        "name": "conversation_id",
+                        "in": "path",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true,
+                        "deprecated": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConversationOut"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            },
+            "delete": {
+                "tags": [
+                    "penny"
+                ],
+                "summary": "DeleteConversation",
+                "operationId": "delete_conversation",
+                "parameters": [
+                    {
+                        "name": "conversation_id",
+                        "in": "path",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true,
+                        "deprecated": false
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Request fulfilled, nothing follows",
+                        "headers": {}
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
         "/api/v1/rules": {
             "get": {
                 "summary": "ListRules",
@@ -5779,6 +6059,28 @@
                 ],
                 "title": "AccountSeriesPoint"
             },
+            "AgentAvailability": {
+                "properties": {
+                    "available": {
+                        "type": "boolean"
+                    },
+                    "reason": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "available"
+                ],
+                "title": "AgentAvailability"
+            },
             "BalanceEntryCreateIn": {
                 "properties": {
                     "amount_minor": {
@@ -6205,6 +6507,81 @@
                     "reauth_required"
                 ],
                 "title": "ConnectionStatus"
+            },
+            "ConversationOut": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "title": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "messages": {
+                        "items": {
+                            "type": "object"
+                        },
+                        "type": "array"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "created_at",
+                    "id",
+                    "messages",
+                    "title",
+                    "updated_at"
+                ],
+                "title": "ConversationOut"
+            },
+            "ConversationSummaryOut": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "title": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "created_at",
+                    "id",
+                    "title",
+                    "updated_at"
+                ],
+                "title": "ConversationSummaryOut"
             },
             "CorrectionActor": {
                 "type": "string",
@@ -7411,6 +7788,32 @@
                 ],
                 "title": "Page[ConnectionOut]"
             },
+            "Page_ConversationSummaryOut_": {
+                "properties": {
+                    "items": {
+                        "items": {
+                            "$ref": "#/components/schemas/ConversationSummaryOut"
+                        },
+                        "type": "array"
+                    },
+                    "next_cursor": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "items",
+                    "next_cursor"
+                ],
+                "title": "Page[ConversationSummaryOut]"
+            },
             "Page_CorrectionLogEntryOut_": {
                 "properties": {
                     "items": {
@@ -7717,7 +8120,7 @@
                         },
                         "type": "array",
                         "minItems": 1,
-                        "description": "The requested grant. Write implies read (PRD M3): the stored scope\nis the strongest one requested, and responses render the full grant."
+                        "description": "The requested grant. Write implies read (PRD M3): the stored rank\nis the strongest one requested, and responses render the full grant.\n``penny`` (PRD M9) is orthogonal — granted iff requested, and never\nwidens the rank: a penny-only token reads."
                     }
                 },
                 "type": "object",
@@ -7825,10 +8228,11 @@
                 "type": "string",
                 "enum": [
                     "read",
-                    "write"
+                    "write",
+                    "penny"
                 ],
                 "title": "PatScope",
-                "description": "v0 scopes, exactly two (PRD M3): a rank, not a set — write implies\nread, so one column holds the whole truth and a guard check is a single\ncomparison. Per-resource scopes later are new machinery, not new values\nhere (deliberately deferred in #8)."
+                "description": "v0 scopes (PRD M3): READ/WRITE are a rank — write implies read, so\none column holds that truth and a guard check is a single comparison.\nPENNY (PRD M9) is the first orthogonal grant, a wire value only: it\ngates the chat endpoint (chat spends money, so no automation token gets\nit implicitly) and is stored as its own flag, never in the rank column.\nPer-resource scopes later are new machinery, not new values here."
             },
             "PayoffHeadline": {
                 "properties": {
@@ -8008,6 +8412,36 @@
                     "months_sooner"
                 ],
                 "title": "PayoffScenario"
+            },
+            "PennyStatusOut": {
+                "properties": {
+                    "available": {
+                        "type": "boolean"
+                    },
+                    "reason": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "agents": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/AgentAvailability"
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "agents",
+                    "available",
+                    "reason"
+                ],
+                "title": "PennyStatusOut"
             },
             "PreviousMonth": {
                 "properties": {
