@@ -20,10 +20,13 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 
 // Screen titles live on the routes themselves (staticData); the shell's top
-// bar shows the deepest match that declares one.
+// bar shows the deepest match that declares one. fullBleed lets a surface
+// own its scroll and edges (the Penny screen's thread + pinned composer,
+// wireframe s22) instead of sitting in the padded scroller.
 declare module '@tanstack/react-router' {
   interface StaticDataRouteOption {
     title?: string
+    fullBleed?: boolean
   }
 }
 
@@ -39,6 +42,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     select: (state) =>
       state.matches.findLast((match) => match.staticData.title)?.staticData
         .title,
+  })
+  const fullBleed = useRouterState({
+    select: (state) =>
+      state.matches.some((match) => match.staticData.fullBleed),
   })
 
   return (
@@ -85,7 +92,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
         <VerifyEmailBanner />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main
+          className={
+            fullBleed
+              ? 'flex min-h-0 flex-1 flex-col overflow-hidden'
+              : 'flex-1 overflow-y-auto p-6'
+          }
+        >
+          {children}
+        </main>
       </div>
     </div>
   )
