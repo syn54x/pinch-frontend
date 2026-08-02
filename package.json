@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:https": "VITE_HTTPS=1 vite",
     "build": "tsc -b && vite build",
     "lint": "biome check .",
     "preview": "vite preview",
@@ -58,6 +59,7 @@
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
     "@vitejs/plugin-react": "^6.0.3",
     "jsdom": "^29.1.1",
     "shadcn": "^4.13.1",
