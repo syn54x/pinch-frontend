@@ -84,6 +84,12 @@ test('⌘K summons Penny from anywhere; on her screen it focuses the composer, n
   await loginViaUi(page, email, PASSWORD)
   await expect(page).toHaveURL(/\/accounts$/)
 
+  // The routes are code-split: the URL flips before the authed layout
+  // mounts, and a ⌘K pressed into that gap hits no listener (CI's cold
+  // vite loses this race every time). The pill's visibility is the mount
+  // signal — only then is the key live.
+  await expect(page.getByTestId('penny-pill')).toBeVisible()
+
   // From a working surface, ⌘K lands on Penny.
   await page.keyboard.press('ControlOrMeta+k')
   await expect(page).toHaveURL(/\/penny$/)
