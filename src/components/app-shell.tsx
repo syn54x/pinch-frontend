@@ -21,6 +21,7 @@ import {
   meOptions,
   requestEmailVerificationMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
+import { PennyChips } from '@/components/penny/history'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 
@@ -119,7 +120,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="flex h-[52px] shrink-0 items-center gap-3.5 border-b px-5">
           <h1 className="font-semibold text-sm">{title}</h1>
           <div className="ml-auto flex items-center gap-2">
-            <AskPenny />
+            {/* s22: on the Penny screen the top bar carries her verbs
+                instead of the (redundant) summon pill. */}
+            {onPenny ? <PennyChips /> : <AskPenny />}
             <ThemeToggle />
             <LogoutButton />
           </div>
