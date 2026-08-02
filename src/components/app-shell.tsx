@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useRouter, useRouterState } from '@tanstack/react-router'
+import {
+  Link,
+  useNavigate,
+  useRouter,
+  useRouterState,
+} from '@tanstack/react-router'
 import {
   CreditCard,
   Home,
@@ -9,7 +14,7 @@ import {
   RefreshCw,
   TrendingUp,
 } from 'lucide-react'
-import { type ComponentType, type ReactNode, useState } from 'react'
+import { type ComponentType, type ReactNode, useEffect, useState } from 'react'
 import {
   countUnreviewedTransactionsOptions,
   logoutMutation,
@@ -31,12 +36,14 @@ declare module '@tanstack/react-router' {
 }
 
 // The App shell (CONTEXT.md): the persistent chrome every authed surface
-// mounts inside — sidebar (brand, nav, user row) and top bar. Wireframe #24
-// is the reference. F3 CP0 ships it lean: only surfaces that exist appear in
-// the nav (no disabled destinations), and there are no Penny affordances and
-// no ⌘K — what ⌘K means is decided when Penny lands (F6). The Inbox count
-// badge is live (CP2): unreviewed-count, refreshed by review-mutation
-// invalidation and window refocus.
+// mounts inside — sidebar (brand, nav, Penny pill, user row) and top bar
+// (title, Ask Penny). Wireframe #24 is the reference. Only surfaces that
+// exist appear in the nav (no disabled destinations). ⌘K is Penny's key,
+// permanently (F6 CP2, resolving #15's open question): summon from
+// anywhere, focus the composer when already there — never a toggle, never
+// a command palette (a future palette is reserved to ⌘P; do not bind it).
+// The Inbox count badge is live: unreviewed-count, refreshed by
+// review-mutation invalidation and window refocus.
 export function AppShell({ children }: { children: ReactNode }) {
   const title = useRouterState({
     select: (state) =>
@@ -47,6 +54,30 @@ export function AppShell({ children }: { children: ReactNode }) {
     select: (state) =>
       state.matches.some((match) => match.staticData.fullBleed),
   })
+  const onPenny = useRouterState({
+    select: (state) => state.location.pathname.startsWith('/penny'),
+  })
+  const navigate = useNavigate()
+
+  // ⌘K / Ctrl+K, globally: navigate to Penny; on her screen, focus the
+  // composer instead (idempotent — the key never leaves a conversation).
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key.toLowerCase() !== 'k' || !(event.metaKey || event.ctrlKey))
+        return
+      if (event.altKey || event.shiftKey) return
+      event.preventDefault()
+      if (onPenny) {
+        document
+          .querySelector<HTMLInputElement>('input[aria-label="Ask Penny"]')
+          ?.focus()
+      } else {
+        void navigate({ to: '/penny' })
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [onPenny, navigate])
 
   return (
     <div className="flex h-svh">
@@ -81,12 +112,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           </NavItem>
         </nav>
         <div className="flex-1" />
+        <PennyPill active={onPenny} />
         <UserRow />
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-[52px] shrink-0 items-center gap-3.5 border-b px-5">
           <h1 className="font-semibold text-sm">{title}</h1>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-2">
+            <AskPenny />
             <ThemeToggle />
             <LogoutButton />
           </div>
@@ -103,6 +136,56 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
     </div>
+  )
+}
+
+function PennyPill({ active }: { active: boolean }) {
+  // The sidebar Penny pill (wireframe s24 at rest, s22 active): a
+  // card-surface bordered row above the user row. Active — on the Penny
+  // screen — it wears her border and the copy flips to "open". In dark
+  // mode the pill is one of the two sanctioned glow surfaces (DESIGN.md
+  // §Elevation); in light, this purple dot is Penny's alone.
+  return (
+    <Link
+      to="/penny"
+      data-testid="penny-pill"
+      aria-current={active ? 'page' : undefined}
+      className={`mt-1.5 flex items-center gap-[9px] rounded-[10px] border bg-card px-2.5 py-[9px] transition-colors dark:shadow-[0_0_22px_-8px_rgba(161,121,242,0.5)] ${
+        active
+          ? 'border-penny dark:border-penny/60'
+          : 'hover:border-penny/50 dark:border-penny/40'
+      }`}
+    >
+      <span
+        aria-hidden
+        className="size-[22px] shrink-0 rounded-full bg-penny"
+      />
+      <span className="min-w-0">
+        <span className="block font-semibold text-[11.5px]">
+          {active ? 'Penny' : 'Ask Penny'}
+        </span>
+        <span className="block text-[10px] text-muted-foreground">
+          {active ? 'open · ⌘K' : '⌘K · always here'}
+        </span>
+      </span>
+    </Link>
+  )
+}
+
+function AskPenny() {
+  // The top-bar pill (wireframe s24): Penny reachable from every screen.
+  return (
+    <Link
+      to="/penny"
+      data-testid="ask-penny"
+      className="flex h-[30px] items-center gap-[7px] rounded-md border bg-card px-[11px] text-[11.5px] text-muted-foreground transition-colors hover:text-foreground"
+    >
+      <span aria-hidden className="size-3.5 rounded-full bg-penny" />
+      Ask Penny
+      <kbd className="rounded border px-1 py-px font-mono font-semibold text-[10px]">
+        ⌘K
+      </kbd>
+    </Link>
   )
 }
 
