@@ -35,7 +35,7 @@ test('logged out, / funnels through login and still lands on the Dashboard', asy
   await expect(page).toHaveURL(/\/dashboard$/)
 })
 
-test('the nav is exactly Dashboard, Inbox, Register, Net Worth, Recurring, Accounts, Setup → Connections — no Penny, no ⌘K', async ({
+test('the nav is exactly Dashboard, Inbox, Register, Net Worth, Recurring, Accounts, Setup → Connections — and Penny is reachable from every screen', async ({
   page,
 }) => {
   const email = uniqueEmail('shell-lean')
@@ -44,7 +44,7 @@ test('the nav is exactly Dashboard, Inbox, Register, Net Worth, Recurring, Accou
   await expect(page).toHaveURL(/\/accounts$/)
 
   // Exactly these destinations, in wireframe order — no disabled items,
-  // no stubs.
+  // no stubs. Penny is deliberately NOT a nav item: she has her own pill.
   await expect(primaryNav(page).getByRole('link')).toHaveText([
     'Dashboard',
     'Inbox',
@@ -60,9 +60,49 @@ test('the nav is exactly Dashboard, Inbox, Register, Net Worth, Recurring, Accou
   await expect(sidebar.getByText('Pinch', { exact: true })).toBeVisible()
   await expect(sidebar.getByText(email)).toBeVisible() // the user row
 
-  // No Penny affordances and no command palette until their features exist.
-  await expect(page.getByText(/Penny/)).toHaveCount(0)
-  await expect(page.getByText('⌘K')).toHaveCount(0)
+  // F6 CP2 (wireframe s24): both Penny affordances, each carrying the ⌘K
+  // hint — the sidebar pill above the user row, the top-bar Ask Penny pill.
+  const sidebarPill = page.getByTestId('penny-pill')
+  await expect(sidebarPill).toBeVisible()
+  await expect(sidebarPill).toContainText('Ask Penny')
+  await expect(sidebarPill).toContainText('⌘K · always here')
+  const topBarPill = page.getByTestId('ask-penny')
+  await expect(topBarPill).toBeVisible()
+  await expect(topBarPill).toContainText('Ask Penny')
+  await expect(topBarPill).toContainText('⌘K')
+
+  // No inline search: it was cut from F6 with the rest of the search
+  // feature — the top bar is title · spacer · Ask Penny · controls.
+  await expect(page.getByPlaceholder(/search/i)).toHaveCount(0)
+})
+
+test('⌘K summons Penny from anywhere; on her screen it focuses the composer, never navigates away', async ({
+  page,
+}) => {
+  const email = uniqueEmail('shell-cmdk')
+  await seedUser(email, PASSWORD)
+  await loginViaUi(page, email, PASSWORD)
+  await expect(page).toHaveURL(/\/accounts$/)
+
+  // From a working surface, ⌘K lands on Penny.
+  await page.keyboard.press('ControlOrMeta+k')
+  await expect(page).toHaveURL(/\/penny$/)
+  await expect(page.getByRole('heading', { name: 'Penny' })).toBeVisible()
+
+  // Already there, ⌘K is idempotent: same URL, composer focused.
+  await page.keyboard.press('ControlOrMeta+k')
+  await expect(page).toHaveURL(/\/penny$/)
+  await expect(page.getByPlaceholder(/ask penny/i)).toBeFocused()
+
+  // The pills navigate too, and the sidebar pill wears its active form on
+  // the Penny screen (s22: penny border, "open · ⌘K").
+  await expect(page.getByTestId('penny-pill')).toContainText('open · ⌘K')
+  await page.goto('/dashboard')
+  await page.getByTestId('ask-penny').click()
+  await expect(page).toHaveURL(/\/penny$/)
+  await page.goto('/dashboard')
+  await page.getByTestId('penny-pill').click()
+  await expect(page).toHaveURL(/\/penny$/)
 })
 
 test('navigation moves between surfaces and marks the active item', async ({
