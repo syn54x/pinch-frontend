@@ -2,14 +2,17 @@ import type { UIMessage } from 'ai'
 import { Markdown } from '@/components/penny/markdown'
 import { ToolChip } from '@/components/penny/tool-chip'
 import { asToolPart } from '@/lib/penny'
+import { isStaleApproval } from '@/lib/penny-chats'
 
 // The conversation column (wireframe s22): user turns are right-aligned
 // bubbles on the selection surface; assistant turns are the 24px penny dot
 // beside free-flowing content — prose, tool chips, approval controls.
 export function Thread({
+  chatId,
   messages,
   onApproval,
 }: {
+  chatId: string
   messages: UIMessage[]
   onApproval: (response: { id: string; approved: boolean }) => void
 }) {
@@ -21,6 +24,7 @@ export function Thread({
         ) : (
           <AssistantTurn
             key={message.id}
+            chatId={chatId}
             message={message}
             onApproval={onApproval}
           />
@@ -46,9 +50,11 @@ function UserTurn({ message }: { message: UIMessage }) {
 }
 
 function AssistantTurn({
+  chatId,
   message,
   onApproval,
 }: {
+  chatId: string
   message: UIMessage
   onApproval: (response: { id: string; approved: boolean }) => void
 }) {
@@ -72,6 +78,7 @@ function AssistantTurn({
               key={tool.toolCallId}
               part={tool}
               onApproval={onApproval}
+              expired={isStaleApproval(chatId, tool.toolCallId)}
             />
           )
         })}

@@ -14,12 +14,41 @@ import { API_BASE_URL, pennyChatFetch } from '@/api/client'
 
 const live = new Map<string, Chat<UIMessage>>()
 
+// Approvals a Chat was CONSTRUCTED with (cold hydration from GET
+// /conversations/{id}) rather than ones it received live. The backend has
+// no durable pending-approval queue (CONTEXT.md: Approval card) — an
+// approval-requested part surviving into a fresh page load only exists
+// because its turn ended without an answer, so it is expired by
+// construction. A part added later, during THIS session's live stream, is
+// never in this set and stays actionable. Reconstructing the Chat (a hard
+// reload) rebuilds the set from the fresh seed; switching conversations via
+// History reuses the live instance and never touches it.
+const staleApprovals = new Map<string, ReadonlySet<string>>()
+
+export function isStaleApproval(chatId: string, toolCallId: string): boolean {
+  return staleApprovals.get(chatId)?.has(toolCallId) ?? false
+}
+
 export function pennyChat(
   id: string,
   messages: UIMessage[] = [],
 ): Chat<UIMessage> {
   const existing = live.get(id)
   if (existing) return existing
+  if (messages.length > 0) {
+    const stale = new Set<string>()
+    for (const message of messages) {
+      for (const part of message.parts) {
+        if (
+          part.type.startsWith('tool-') &&
+          (part as { state?: string }).state === 'approval-requested'
+        ) {
+          stale.add((part as { toolCallId: string }).toolCallId)
+        }
+      }
+    }
+    if (stale.size > 0) staleApprovals.set(id, stale)
+  }
   const chat = new Chat<UIMessage>({
     id,
     messages,
@@ -46,4 +75,5 @@ export function peekPennyChat(id: string): Chat<UIMessage> | undefined {
 /** Forget a Conversation's live state (delete flows, CP3). */
 export function dropPennyChat(id: string): void {
   live.delete(id)
+  staleApprovals.delete(id)
 }

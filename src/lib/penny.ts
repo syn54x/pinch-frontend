@@ -46,6 +46,19 @@ const TOOL_LABELS: Record<string, string> = {
   create_category: 'Create a category',
 }
 
+/** The write bundle (pinch-backend `penny/bundles.py`), mirrored so the
+ * frontend can recognize "this call changed the ledger" without a
+ * per-tool response map — every name here triggers the same blanket cache
+ * invalidation (PRD #45 decision 9). Extending the bundle only means
+ * adding a name here; no new invalidation logic. */
+export const WRITE_TOOL_NAMES: ReadonlySet<string> = new Set([
+  'recategorize_transaction',
+  'accept_review',
+  'create_rule',
+  'mark_transfer',
+  'create_category',
+])
+
 /** The detail a chip shows after its label ("Read your spending report ·
  * 2026-06"): the one input field a human would use to tell two calls apart. */
 const DETAIL_KEYS = ['month', 'query', 'name', 'payee_contains', 'range']

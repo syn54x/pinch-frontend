@@ -149,6 +149,84 @@ test('CP3: history — switch between Conversations, delete the current one, the
   await expect(page.getByTestId('tool-part').first()).toBeVisible()
 })
 
+test('CP4: approving a write invalidates ledger-scoped queries wholesale, denying changes nothing, reload mid-approval renders expired', async ({
+  page,
+}) => {
+  const email = uniqueEmail('penny-cp4')
+  await seedUser(email, PASSWORD)
+  await loginViaUi(page, email, PASSWORD)
+  await expect(page).toHaveURL(/\/accounts$/)
+
+  await page.goto('/penny')
+  const composer = page.getByPlaceholder(/ask penny/i)
+  await composer.fill('Set things up')
+  await composer.press('Enter')
+  await expect(page.getByTestId('approval-requested')).toHaveCount(5, {
+    timeout: 30_000,
+  })
+
+  // Blanket invalidation (PRD #45 decision 9): the approved write is
+  // create_category, which changes no unreviewed-count VALUE — the proof
+  // is that the shell's always-mounted InboxCount query gets invalidated
+  // and genuinely refetches anyway, because invalidation is wholesale
+  // across ledger-scoped families, not a per-tool map that would only
+  // know to touch categories.
+  const invalidatedInboxCount = page.waitForResponse((response) =>
+    response.url().includes('/api/v1/transactions/unreviewed-count'),
+  )
+  await page.getByTestId('approve-create_category').click()
+  for (const tool of [
+    'recategorize_transaction',
+    'accept_review',
+    'create_rule',
+    'mark_transfer',
+  ]) {
+    await page.getByTestId(`deny-${tool}`).click()
+  }
+  await expect(invalidatedInboxCount).resolves.toBeTruthy()
+
+  // Deny changes nothing on the ledger: no category from any denied tool's
+  // garbage input exists.
+  await expect(page.getByTestId('assistant-text').last()).not.toBeEmpty({
+    timeout: 30_000,
+  })
+  const { ctx } = await authedContext(email, PASSWORD)
+  try {
+    const categories = (await (await ctx.get('/api/v1/categories')).json()) as {
+      items: Array<{ name: string }>
+    }
+    expect(categories.items.filter((c) => c.name === 'a')).toHaveLength(1)
+  } finally {
+    await ctx.dispose()
+  }
+
+  // A second, fresh Conversation: send, leave every approval unanswered,
+  // and reload before deciding anything — the realistic "walked away"
+  // case. The backend holds no durable pending queue (CONTEXT.md:
+  // Approval card), so this reload is the ground truth for "expired".
+  await page.goto('/penny')
+  await composer.fill('Ask again')
+  await composer.press('Enter')
+  await expect(page.getByTestId('approval-requested')).toHaveCount(5, {
+    timeout: 30_000,
+  })
+  await page.reload()
+  await expect(page.getByTestId('approval-expired')).toHaveCount(5)
+  await expect(page.getByTestId('approval-requested')).toHaveCount(0)
+  for (const tool of [
+    'recategorize_transaction',
+    'accept_review',
+    'create_rule',
+    'mark_transfer',
+    'create_category',
+  ]) {
+    await expect(
+      page.getByTestId(`approve-${tool}`),
+      `${tool} must not be re-clickable after expiry`,
+    ).toHaveCount(0)
+  }
+})
+
 test('a dropped stream surfaces the error and Try again resumes the turn', async ({
   page,
 }) => {
