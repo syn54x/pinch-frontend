@@ -81,6 +81,74 @@ test('CP1: the s22 screen — chips seed the first ask, the URL takes the conver
   await assertContrast()
 })
 
+test('CP3: history — switch between Conversations, delete the current one, the survivor restores', async ({
+  page,
+}) => {
+  const email = uniqueEmail('penny-cp3')
+  await seedUser(email, PASSWORD)
+  await loginViaUi(page, email, PASSWORD)
+  await expect(page).toHaveURL(/\/accounts$/)
+
+  // Conversation A: persisted once the first turn's stream settles (the
+  // approval requests arriving IS the turn settling under the test model).
+  await page.goto('/penny')
+  const composer = page.getByPlaceholder(/ask penny/i)
+  await composer.fill('What are my accounts?')
+  await composer.press('Enter')
+  await expect(page).toHaveURL(/\/penny\/[0-9a-f-]{36}$/)
+  await expect(page.getByTestId('approval-requested')).toHaveCount(5, {
+    timeout: 30_000,
+  })
+  const urlA = page.url()
+
+  // New chat is a verb on the Penny screen: back to a fresh composer,
+  // nothing created server-side until B's first send.
+  await page.getByRole('link', { name: 'New chat' }).click()
+  await expect(page).toHaveURL(/\/penny$/)
+  await expect(page.getByTestId('suggestion-chip')).toHaveCount(3)
+  await composer.fill('How is my net worth?')
+  await composer.press('Enter')
+  await expect(page.getByTestId('approval-requested')).toHaveCount(5, {
+    timeout: 30_000,
+  })
+
+  // History: both Conversations, newest first, titled by first message.
+  await page.getByRole('button', { name: 'History' }).click()
+  const rows = page.getByTestId('history-row')
+  await expect(rows).toHaveCount(2)
+  await expect(rows.first()).toContainText('How is my net worth?')
+  await expect(rows.last()).toContainText('What are my accounts?')
+
+  // Switching restores A — same URL, same transcript.
+  await rows.last().click()
+  await expect(page).toHaveURL(urlA)
+  await expect(page.getByTestId('user-text').first()).toHaveText(
+    'What are my accounts?',
+  )
+
+  // Deleting the CURRENT Conversation asks first, then lands on a fresh
+  // chat with A gone from history.
+  await page.getByRole('button', { name: 'History' }).click()
+  await page
+    .getByRole('button', {
+      name: 'Delete conversation: What are my accounts?',
+    })
+    .click()
+  await page.getByRole('button', { name: 'Delete conversation' }).click()
+  await expect(page).toHaveURL(/\/penny$/)
+
+  // The survivor restores fully after a reload.
+  await page.reload()
+  await page.getByRole('button', { name: 'History' }).click()
+  await expect(page.getByTestId('history-row')).toHaveCount(1)
+  await page.getByTestId('history-row').first().click()
+  await expect(page).toHaveURL(/\/penny\/[0-9a-f-]{36}$/)
+  await expect(page.getByTestId('user-text').first()).toHaveText(
+    'How is my net worth?',
+  )
+  await expect(page.getByTestId('tool-part').first()).toBeVisible()
+})
+
 test('a dropped stream surfaces the error and Try again resumes the turn', async ({
   page,
 }) => {
