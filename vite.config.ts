@@ -17,4 +17,18 @@ export default defineConfig({
   resolve: {
     alias: { '@': new URL('./src', import.meta.url).pathname },
   },
+  server: {
+    // In https mode the API must be same-origin: Safari blocks an https
+    // page's fetches to http://localhost outright (no localhost mixed-
+    // content exemption), and schemeful same-site withholds the Lax
+    // session cookie cross-scheme everywhere else. Proxying makes dev
+    // match the hosted same-origin shape; dev:https points
+    // VITE_API_BASE_URL back at this origin.
+    proxy: process.env.VITE_HTTPS
+      ? {
+          '/api': 'http://localhost:8000',
+          '/health': 'http://localhost:8000',
+        }
+      : undefined,
+  },
 })

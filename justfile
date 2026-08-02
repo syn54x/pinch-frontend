@@ -7,9 +7,13 @@ default:
 setup:
     pnpm install
 
-# Run the dev server (backend must be running for real data).
+# Run the dev server (backend must be running for real data). Serves
+# https://localhost:5173 — Plaid's production OAuth redirect demands an
+# https URI, and the backend's CORS origin follows suit, so plain-http
+# `pnpm dev` no longer pairs with a local backend. The e2e stacks stay
+# http on their own ports (Playwright starts Vite itself, sans VITE_HTTPS).
 dev:
-    pnpm dev
+    pnpm dev:https
 
 # Lint + format check + typecheck.
 check:

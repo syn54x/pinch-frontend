@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:https": "VITE_HTTPS=1 vite",
+    "dev:https": "VITE_HTTPS=1 VITE_API_BASE_URL=https://localhost:5173 vite",
     "build": "tsc -b && vite build",
     "lint": "biome check .",
     "preview": "vite preview",
