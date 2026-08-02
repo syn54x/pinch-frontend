@@ -44,6 +44,11 @@ e2e *args:
 # Procrastinate worker (syncs are background jobs). The worker starts only
 # after the server passes health, so concurrent first-migrations never race;
 # it dies with the recipe via the EXIT trap when Playwright tears down.
+# All three AI knobs are pinned (F6 CP0): chat runs pydantic-ai's keyless
+# deterministic `test` model; categorization and mapping are explicitly
+# EMPTY — the backend loads its .env with override=False, so an unset knob
+# would inherit a developer's real model + key and the classification sweep
+# would make live LLM calls mid-suite (real money, nondeterministic inbox).
 e2e-backend backend="../pinch-backend" db="docker":
     just _e2e-db-reset-{{ db }}
     mkdir -p test-results
@@ -51,6 +56,9 @@ e2e-backend backend="../pinch-backend" db="docker":
       PINCH_DATABASE_URL=postgres://postgres:password@localhost:5432/pinch_e2e \
       PINCH_FRONTEND_BASE_URL=http://localhost:5183 \
       PINCH_BREACH_CHECK_ENABLED=false \
+      PINCH_AI_CHAT_MODEL=test \
+      PINCH_AI_CATEGORIZATION_MODEL= \
+      PINCH_AI_MAPPING_MODEL= \
       PINCH_AUTH_RATE_LIMIT_PER_IP=100000 \
       PINCH_SECRET_KEY=e2e-only-not-a-secret \
       PINCH_SECRET_ENCRYPTION_KEY=0fgqNJQuqR09ILyfU1jynGBXmn3_6a_h-8iLItevJXk= \

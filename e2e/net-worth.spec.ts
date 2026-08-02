@@ -105,11 +105,6 @@ function money(minor: number): string {
   return usd.format(minor / 100)
 }
 
-function monthStartISO(): string {
-  const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-}
-
 async function openNetWorth(page: Page, email: string): Promise<void> {
   await loginViaUi(page, email, PASSWORD)
   await page.getByRole('link', { name: 'Net Worth' }).click()
@@ -191,22 +186,19 @@ test('MoM gate: all-range on a within-month history reads "—", not a fabricate
   page,
 }) => {
   const email = uniqueEmail('nw-mom')
-  // range=all starts the series at the first observation; a few days of history
-  // this month means no full prior month to compare against.
-  const seeded = await seedNetWorth(email, 3)
+  // A few days of history means no full prior month to compare against.
+  await seedNetWorth(email, 3)
   await loginViaUi(page, email, PASSWORD)
   await expect(page.getByRole('link', { name: 'Net Worth' })).toBeVisible()
   await page.goto('/net-worth?range=all')
   await expect(page.getByTestId('nw-hero')).toBeVisible()
 
-  // Deterministic except within the first days of a month (when 3 days ago fell
-  // in the prior month and the gate legitimately opens) — assert whichever the
-  // gate should show for this run date.
-  if (seeded.earliest > monthStartISO()) {
-    await expect(page.getByText('needs a full month')).toBeVisible()
-  } else {
-    await expect(page.getByText('needs a full month')).toHaveCount(0)
-  }
+  // Deterministic on every run date: range=all buckets monthly, and a
+  // days-long history collapses to a single point dated as-of — inside the
+  // current month wherever the calendar stands. Even when the seeded days
+  // straddle a month boundary, two days of last month are not a full month,
+  // so the gate is always closed here.
+  await expect(page.getByText('needs a full month')).toBeVisible()
 })
 
 test('net worth holds AA contrast in both themes', async ({ page }) => {

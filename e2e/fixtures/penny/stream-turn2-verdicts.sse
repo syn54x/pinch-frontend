@@ -1,0 +1,116 @@
+data: {"type":"start"}
+
+data: {"type":"tool-input-available","toolCallId":"pyd_ai_tool_call_id__create_category","toolName":"create_category","input":{"name":"a"}}
+
+data: {"type":"tool-output-denied","toolCallId":"pyd_ai_tool_call_id__mark_transfer"}
+
+data: {"type":"tool-output-denied","toolCallId":"pyd_ai_tool_call_id__accept_review"}
+
+data: {"type":"tool-output-denied","toolCallId":"pyd_ai_tool_call_id__create_rule"}
+
+data: {"type":"tool-output-denied","toolCallId":"pyd_ai_tool_call_id__recategorize_transaction"}
+
+data: {"type":"tool-output-available","toolCallId":"pyd_ai_tool_call_id__create_category","output":{"id":"019fc2e1-7487-713c-8c13-547ca91f7d48","name":"a","parent_id":null,"created_at":"2026-08-02T14:29:43.175917Z"}}
+
+data: {"type":"start-step"}
+
+data: {"type":"text-start","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"{\"list_accounts\":[],\"search_transactions\":{\"more_matches\":false,\"transactions\":[]},\"get_transaction\":\"The ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"API ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"declined ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"this ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"request: ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"Not ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"Found ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"(HTTP ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"404)\",\"spending_report\":{\"by_category\":[],\"by_day\":[],\"change\":{\"delta_minor\":0,\"percent\":null},\"currency\":\"USD\",\"excluded\":[],\"month\":\"2026-08\",\"previous\":{\"month\":\"2026-07\",\"total_minor\":0},\"total_minor\":0},\"net_worth_report\":{\"accounts\":[],\"as_of\":\"2026-08-02\",\"assets_minor\":0,\"currency\":\"USD\",\"excluded\":[],\"granularity\":\"weekly\",\"liabilities_minor\":0,\"month_to_date\":{\"delta_minor\":0,\"percent\":null},\"net_worth_minor\":0,\"projection\":null,\"range\":\"6m\",\"series\":[{\"date\":\"2026-02-01\",\"net_worth_minor\":0},{\"date\":\"2026-02-08\",\"net_worth_minor\":0},{\"date\":\"2026-02-15\",\"net_worth_minor\":0},{\"date\":\"2026-02-22\",\"net_worth_minor\":0},{\"date\":\"2026-03-01\",\"net_worth_minor\":0},{\"date\":\"2026-03-08\",\"net_worth_minor\":0},{\"date\":\"2026-03-15\",\"net_worth_minor\":0},{\"date\":\"2026-03-22\",\"net_worth_minor\":0},{\"date\":\"2026-03-29\",\"net_worth_minor\":0},{\"date\":\"2026-04-05\",\"net_worth_minor\":0},{\"date\":\"2026-04-12\",\"net_worth_minor\":0},{\"date\":\"2026-04-19\",\"net_worth_minor\":0},{\"date\":\"2026-04-26\",\"net_worth_minor\":0},{\"date\":\"2026-05-03\",\"net_worth_minor\":0},{\"date\":\"2026-05-10\",\"net_worth_minor\":0},{\"date\":\"2026-05-17\",\"net_worth_minor\":0},{\"date\":\"2026-05-24\",\"net_worth_minor\":0},{\"date\":\"2026-05-31\",\"net_worth_minor\":0},{\"date\":\"2026-06-07\",\"net_worth_minor\":0},{\"date\":\"2026-06-14\",\"net_worth_minor\":0},{\"date\":\"2026-06-21\",\"net_worth_minor\":0},{\"date\":\"2026-06-28\",\"net_worth_minor\":0},{\"date\":\"2026-07-05\",\"net_worth_minor\":0},{\"date\":\"2026-07-12\",\"net_worth_minor\":0},{\"date\":\"2026-07-19\",\"net_worth_minor\":0},{\"date\":\"2026-07-26\",\"net_worth_minor\":0},{\"date\":\"2026-08-02\",\"net_worth_minor\":0}],\"since_range_start\":{\"delta_minor\":0,\"percent\":null}},\"debt_report\":{\"apr_excluded_count\":0,\"as_of\":\"2026-08-02\",\"currency\":\"USD\",\"debt_free_by\":null,\"debt_free_excluded_count\":0,\"excluded\":[],\"loan_count\":0,\"loans\":[],\"minimums_excluded_count\":0,\"monthly_minimums_minor\":0,\"total_debt_minor\":0,\"weighted_apr\":null},\"list_recurring_series\":[],\"list_categories\":[{\"id\":\"019fc2df-c9f3-7064-93e4-216bace43244\",\"name\":\"Income\",\"parent_id\":null},{\"id\":\"019fc2df-c9f3-7064-93e4-216c88c932be\",\"name\":\"Housing\",\"parent_id\":null},{\"id\":\"019fc2df-c9f3-7064-93e4-216d47b5b038\",\"name\":\"Food ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"& ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"Drink\",\"parent_id\":null},{\"id\":\"019fc2df-c9f3-7064-93e4-216e6bb7431c\",\"name\":\"Transportation\",\"parent_id\":null},{\"id\":\"019fc2df-c9f3-7064-93e4-216ff8b00555\",\"name\":\"Shopping\",\"parent_id\":null},{\"id\":\"019fc2df-c9f3-7064-93e4-2170c3a502ec\",\"name\":\"Health\",\"parent_id\":null},{\"id\":\"019fc2df-c9f3-7064-93e4-217109ca0d7e\",\"name\":\"Entertainment\",\"parent_id\":null},{\"id\":\"019fc2df-c9f3-7064-93e4-2172445c0a75\",\"name\":\"Travel\",\"parent_id\":null},{\"id\":\"019fc2df-c9f3-7064-93e4-2173ab3f5ecf\",\"name\":\"Bills ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"& ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"Subscriptions\",\"parent_id\":null},{\"id\":\"019fc2df-c9f3-7064-93e4-2174e925810a\",\"name\":\"Personal ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"Care\",\"parent_id\":null},{\"id\":\"019fc2df-c9f3-7064-93e4-21758ff34aa4\",\"name\":\"Gifts ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"& ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"Donations\",\"parent_id\":null},{\"id\":\"019fc2df-c9f3-7064-93e4-2176993a460d\",\"name\":\"Fees ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"& ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"Charges\",\"parent_id\":null},{\"id\":\"019fc2df-c9f6-7087-928f-397452f1a119\",\"name\":\"Paycheck\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-216bace43244\"},{\"id\":\"019fc2df-c9f6-7087-928f-3975058ccc16\",\"name\":\"Interest\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-216bace43244\"},{\"id\":\"019fc2df-c9f6-7087-928f-397622301b9d\",\"name\":\"Other ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"Income\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-216bace43244\"},{\"id\":\"019fc2df-c9f6-7087-928f-3977b26a25e8\",\"name\":\"Rent ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"& ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"Mortgage\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-216c88c932be\"},{\"id\":\"019fc2df-c9f6-7087-928f-3978bfde1887\",\"name\":\"Utilities\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-216c88c932be\"},{\"id\":\"019fc2df-c9f6-7087-928f-3979ca509680\",\"name\":\"Home ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"Improvement\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-216c88c932be\"},{\"id\":\"019fc2df-c9f6-7087-928f-397a84787e15\",\"name\":\"Groceries\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-216d47b5b038\"},{\"id\":\"019fc2df-c9f6-7087-928f-397bd3837023\",\"name\":\"Restaurants\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-216d47b5b038\"},{\"id\":\"019fc2df-c9f6-7087-928f-397c4a03b309\",\"name\":\"Coffee\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-216d47b5b038\"},{\"id\":\"019fc2df-c9f6-7087-928f-397d2bba0420\",\"name\":\"Gas\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-216e6bb7431c\"},{\"id\":\"019fc2df-c9f6-7087-928f-397e76a51339\",\"name\":\"Parking ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"& ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"Tolls\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-216e6bb7431c\"},{\"id\":\"019fc2df-c9f6-7087-928f-397f5141f7e0\",\"name\":\"Public ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"Transit\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-216e6bb7431c\"},{\"id\":\"019fc2df-c9f6-7087-928f-398078dab5b1\",\"name\":\"Auto ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"& ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"Ride ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"Share\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-216e6bb7431c\"},{\"id\":\"019fc2df-c9f6-7087-928f-3981878abc3b\",\"name\":\"Clothing\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-216ff8b00555\"},{\"id\":\"019fc2df-c9f6-7087-928f-39827f94ac34\",\"name\":\"Electronics\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-216ff8b00555\"},{\"id\":\"019fc2df-c9f6-7087-928f-3983d80473f9\",\"name\":\"Household\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-216ff8b00555\"},{\"id\":\"019fc2df-c9f6-7087-928f-39844fb8fb83\",\"name\":\"Medical\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-2170c3a502ec\"},{\"id\":\"019fc2df-c9f6-7087-928f-39853f8c5457\",\"name\":\"Pharmacy\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-2170c3a502ec\"},{\"id\":\"019fc2df-c9f6-7087-928f-398643eede09\",\"name\":\"Fitness\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-2170c3a502ec\"},{\"id\":\"019fc2df-c9f6-7087-928f-3987a605de0f\",\"name\":\"Streaming\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-217109ca0d7e\"},{\"id\":\"019fc2df-c9f6-7087-928f-39881e454401\",\"name\":\"Events\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-217109ca0d7e\"},{\"id\":\"019fc2df-c9f6-7087-928f-39897740dddf\",\"name\":\"Hobbies\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-217109ca0d7e\"},{\"id\":\"019fc2df-c9f6-7087-928f-398ab80b696b\",\"name\":\"Flights\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-2172445c0a75\"},{\"id\":\"019fc2df-c9f6-7087-928f-398ba51747c9\",\"name\":\"Lodging\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-2172445c0a75\"},{\"id\":\"019fc2df-c9f6-7087-928f-398c8772636f\",\"name\":\"Rideshare\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-2172445c0a75\"},{\"id\":\"019fc2df-c9f6-7087-928f-398d60f11b99\",\"name\":\"Phone\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-2173ab3f5ecf\"},{\"id\":\"019fc2df-c9f6-7087-928f-398e6673b25c\",\"name\":\"Internet\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-2173ab3f5ecf\"},{\"id\":\"019fc2df-c9f6-7087-928f-398f766f5a37\",\"name\":\"Software\",\"parent_id\":\"019fc2df-c9f3-7064-93e4-2173ab3f5ecf\"}],\"list_rules\":[],\"ledger_stats\":{\"classified\":0,\"last_synced_at\":null,\"recurring_found\":0,\"transactions_total\":0,\"unreviewed\":0,\"unreviewed_by_provenance\":{\"ai\":0,\"detection\":0,\"history\":0,\"none\":0,\"rule\":0}},\"recategorize_transaction\":\"The ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"tool ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"call ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"was ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"denied.\",\"accept_review\":\"The ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"tool ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"call ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"was ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"denied.\",\"create_rule\":\"The ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"tool ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"call ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"was ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"denied.\",\"mark_transfer\":\"The ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"tool ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"call ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"was ","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-delta","delta":"denied.\",\"create_category\":{\"id\":\"019fc2e1-7487-713c-8c13-547ca91f7d48\",\"name\":\"a\",\"parent_id\":null,\"created_at\":\"2026-08-02T14:29:43.175917Z\"}}","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"text-end","id":"5d3c8597-aaca-493a-bf48-1410c8cd0c5f"}
+
+data: {"type":"message-metadata","messageMetadata":{"pydantic_ai":{"timestamp":"2026-08-02T14:29:43.179852Z"}}}
+
+data: {"type":"finish-step"}
+
+data: {"type":"finish"}
+
+data: [DONE]
+

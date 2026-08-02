@@ -40,3 +40,30 @@ The first-run wizard — primary currency, first account (connect or manual,
 skippable), first sync — shown when the ledger has no accounts and no
 connections. Ends by landing in a full Inbox, never an empty app.
 _Avoid_: setup wizard, welcome flow
+
+**Penny (screen)**:
+The chat surface — a full route, not an overlay — where the user converses
+with Penny over the ledger. Holds one Conversation at a time; New chat and
+History are its only top-bar verbs. Present even when Penny is not
+configured (the screen explains, rather than the nav hiding her).
+_Avoid_: chat page, assistant panel, copilot
+
+**Conversation**:
+The persisted unit of chat, defined in `pinch-backend/CONTEXT.md` and
+canonical here. Surface-side: a Conversation is addressable by URL, titled
+by its first user message, and clients contribute new messages — never
+rewrite history.
+_Avoid_: thread, session
+
+**Approval card**:
+The in-conversation consent surface for one Penny write: names the action in
+ledger terms, offers Approve / Deny. An approval left unanswered (e.g.
+across a reload) renders as expired — muted, "not applied", never
+re-actionable.
+_Avoid_: confirmation dialog (it is in-flow, not modal)
+
+**Tool chip**:
+The collapsed in-conversation trace of one Penny read — what she looked at
+to ground a reply ("Read spending report · June"), expandable to the raw
+call. Honesty UI, not decoration: every read Penny makes is visible.
+_Avoid_: tool call (the wire term), activity log
