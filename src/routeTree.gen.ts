@@ -20,6 +20,7 @@ import { Route as AuthedConnectionsRouteImport } from './routes/_authed/connecti
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedInboxRouteImport } from './routes/_authed/inbox'
 import { Route as AuthedNetWorthRouteImport } from './routes/_authed/net-worth'
+import { Route as AuthedPennyRouteImport } from './routes/_authed/penny'
 import { Route as AuthedRecurringRouteImport } from './routes/_authed/recurring'
 import { Route as AuthedRegisterRouteImport } from './routes/_authed/register'
 import { Route as ConnectOauthReturnRouteImport } from './routes/connect.oauth-return'
@@ -82,6 +83,11 @@ const AuthedNetWorthRoute = AuthedNetWorthRouteImport.update({
   path: '/net-worth',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedPennyRoute = AuthedPennyRouteImport.update({
+  id: '/penny',
+  path: '/penny',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedRecurringRoute = AuthedRecurringRouteImport.update({
   id: '/recurring',
   path: '/recurring',
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthedDashboardRoute
   '/inbox': typeof AuthedInboxRoute
   '/net-worth': typeof AuthedNetWorthRoute
+  '/penny': typeof AuthedPennyRoute
   '/recurring': typeof AuthedRecurringRoute
   '/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthedDashboardRoute
   '/inbox': typeof AuthedInboxRoute
   '/net-worth': typeof AuthedNetWorthRoute
+  '/penny': typeof AuthedPennyRoute
   '/recurring': typeof AuthedRecurringRoute
   '/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/inbox': typeof AuthedInboxRoute
   '/_authed/net-worth': typeof AuthedNetWorthRoute
+  '/_authed/penny': typeof AuthedPennyRoute
   '/_authed/recurring': typeof AuthedRecurringRoute
   '/_authed/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/inbox'
     | '/net-worth'
+    | '/penny'
     | '/recurring'
     | '/register'
     | '/connect/oauth-return'
@@ -211,6 +221,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/inbox'
     | '/net-worth'
+    | '/penny'
     | '/recurring'
     | '/register'
     | '/connect/oauth-return'
@@ -231,6 +242,7 @@ export interface FileRouteTypes {
     | '/_authed/dashboard'
     | '/_authed/inbox'
     | '/_authed/net-worth'
+    | '/_authed/penny'
     | '/_authed/recurring'
     | '/_authed/register'
     | '/connect/oauth-return'
@@ -329,6 +341,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedNetWorthRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/penny': {
+      id: '/_authed/penny'
+      path: '/penny'
+      fullPath: '/penny'
+      preLoaderRoute: typeof AuthedPennyRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/recurring': {
       id: '/_authed/recurring'
       path: '/recurring'
@@ -413,6 +432,7 @@ interface AuthedRouteChildren {
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedInboxRoute: typeof AuthedInboxRoute
   AuthedNetWorthRoute: typeof AuthedNetWorthRoute
+  AuthedPennyRoute: typeof AuthedPennyRoute
   AuthedRecurringRoute: typeof AuthedRecurringRoute
   AuthedRegisterRoute: typeof AuthedRegisterRoute
   AuthedAccountsDebtRoute: typeof AuthedAccountsDebtRouteWithChildren
@@ -425,6 +445,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedInboxRoute: AuthedInboxRoute,
   AuthedNetWorthRoute: AuthedNetWorthRoute,
+  AuthedPennyRoute: AuthedPennyRoute,
   AuthedRecurringRoute: AuthedRecurringRoute,
   AuthedRegisterRoute: AuthedRegisterRoute,
   AuthedAccountsDebtRoute: AuthedAccountsDebtRouteWithChildren,

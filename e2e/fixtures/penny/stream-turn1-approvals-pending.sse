@@ -1,0 +1,114 @@
+data: {"type":"start"}
+
+data: {"type":"start-step"}
+
+data: {"type":"tool-input-start","toolCallId":"pyd_ai_tool_call_id__list_accounts","toolName":"list_accounts"}
+
+data: {"type":"tool-input-start","toolCallId":"pyd_ai_tool_call_id__search_transactions","toolName":"search_transactions"}
+
+data: {"type":"tool-input-start","toolCallId":"pyd_ai_tool_call_id__get_transaction","toolName":"get_transaction"}
+
+data: {"type":"tool-input-delta","toolCallId":"pyd_ai_tool_call_id__get_transaction","inputTextDelta":"{\"transaction_id\":\"a\"}"}
+
+data: {"type":"tool-input-start","toolCallId":"pyd_ai_tool_call_id__spending_report","toolName":"spending_report"}
+
+data: {"type":"tool-input-start","toolCallId":"pyd_ai_tool_call_id__net_worth_report","toolName":"net_worth_report"}
+
+data: {"type":"tool-input-start","toolCallId":"pyd_ai_tool_call_id__debt_report","toolName":"debt_report"}
+
+data: {"type":"tool-input-start","toolCallId":"pyd_ai_tool_call_id__list_recurring_series","toolName":"list_recurring_series"}
+
+data: {"type":"tool-input-start","toolCallId":"pyd_ai_tool_call_id__list_categories","toolName":"list_categories"}
+
+data: {"type":"tool-input-start","toolCallId":"pyd_ai_tool_call_id__list_rules","toolName":"list_rules"}
+
+data: {"type":"tool-input-start","toolCallId":"pyd_ai_tool_call_id__ledger_stats","toolName":"ledger_stats"}
+
+data: {"type":"tool-input-start","toolCallId":"pyd_ai_tool_call_id__recategorize_transaction","toolName":"recategorize_transaction"}
+
+data: {"type":"tool-input-delta","toolCallId":"pyd_ai_tool_call_id__recategorize_transaction","inputTextDelta":"{\"transaction_id\":\"a\"}"}
+
+data: {"type":"tool-input-start","toolCallId":"pyd_ai_tool_call_id__accept_review","toolName":"accept_review"}
+
+data: {"type":"tool-input-delta","toolCallId":"pyd_ai_tool_call_id__accept_review","inputTextDelta":"{\"transaction_id\":\"a\"}"}
+
+data: {"type":"tool-input-start","toolCallId":"pyd_ai_tool_call_id__create_rule","toolName":"create_rule"}
+
+data: {"type":"tool-input-delta","toolCallId":"pyd_ai_tool_call_id__create_rule","inputTextDelta":"{\"payee_contains\":\"a\"}"}
+
+data: {"type":"tool-input-start","toolCallId":"pyd_ai_tool_call_id__mark_transfer","toolName":"mark_transfer"}
+
+data: {"type":"tool-input-delta","toolCallId":"pyd_ai_tool_call_id__mark_transfer","inputTextDelta":"{\"transaction_id\":\"a\"}"}
+
+data: {"type":"tool-input-start","toolCallId":"pyd_ai_tool_call_id__create_category","toolName":"create_category"}
+
+data: {"type":"tool-input-delta","toolCallId":"pyd_ai_tool_call_id__create_category","inputTextDelta":"{\"name\":\"a\"}"}
+
+data: {"type":"tool-input-available","toolCallId":"pyd_ai_tool_call_id__list_accounts","toolName":"list_accounts","input":{}}
+
+data: {"type":"tool-input-available","toolCallId":"pyd_ai_tool_call_id__search_transactions","toolName":"search_transactions","input":{}}
+
+data: {"type":"tool-input-available","toolCallId":"pyd_ai_tool_call_id__get_transaction","toolName":"get_transaction","input":{"transaction_id":"a"}}
+
+data: {"type":"tool-input-available","toolCallId":"pyd_ai_tool_call_id__spending_report","toolName":"spending_report","input":{}}
+
+data: {"type":"tool-input-available","toolCallId":"pyd_ai_tool_call_id__net_worth_report","toolName":"net_worth_report","input":{}}
+
+data: {"type":"tool-input-available","toolCallId":"pyd_ai_tool_call_id__debt_report","toolName":"debt_report","input":{}}
+
+data: {"type":"tool-input-available","toolCallId":"pyd_ai_tool_call_id__list_recurring_series","toolName":"list_recurring_series","input":{}}
+
+data: {"type":"tool-input-available","toolCallId":"pyd_ai_tool_call_id__list_categories","toolName":"list_categories","input":{}}
+
+data: {"type":"tool-input-available","toolCallId":"pyd_ai_tool_call_id__list_rules","toolName":"list_rules","input":{}}
+
+data: {"type":"tool-input-available","toolCallId":"pyd_ai_tool_call_id__ledger_stats","toolName":"ledger_stats","input":{}}
+
+data: {"type":"tool-output-available","toolCallId":"pyd_ai_tool_call_id__get_transaction","output":"The API declined this request: Not Found (HTTP 404)"}
+
+data: {"type":"tool-output-available","toolCallId":"pyd_ai_tool_call_id__list_categories","output":[{"id":"019fc2df-c9f3-7064-93e4-216bace43244","name":"Income","parent_id":null},{"id":"019fc2df-c9f3-7064-93e4-216c88c932be","name":"Housing","parent_id":null},{"id":"019fc2df-c9f3-7064-93e4-216d47b5b038","name":"Food & Drink","parent_id":null},{"id":"019fc2df-c9f3-7064-93e4-216e6bb7431c","name":"Transportation","parent_id":null},{"id":"019fc2df-c9f3-7064-93e4-216ff8b00555","name":"Shopping","parent_id":null},{"id":"019fc2df-c9f3-7064-93e4-2170c3a502ec","name":"Health","parent_id":null},{"id":"019fc2df-c9f3-7064-93e4-217109ca0d7e","name":"Entertainment","parent_id":null},{"id":"019fc2df-c9f3-7064-93e4-2172445c0a75","name":"Travel","parent_id":null},{"id":"019fc2df-c9f3-7064-93e4-2173ab3f5ecf","name":"Bills & Subscriptions","parent_id":null},{"id":"019fc2df-c9f3-7064-93e4-2174e925810a","name":"Personal Care","parent_id":null},{"id":"019fc2df-c9f3-7064-93e4-21758ff34aa4","name":"Gifts & Donations","parent_id":null},{"id":"019fc2df-c9f3-7064-93e4-2176993a460d","name":"Fees & Charges","parent_id":null},{"id":"019fc2df-c9f6-7087-928f-397452f1a119","name":"Paycheck","parent_id":"019fc2df-c9f3-7064-93e4-216bace43244"},{"id":"019fc2df-c9f6-7087-928f-3975058ccc16","name":"Interest","parent_id":"019fc2df-c9f3-7064-93e4-216bace43244"},{"id":"019fc2df-c9f6-7087-928f-397622301b9d","name":"Other Income","parent_id":"019fc2df-c9f3-7064-93e4-216bace43244"},{"id":"019fc2df-c9f6-7087-928f-3977b26a25e8","name":"Rent & Mortgage","parent_id":"019fc2df-c9f3-7064-93e4-216c88c932be"},{"id":"019fc2df-c9f6-7087-928f-3978bfde1887","name":"Utilities","parent_id":"019fc2df-c9f3-7064-93e4-216c88c932be"},{"id":"019fc2df-c9f6-7087-928f-3979ca509680","name":"Home Improvement","parent_id":"019fc2df-c9f3-7064-93e4-216c88c932be"},{"id":"019fc2df-c9f6-7087-928f-397a84787e15","name":"Groceries","parent_id":"019fc2df-c9f3-7064-93e4-216d47b5b038"},{"id":"019fc2df-c9f6-7087-928f-397bd3837023","name":"Restaurants","parent_id":"019fc2df-c9f3-7064-93e4-216d47b5b038"},{"id":"019fc2df-c9f6-7087-928f-397c4a03b309","name":"Coffee","parent_id":"019fc2df-c9f3-7064-93e4-216d47b5b038"},{"id":"019fc2df-c9f6-7087-928f-397d2bba0420","name":"Gas","parent_id":"019fc2df-c9f3-7064-93e4-216e6bb7431c"},{"id":"019fc2df-c9f6-7087-928f-397e76a51339","name":"Parking & Tolls","parent_id":"019fc2df-c9f3-7064-93e4-216e6bb7431c"},{"id":"019fc2df-c9f6-7087-928f-397f5141f7e0","name":"Public Transit","parent_id":"019fc2df-c9f3-7064-93e4-216e6bb7431c"},{"id":"019fc2df-c9f6-7087-928f-398078dab5b1","name":"Auto & Ride Share","parent_id":"019fc2df-c9f3-7064-93e4-216e6bb7431c"},{"id":"019fc2df-c9f6-7087-928f-3981878abc3b","name":"Clothing","parent_id":"019fc2df-c9f3-7064-93e4-216ff8b00555"},{"id":"019fc2df-c9f6-7087-928f-39827f94ac34","name":"Electronics","parent_id":"019fc2df-c9f3-7064-93e4-216ff8b00555"},{"id":"019fc2df-c9f6-7087-928f-3983d80473f9","name":"Household","parent_id":"019fc2df-c9f3-7064-93e4-216ff8b00555"},{"id":"019fc2df-c9f6-7087-928f-39844fb8fb83","name":"Medical","parent_id":"019fc2df-c9f3-7064-93e4-2170c3a502ec"},{"id":"019fc2df-c9f6-7087-928f-39853f8c5457","name":"Pharmacy","parent_id":"019fc2df-c9f3-7064-93e4-2170c3a502ec"},{"id":"019fc2df-c9f6-7087-928f-398643eede09","name":"Fitness","parent_id":"019fc2df-c9f3-7064-93e4-2170c3a502ec"},{"id":"019fc2df-c9f6-7087-928f-3987a605de0f","name":"Streaming","parent_id":"019fc2df-c9f3-7064-93e4-217109ca0d7e"},{"id":"019fc2df-c9f6-7087-928f-39881e454401","name":"Events","parent_id":"019fc2df-c9f3-7064-93e4-217109ca0d7e"},{"id":"019fc2df-c9f6-7087-928f-39897740dddf","name":"Hobbies","parent_id":"019fc2df-c9f3-7064-93e4-217109ca0d7e"},{"id":"019fc2df-c9f6-7087-928f-398ab80b696b","name":"Flights","parent_id":"019fc2df-c9f3-7064-93e4-2172445c0a75"},{"id":"019fc2df-c9f6-7087-928f-398ba51747c9","name":"Lodging","parent_id":"019fc2df-c9f3-7064-93e4-2172445c0a75"},{"id":"019fc2df-c9f6-7087-928f-398c8772636f","name":"Rideshare","parent_id":"019fc2df-c9f3-7064-93e4-2172445c0a75"},{"id":"019fc2df-c9f6-7087-928f-398d60f11b99","name":"Phone","parent_id":"019fc2df-c9f3-7064-93e4-2173ab3f5ecf"},{"id":"019fc2df-c9f6-7087-928f-398e6673b25c","name":"Internet","parent_id":"019fc2df-c9f3-7064-93e4-2173ab3f5ecf"},{"id":"019fc2df-c9f6-7087-928f-398f766f5a37","name":"Software","parent_id":"019fc2df-c9f3-7064-93e4-2173ab3f5ecf"}]}
+
+data: {"type":"tool-output-available","toolCallId":"pyd_ai_tool_call_id__search_transactions","output":{"transactions":[],"more_matches":false}}
+
+data: {"type":"tool-output-available","toolCallId":"pyd_ai_tool_call_id__list_accounts","output":[]}
+
+data: {"type":"tool-output-available","toolCallId":"pyd_ai_tool_call_id__list_rules","output":[]}
+
+data: {"type":"tool-output-available","toolCallId":"pyd_ai_tool_call_id__list_recurring_series","output":[]}
+
+data: {"type":"tool-output-available","toolCallId":"pyd_ai_tool_call_id__net_worth_report","output":{"as_of":"2026-08-02","range":"6m","granularity":"weekly","currency":"USD","net_worth_minor":0,"assets_minor":0,"liabilities_minor":0,"month_to_date":{"delta_minor":0,"percent":null},"since_range_start":{"delta_minor":0,"percent":null},"series":[{"date":"2026-02-01","net_worth_minor":0},{"date":"2026-02-08","net_worth_minor":0},{"date":"2026-02-15","net_worth_minor":0},{"date":"2026-02-22","net_worth_minor":0},{"date":"2026-03-01","net_worth_minor":0},{"date":"2026-03-08","net_worth_minor":0},{"date":"2026-03-15","net_worth_minor":0},{"date":"2026-03-22","net_worth_minor":0},{"date":"2026-03-29","net_worth_minor":0},{"date":"2026-04-05","net_worth_minor":0},{"date":"2026-04-12","net_worth_minor":0},{"date":"2026-04-19","net_worth_minor":0},{"date":"2026-04-26","net_worth_minor":0},{"date":"2026-05-03","net_worth_minor":0},{"date":"2026-05-10","net_worth_minor":0},{"date":"2026-05-17","net_worth_minor":0},{"date":"2026-05-24","net_worth_minor":0},{"date":"2026-05-31","net_worth_minor":0},{"date":"2026-06-07","net_worth_minor":0},{"date":"2026-06-14","net_worth_minor":0},{"date":"2026-06-21","net_worth_minor":0},{"date":"2026-06-28","net_worth_minor":0},{"date":"2026-07-05","net_worth_minor":0},{"date":"2026-07-12","net_worth_minor":0},{"date":"2026-07-19","net_worth_minor":0},{"date":"2026-07-26","net_worth_minor":0},{"date":"2026-08-02","net_worth_minor":0}],"projection":null,"accounts":[],"excluded":[]}}
+
+data: {"type":"tool-output-available","toolCallId":"pyd_ai_tool_call_id__debt_report","output":{"as_of":"2026-08-02","currency":"USD","total_debt_minor":0,"loan_count":0,"monthly_minimums_minor":0,"minimums_excluded_count":0,"weighted_apr":null,"apr_excluded_count":0,"debt_free_by":null,"debt_free_excluded_count":0,"loans":[],"excluded":[]}}
+
+data: {"type":"tool-output-available","toolCallId":"pyd_ai_tool_call_id__ledger_stats","output":{"transactions_total":0,"classified":0,"unreviewed":0,"unreviewed_by_provenance":{"rule":0,"history":0,"ai":0,"detection":0,"none":0},"recurring_found":0,"last_synced_at":null}}
+
+data: {"type":"tool-output-available","toolCallId":"pyd_ai_tool_call_id__spending_report","output":{"month":"2026-08","currency":"USD","total_minor":0,"by_day":[],"by_category":[],"previous":{"month":"2026-07","total_minor":0},"change":{"delta_minor":0,"percent":null},"excluded":[]}}
+
+data: {"type":"tool-input-available","toolCallId":"pyd_ai_tool_call_id__recategorize_transaction","toolName":"recategorize_transaction","input":{"transaction_id":"a"}}
+
+data: {"type":"tool-input-available","toolCallId":"pyd_ai_tool_call_id__accept_review","toolName":"accept_review","input":{"transaction_id":"a"}}
+
+data: {"type":"tool-input-available","toolCallId":"pyd_ai_tool_call_id__create_rule","toolName":"create_rule","input":{"payee_contains":"a"}}
+
+data: {"type":"tool-input-available","toolCallId":"pyd_ai_tool_call_id__mark_transfer","toolName":"mark_transfer","input":{"transaction_id":"a"}}
+
+data: {"type":"tool-input-available","toolCallId":"pyd_ai_tool_call_id__create_category","toolName":"create_category","input":{"name":"a"}}
+
+data: {"type":"message-metadata","messageMetadata":{"pydantic_ai":{"timestamp":"2026-08-02T14:28:26.874339Z"}}}
+
+data: {"type":"tool-approval-request","approvalId":"pyd_ai_tool_call_id__recategorize_transaction","toolCallId":"pyd_ai_tool_call_id__recategorize_transaction"}
+
+data: {"type":"tool-approval-request","approvalId":"pyd_ai_tool_call_id__accept_review","toolCallId":"pyd_ai_tool_call_id__accept_review"}
+
+data: {"type":"tool-approval-request","approvalId":"pyd_ai_tool_call_id__create_rule","toolCallId":"pyd_ai_tool_call_id__create_rule"}
+
+data: {"type":"tool-approval-request","approvalId":"pyd_ai_tool_call_id__mark_transfer","toolCallId":"pyd_ai_tool_call_id__mark_transfer"}
+
+data: {"type":"tool-approval-request","approvalId":"pyd_ai_tool_call_id__create_category","toolCallId":"pyd_ai_tool_call_id__create_category"}
+
+data: {"type":"finish-step"}
+
+data: {"type":"finish"}
+
+data: [DONE]
+

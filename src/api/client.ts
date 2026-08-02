@@ -89,16 +89,20 @@ const SELF_HANDLED_401S = ['/api/v1/auth/login', '/api/v1/auth/me']
 
 // Session expiry, handled once: any other 401 means the cookie went stale
 // out from under the app — send the user to login, keeping their place.
+function redirectToLogin(): void {
+  const { pathname, search } = window.location
+  if (pathname !== '/login') {
+    const redirect = encodeURIComponent(pathname + search)
+    window.location.assign(`/login?redirect=${redirect}`)
+  }
+}
+
 client.interceptors.response.use((response, request) => {
   if (
     response.status === 401 &&
     !SELF_HANDLED_401S.includes(new URL(request.url).pathname)
   ) {
-    const { pathname, search } = window.location
-    if (pathname !== '/login') {
-      const redirect = encodeURIComponent(pathname + search)
-      window.location.assign(`/login?redirect=${redirect}`)
-    }
+    redirectToLogin()
   }
   return response
 })
@@ -117,3 +121,31 @@ client.interceptors.request.use(async (request) => {
   }
   return request
 })
+
+/** The API origin the generated client is configured against. */
+export const API_BASE_URL: string =
+  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+
+// Penny's chat stream is the one endpoint outside the generated client
+// (ADR-0001): the spec deliberately leaves it untyped, so the AI SDK's
+// transport calls this fetch instead of a generated mutation. It reproduces
+// the plumbing above for a request the interceptors can't see — credentials,
+// the CSRF echo (with the cold-visit bootstrap), stale-token recovery, and
+// the session-expiry redirect.
+export async function pennyChatFetch(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> {
+  const request = new Request(input, { ...init, credentials: 'include' })
+  if (UNSAFE_METHODS.has(request.method)) {
+    if (!csrfToken()) {
+      const base = new URL(request.url).origin
+      await fetch(`${base}/health`, { credentials: 'include' })
+    }
+    const token = csrfToken()
+    if (token) request.headers.set('x-csrftoken', token)
+  }
+  const response = await fetchWithCsrfRecovery(request)
+  if (response.status === 401) redirectToLogin()
+  return response
+}
