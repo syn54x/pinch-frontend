@@ -66,13 +66,40 @@ e2e-backend backend="../pinch-backend" db="docker":
       sh -c '(until curl -sf http://localhost:8100/health >/dev/null 2>&1; do sleep 0.5; done; echo "[e2e-harness] server healthy, starting worker"; exec uv run python -m pinch_backend.cli.app worker) & worker_waiter=$!; trap "kill $worker_waiter 2>/dev/null" EXIT; uv run litestar --app pinch_backend.api.app:app run --port 8100' 2>&1 \
       | tee {{ justfile_directory() }}/test-results/backend.log
 
+# The Penny-unavailable stack (F6 CP1): the same backend with NO chat model,
+# on its own port and database, so the disabled state is the real backend
+# saying no — not a mock. No worker: nothing on this stack syncs.
+e2e-backend-noai backend="../pinch-backend" db="docker":
+    just _e2e-db-reset-noai-{{ db }}
+    mkdir -p test-results
+    cd {{ backend }} && \
+      PINCH_DATABASE_URL=postgres://postgres:password@localhost:5432/pinch_e2e_noai \
+      PINCH_FRONTEND_BASE_URL=http://localhost:5184 \
+      PINCH_BREACH_CHECK_ENABLED=false \
+      PINCH_AI_CHAT_MODEL= \
+      PINCH_AI_CATEGORIZATION_MODEL= \
+      PINCH_AI_MAPPING_MODEL= \
+      PINCH_AUTH_RATE_LIMIT_PER_IP=100000 \
+      PINCH_SECRET_KEY=e2e-only-not-a-secret \
+      PINCH_SECRET_ENCRYPTION_KEY=0fgqNJQuqR09ILyfU1jynGBXmn3_6a_h-8iLItevJXk= \
+      PYTHONUNBUFFERED=1 \
+      uv run litestar --app pinch_backend.api.app:app run --port 8101 2>&1 \
+      | tee {{ justfile_directory() }}/test-results/backend-noai.log
+
 e2e_db_reset_sql := "-c 'DROP DATABASE IF EXISTS pinch_e2e' -c 'CREATE DATABASE pinch_e2e'"
+e2e_noai_db_reset_sql := "-c 'DROP DATABASE IF EXISTS pinch_e2e_noai' -c 'CREATE DATABASE pinch_e2e_noai'"
 
 _e2e-db-reset-docker:
     docker exec local-pg psql -U postgres {{ e2e_db_reset_sql }}
 
 _e2e-db-reset-direct:
     PGPASSWORD=password psql -h localhost -U postgres {{ e2e_db_reset_sql }}
+
+_e2e-db-reset-noai-docker:
+    docker exec local-pg psql -U postgres {{ e2e_noai_db_reset_sql }}
+
+_e2e-db-reset-noai-direct:
+    PGPASSWORD=password psql -h localhost -U postgres {{ e2e_noai_db_reset_sql }}
 
 # Re-export the backend's OpenAPI schema and regenerate the typed client.
 # The committed openapi.json snapshot is the contract seam between the repos:

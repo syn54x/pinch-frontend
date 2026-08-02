@@ -23,7 +23,24 @@ export default defineConfig({
     // en-US strings, so make that contract explicit.
     locale: 'en-US',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testIgnore: /penny-unavailable/,
+    },
+    // The Penny-unavailable stack: same app, a backend with no chat model
+    // (port 8101 → frontend 5184). The disabled state is asserted against
+    // the real backend refusing, never a mocked status.
+    {
+      name: 'chromium-noai',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: 'http://localhost:5184',
+      },
+      testMatch: /penny-unavailable/,
+    },
+  ],
   webServer: [
     {
       // CI overrides both: the pinned backend checkout lives inside the
@@ -39,6 +56,19 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 30_000,
       env: { VITE_API_BASE_URL: 'http://localhost:8100' },
+    },
+    {
+      command: `just e2e-backend-noai ${process.env.E2E_BACKEND_DIR ?? '../pinch-backend'} ${process.env.E2E_DB_MODE ?? 'docker'}`,
+      url: 'http://localhost:8101/health',
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
+    {
+      command: 'pnpm dev --port 5184 --strictPort',
+      url: 'http://localhost:5184',
+      reuseExistingServer: false,
+      timeout: 30_000,
+      env: { VITE_API_BASE_URL: 'http://localhost:8101' },
     },
   ],
 })

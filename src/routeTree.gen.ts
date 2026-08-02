@@ -25,6 +25,7 @@ import { Route as AuthedRecurringRouteImport } from './routes/_authed/recurring'
 import { Route as AuthedRegisterRouteImport } from './routes/_authed/register'
 import { Route as ConnectOauthReturnRouteImport } from './routes/connect.oauth-return'
 import { Route as AuthedAccountsDebtRouteImport } from './routes/_authed/accounts_.debt'
+import { Route as AuthedPennyConversationIdRouteImport } from './routes/_authed/penny_.$conversationId'
 import { Route as AuthedAccountsDebtAddRouteImport } from './routes/_authed/accounts_.debt.add'
 import { Route as AuthedAccountsDebtAccountIdRouteImport } from './routes/_authed/accounts_.debt_.$accountId'
 import { Route as AuthedAccountsDebtAccountIdTermsRouteImport } from './routes/_authed/accounts_.debt_.$accountId.terms'
@@ -108,6 +109,12 @@ const AuthedAccountsDebtRoute = AuthedAccountsDebtRouteImport.update({
   path: '/accounts/debt',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedPennyConversationIdRoute =
+  AuthedPennyConversationIdRouteImport.update({
+    id: '/penny_/$conversationId',
+    path: '/penny/$conversationId',
+    getParentRoute: () => AuthedRoute,
+  } as any)
 const AuthedAccountsDebtAddRoute = AuthedAccountsDebtAddRouteImport.update({
   id: '/add',
   path: '/add',
@@ -142,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
   '/accounts/debt': typeof AuthedAccountsDebtRouteWithChildren
+  '/penny/$conversationId': typeof AuthedPennyConversationIdRoute
   '/accounts/debt/add': typeof AuthedAccountsDebtAddRoute
   '/accounts/debt/$accountId': typeof AuthedAccountsDebtAccountIdRouteWithChildren
   '/accounts/debt/$accountId/terms': typeof AuthedAccountsDebtAccountIdTermsRoute
@@ -162,6 +170,7 @@ export interface FileRoutesByTo {
   '/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
   '/accounts/debt': typeof AuthedAccountsDebtRouteWithChildren
+  '/penny/$conversationId': typeof AuthedPennyConversationIdRoute
   '/accounts/debt/add': typeof AuthedAccountsDebtAddRoute
   '/accounts/debt/$accountId': typeof AuthedAccountsDebtAccountIdRouteWithChildren
   '/accounts/debt/$accountId/terms': typeof AuthedAccountsDebtAccountIdTermsRoute
@@ -184,6 +193,7 @@ export interface FileRoutesById {
   '/_authed/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
   '/_authed/accounts_/debt': typeof AuthedAccountsDebtRouteWithChildren
+  '/_authed/penny_/$conversationId': typeof AuthedPennyConversationIdRoute
   '/_authed/accounts_/debt/add': typeof AuthedAccountsDebtAddRoute
   '/_authed/accounts_/debt_/$accountId': typeof AuthedAccountsDebtAccountIdRouteWithChildren
   '/_authed/accounts_/debt_/$accountId/terms': typeof AuthedAccountsDebtAccountIdTermsRoute
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/connect/oauth-return'
     | '/accounts/debt'
+    | '/penny/$conversationId'
     | '/accounts/debt/add'
     | '/accounts/debt/$accountId'
     | '/accounts/debt/$accountId/terms'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/connect/oauth-return'
     | '/accounts/debt'
+    | '/penny/$conversationId'
     | '/accounts/debt/add'
     | '/accounts/debt/$accountId'
     | '/accounts/debt/$accountId/terms'
@@ -247,6 +259,7 @@ export interface FileRouteTypes {
     | '/_authed/register'
     | '/connect/oauth-return'
     | '/_authed/accounts_/debt'
+    | '/_authed/penny_/$conversationId'
     | '/_authed/accounts_/debt/add'
     | '/_authed/accounts_/debt_/$accountId'
     | '/_authed/accounts_/debt_/$accountId/terms'
@@ -376,6 +389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAccountsDebtRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/penny_/$conversationId': {
+      id: '/_authed/penny_/$conversationId'
+      path: '/penny/$conversationId'
+      fullPath: '/penny/$conversationId'
+      preLoaderRoute: typeof AuthedPennyConversationIdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/accounts_/debt/add': {
       id: '/_authed/accounts_/debt/add'
       path: '/add'
@@ -436,6 +456,7 @@ interface AuthedRouteChildren {
   AuthedRecurringRoute: typeof AuthedRecurringRoute
   AuthedRegisterRoute: typeof AuthedRegisterRoute
   AuthedAccountsDebtRoute: typeof AuthedAccountsDebtRouteWithChildren
+  AuthedPennyConversationIdRoute: typeof AuthedPennyConversationIdRoute
   AuthedAccountsDebtAccountIdRoute: typeof AuthedAccountsDebtAccountIdRouteWithChildren
 }
 
@@ -449,6 +470,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedRecurringRoute: AuthedRecurringRoute,
   AuthedRegisterRoute: AuthedRegisterRoute,
   AuthedAccountsDebtRoute: AuthedAccountsDebtRouteWithChildren,
+  AuthedPennyConversationIdRoute: AuthedPennyConversationIdRoute,
   AuthedAccountsDebtAccountIdRoute:
     AuthedAccountsDebtAccountIdRouteWithChildren,
 }

@@ -33,8 +33,11 @@ export async function seedUser(
   email: string,
   password: string,
   accounts: SeedAccount[] = [],
+  /** Override for tests running against a secondary stack (e.g. the
+   * Penny-unavailable backend on 8101). */
+  base: string = API,
 ): Promise<void> {
-  const ctx = await request.newContext({ baseURL: API })
+  const ctx = await request.newContext({ baseURL: base })
   try {
     // Safe request first: obtains the CSRF cookie.
     const health = await ctx.get('/health')

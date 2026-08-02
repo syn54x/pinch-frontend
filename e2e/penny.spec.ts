@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { authedContext, PASSWORD, seedUser, uniqueEmail } from './helpers/api'
+import { contrastRatio } from './helpers/contrast'
 import { loginViaUi } from './helpers/ui'
 
 // F6 CP0 (issue #46): the integration spike's definition of done. The e2e
@@ -9,6 +10,104 @@ import { loginViaUi } from './helpers/ui'
 // write tool, and the assistant's text arrives only on the follow-up turn,
 // after EVERY approval is answered (the backend rejects partial verdicts;
 // the SDK's sendAutomaticallyWhen resubmits once all are in).
+
+test('CP1: the s22 screen — chips seed the first ask, the URL takes the conversation id, reload restores the transcript', async ({
+  page,
+}) => {
+  const email = uniqueEmail('penny-cp1')
+  await seedUser(email, PASSWORD)
+  await loginViaUi(page, email, PASSWORD)
+  await expect(page).toHaveURL(/\/accounts$/)
+
+  await page.goto('/penny')
+  await expect(page.getByRole('heading', { name: 'Penny' })).toBeVisible()
+
+  // Empty conversation: exactly three suggestion chips, each an honest map
+  // to a real read tool. Clicking one sends it as the first message.
+  const chips = page.getByTestId('suggestion-chip')
+  await expect(chips).toHaveCount(3)
+  await chips.first().click()
+  await expect(page.getByTestId('user-text')).toBeVisible()
+  await expect(page.getByTestId('suggestion-chip')).toHaveCount(0)
+
+  // First send hands the conversation its URL (history.replace, so Back
+  // doesn't step through a dead /penny).
+  await expect(page).toHaveURL(/\/penny\/[0-9a-f-]{36}$/)
+
+  // Tool chips are collapsed traces; expanding one reveals the raw call.
+  const firstChip = page.getByTestId('tool-part').first()
+  await expect(firstChip).toBeVisible({ timeout: 30_000 })
+  await firstChip.getByRole('button').click()
+  await expect(firstChip.getByTestId('tool-raw')).toBeVisible()
+
+  // Settle the turn (deny everything) so the transcript persists.
+  await expect(page.getByTestId('approval-requested')).toHaveCount(5, {
+    timeout: 30_000,
+  })
+  for (const tool of [
+    'create_category',
+    'recategorize_transaction',
+    'accept_review',
+    'create_rule',
+    'mark_transfer',
+  ]) {
+    await page.getByTestId(`deny-${tool}`).click()
+  }
+  await expect(page.getByTestId('assistant-text').last()).not.toBeEmpty({
+    timeout: 30_000,
+  })
+
+  // Reload: the per-Conversation URL hydrates the full transcript from the
+  // server — prose, tool chips, resolved approvals.
+  await page.reload()
+  await expect(page.getByTestId('user-text')).toBeVisible()
+  await expect(page.getByTestId('assistant-text').last()).not.toBeEmpty()
+  await expect(page.getByTestId('tool-part').first()).toBeVisible()
+  // No approval is re-actionable after reload — the verdicts are history.
+  await expect(page.getByTestId('approval-requested')).toHaveCount(0)
+
+  // Both registers hold AA on the conversation's own surfaces.
+  async function assertContrast() {
+    for (const locator of [
+      page.getByTestId('user-text'),
+      page.getByTestId('assistant-text').last(),
+      page.getByTestId('tool-part').first().getByRole('button'),
+    ]) {
+      expect(await contrastRatio(locator)).toBeGreaterThanOrEqual(4.5)
+    }
+  }
+  await assertContrast()
+  await page.getByRole('button', { name: /Switch to (light|dark)/ }).click()
+  await assertContrast()
+})
+
+test('a dropped stream surfaces the error and Try again resumes the turn', async ({
+  page,
+}) => {
+  const email = uniqueEmail('penny-err')
+  await seedUser(email, PASSWORD)
+  await loginViaUi(page, email, PASSWORD)
+  await expect(page).toHaveURL(/\/accounts$/)
+  await page.goto('/penny')
+
+  // The network eats the chat request: the error is visible, the message
+  // is not silently lost.
+  await page.route('**/api/v1/penny/chat', (route) => route.abort())
+  const composer = page.getByPlaceholder(/ask penny/i)
+  await composer.fill('What did I spend this month?')
+  await composer.press('Enter')
+  await expect(page.getByTestId('user-text')).toBeVisible()
+  await expect(page.getByTestId('chat-error')).toBeVisible({
+    timeout: 15_000,
+  })
+
+  // Connectivity returns; Try again resumes the same turn for real.
+  await page.unroute('**/api/v1/penny/chat')
+  await page.getByRole('button', { name: 'Try again' }).click()
+  await expect(page.getByTestId('tool-part').first()).toBeVisible({
+    timeout: 30_000,
+  })
+})
 
 test('a message streams tool activity, pauses on approvals, resumes on verdicts, and persists', async ({
   page,
