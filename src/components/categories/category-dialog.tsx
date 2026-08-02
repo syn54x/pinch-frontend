@@ -111,8 +111,6 @@ export function CategoryDialog({
               placeholder="Groceries"
               required
               maxLength={100}
-              // eslint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
