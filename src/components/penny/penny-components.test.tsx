@@ -75,4 +75,25 @@ describe('ToolChip', () => {
     expect(screen.queryByTestId('approval-requested')).not.toBeInTheDocument()
     expect(screen.getByRole('button')).toHaveAccessibleName(/not applied/)
   })
+
+  it('renders an expired approval as muted history, not the consent card, even with a live approval id', () => {
+    const onApproval = vi.fn()
+    const stale: ToolPart = {
+      toolName: 'create_category',
+      toolCallId: 'call-2',
+      state: 'approval-requested',
+      input: { name: 'Coffee' },
+      approval: { id: 'call-2' },
+    }
+    render(<ToolChip part={stale} onApproval={onApproval} expired />)
+    expect(screen.getByTestId('approval-expired')).toBeInTheDocument()
+    expect(screen.queryByTestId('approval-requested')).not.toBeInTheDocument()
+    expect(
+      screen.queryByTestId('approve-create_category'),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByTestId('deny-create_category')).not.toBeInTheDocument()
+    expect(screen.getByRole('button')).toHaveAccessibleName(
+      /expired — not applied/,
+    )
+  })
 })

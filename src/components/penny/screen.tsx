@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react'
 import { pennyStatusOptions } from '@/api/generated/@tanstack/react-query.gen'
 import { Composer } from '@/components/penny/composer'
 import { Thread } from '@/components/penny/thread'
+import { useWriteInvalidation } from '@/components/penny/use-write-invalidation'
 import { Button } from '@/components/ui/button'
 
 // The Penny screen (CONTEXT.md; wireframe s22): one Conversation, a
@@ -28,6 +29,7 @@ export function PennyScreen({
   } = useChat({ chat })
   const statusQuery = useQuery(pennyStatusOptions())
   const scroller = useRef<HTMLDivElement>(null)
+  useWriteInvalidation(messages)
 
   // Follow the stream: pinned to the newest turn as content arrives.
   // biome-ignore lint/correctness/useExhaustiveDependencies: scroll reacts to conversation growth
@@ -52,7 +54,11 @@ export function PennyScreen({
         ref={scroller}
         className="flex-1 overflow-y-auto px-[22px] py-[18px]"
       >
-        <Thread messages={messages} onApproval={addToolApprovalResponse} />
+        <Thread
+          chatId={chat.id ?? ''}
+          messages={messages}
+          onApproval={addToolApprovalResponse}
+        />
         {status === 'submitted' ? (
           <div role="status" className="mt-4 flex items-center gap-2.5">
             <span
