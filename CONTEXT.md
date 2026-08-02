@@ -67,3 +67,22 @@ The collapsed in-conversation trace of one Penny read — what she looked at
 to ground a reply ("Read spending report · June"), expandable to the raw
 call. Honesty UI, not decoration: every read Penny makes is visible.
 _Avoid_: tool call (the wire term), activity log
+
+**Categories & Rules (surface)**:
+The Setup surface for the taxonomy — one page, four tab routes: Categories
+(the tree, with identity and spend), Rules (the law, plus Penny's suggested
+rules), Tags, and Learning. New/edit category is a dialog; the rule builder
+is its own route.
+_Avoid_: taxonomy page, category settings
+
+**Rule builder**:
+The route where a rule is authored or edited: conditions, actions, a live
+preview of matches, and — at creation only — the retro-apply tiers
+(defined in `pinch-backend/CONTEXT.md`).
+_Avoid_: rule modal, rule form
+
+**Learning (tab)**:
+The read-only rendering of the correction log and its stats — the flywheel
+made visible. No verbs: recovery from any decision is editing the
+transaction again, never an undo.
+_Avoid_: history tab, activity feed
