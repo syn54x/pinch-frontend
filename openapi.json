@@ -2490,6 +2490,85 @@
                 "deprecated": false
             }
         },
+        "/api/v1/correction-log/stats": {
+            "get": {
+                "summary": "CorrectionLogStats",
+                "operationId": "correction_log_stats",
+                "parameters": [
+                    {
+                        "name": "as_of",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        },
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CorrectionLogStatsOut"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
         "/api/v1/imports": {
             "post": {
                 "summary": "CreateImport",
@@ -4053,6 +4132,84 @@
                     "204": {
                         "description": "Request fulfilled, nothing follows",
                         "headers": {}
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            },
+            "patch": {
+                "summary": "RenameTag",
+                "operationId": "rename_tag",
+                "parameters": [
+                    {
+                        "name": "tag_id",
+                        "in": "path",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true,
+                        "deprecated": false
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TagCreateIn"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TagOut"
+                                }
+                            }
+                        }
                     },
                     "400": {
                         "description": "Bad request syntax or unsupported method",
@@ -6193,6 +6350,29 @@
                 ],
                 "title": "BucketSlice"
             },
+            "CategoryColor": {
+                "type": "string",
+                "enum": [
+                    "rust",
+                    "amber",
+                    "gold",
+                    "olive",
+                    "green",
+                    "sage",
+                    "teal",
+                    "cyan",
+                    "sky",
+                    "blue",
+                    "indigo",
+                    "violet",
+                    "purple",
+                    "magenta",
+                    "rose",
+                    "slate"
+                ],
+                "title": "CategoryColor",
+                "description": "The named palette slots a category's color may take (F4, CONTEXT.md:\nCategory identity): 15 chromatic hues plus slate, the neutral. The enum\nis APPEND-ONLY — a name binds to \"a color that reads as that name\", the\nfrontend owns the actual values, and removing or repurposing a name\nwould silently re-color stored data. Grow it; never shrink it."
+            },
             "CategoryCreateIn": {
                 "properties": {
                     "name": {
@@ -6211,6 +6391,30 @@
                             }
                         ],
                         "description": "A top-level node when null; otherwise nests under the named parent\n(depth-capped, validated server-side)."
+                    },
+                    "emoji": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "maxLength": 20,
+                        "minLength": 1,
+                        "description": "Identity glyph — one emoji (ZWJ sequences fit the bound); null = unset."
+                    },
+                    "color": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/CategoryColor"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "A named palette slot (append-only enum); null = unset."
                     }
                 },
                 "type": "object",
@@ -6260,6 +6464,26 @@
                             }
                         ]
                     },
+                    "emoji": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "color": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/CategoryColor"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
                     "created_at": {
                         "type": "string",
                         "format": "date-time"
@@ -6267,7 +6491,9 @@
                 },
                 "type": "object",
                 "required": [
+                    "color",
                     "created_at",
+                    "emoji",
                     "id",
                     "name",
                     "parent_id"
@@ -6387,6 +6613,30 @@
                         "type": "boolean",
                         "description": "True to apply parent_id (including null → top level). Distinguishes\n\"move to top level\" from \"don't touch the parent\" without a sentinel.",
                         "default": false
+                    },
+                    "emoji": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "maxLength": 20,
+                        "minLength": 1,
+                        "description": "Present-and-null clears; absent leaves unchanged (model_fields_set)."
+                    },
+                    "color": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/CategoryColor"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Present-and-null clears; absent leaves unchanged (model_fields_set)."
                     }
                 },
                 "type": "object",
@@ -6796,6 +7046,27 @@
                             }
                         ]
                     },
+                    "accepted_untouched": {
+                        "oneOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "batch_id": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
                     "voids": {
                         "oneOf": [
                             {
@@ -6824,7 +7095,9 @@
                 },
                 "type": "object",
                 "required": [
+                    "accepted_untouched",
                     "actor",
+                    "batch_id",
                     "created_at",
                     "decision_category_id",
                     "decision_category_name",
@@ -6851,6 +7124,59 @@
                     "voids"
                 ],
                 "title": "CorrectionLogEntryOut"
+            },
+            "CorrectionLogStatsOut": {
+                "properties": {
+                    "reviews_total": {
+                        "type": "integer"
+                    },
+                    "corrections_total": {
+                        "type": "integer"
+                    },
+                    "accepted_untouched_pct": {
+                        "oneOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "current_month_pct": {
+                        "oneOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "previous_month_pct": {
+                        "oneOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "promoted_rules_accepted": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "accepted_untouched_pct",
+                    "corrections_total",
+                    "current_month_pct",
+                    "previous_month_pct",
+                    "promoted_rules_accepted",
+                    "reviews_total"
+                ],
+                "title": "CorrectionLogStatsOut"
             },
             "CycleCard": {
                 "properties": {
@@ -8718,6 +9044,17 @@
                 ],
                 "title": "RecurringSummaryOut"
             },
+            "RetroApplyTier": {
+                "type": "string",
+                "enum": [
+                    "forward",
+                    "unreviewed",
+                    "full"
+                ],
+                "title": "RetroApplyTier",
+                "description": "The escalating consent tiers, chosen at rule creation (CONTEXT.md:\nRetro-apply). Cumulative: UNREVIEWED includes forward; FULL includes\nboth. Never re-offered on edit.",
+                "default": "forward"
+            },
             "ReviewBatchIn": {
                 "properties": {
                     "ids": {
@@ -8885,6 +9222,42 @@
                 "required": [],
                 "title": "ReviewTransferIn"
             },
+            "RuleApplyReport": {
+                "properties": {
+                    "tier": {
+                        "$ref": "#/components/schemas/RetroApplyTier"
+                    },
+                    "refreshed_unreviewed": {
+                        "type": "integer"
+                    },
+                    "recategorized_reviewed": {
+                        "type": "integer"
+                    },
+                    "skipped": {
+                        "type": "integer"
+                    },
+                    "batch_id": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "batch_id",
+                    "recategorized_reviewed",
+                    "refreshed_unreviewed",
+                    "skipped",
+                    "tier"
+                ],
+                "title": "RuleApplyReport"
+            },
             "RuleCreateIn": {
                 "properties": {
                     "condition": {
@@ -8925,6 +9298,9 @@
                         "type": "boolean",
                         "description": "Propose an untracked transfer (M6 CP4); mutually exclusive with\naction_category_id — one rule, one classification stance.",
                         "default": false
+                    },
+                    "apply": {
+                        "$ref": "#/components/schemas/RetroApplyTier"
                     }
                 },
                 "type": "object",
@@ -8932,6 +9308,15 @@
                     "condition"
                 ],
                 "title": "RuleCreateIn"
+            },
+            "RuleOrigin": {
+                "type": "string",
+                "enum": [
+                    "user",
+                    "promotion"
+                ],
+                "title": "RuleOrigin",
+                "description": "How a rule came to be (F4, CONTEXT.md: Rule origin) — authored by the\nuser, or minted by promotion from their own repeated filings. Fixed at\ncreation and permanent: without it, an accepted promoted rule would be\nindistinguishable from a hand-authored one, and that provenance can't\nbe reconstructed later."
             },
             "RuleOut": {
                 "properties": {
@@ -8941,6 +9326,12 @@
                     },
                     "status": {
                         "$ref": "#/components/schemas/RuleStatus"
+                    },
+                    "origin": {
+                        "$ref": "#/components/schemas/RuleOrigin"
+                    },
+                    "matched_count": {
+                        "type": "integer"
                     },
                     "condition": {
                         "type": "object"
@@ -8974,6 +9365,16 @@
                     "action_mark_transfer": {
                         "type": "boolean"
                     },
+                    "applied": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/RuleApplyReport"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
                     "created_at": {
                         "type": "string",
                         "format": "date-time"
@@ -8988,6 +9389,8 @@
                     "condition",
                     "created_at",
                     "id",
+                    "matched_count",
+                    "origin",
                     "status"
                 ],
                 "title": "RuleOut"
@@ -9077,12 +9480,24 @@
                     },
                     "truncated": {
                         "type": "boolean"
+                    },
+                    "unreviewed_count": {
+                        "type": "integer"
+                    },
+                    "reviewed_count": {
+                        "type": "integer"
+                    },
+                    "skipped_count": {
+                        "type": "integer"
                     }
                 },
                 "type": "object",
                 "required": [
                     "items",
-                    "truncated"
+                    "reviewed_count",
+                    "skipped_count",
+                    "truncated",
+                    "unreviewed_count"
                 ],
                 "title": "RulePreviewOut"
             },
@@ -9402,6 +9817,15 @@
                     "name": {
                         "type": "string"
                     },
+                    "transaction_count": {
+                        "type": "integer"
+                    },
+                    "net_minor": {
+                        "type": "integer"
+                    },
+                    "pending_minor": {
+                        "type": "integer"
+                    },
                     "created_at": {
                         "type": "string",
                         "format": "date-time"
@@ -9411,7 +9835,10 @@
                 "required": [
                     "created_at",
                     "id",
-                    "name"
+                    "name",
+                    "net_minor",
+                    "pending_minor",
+                    "transaction_count"
                 ],
                 "title": "TagOut"
             },

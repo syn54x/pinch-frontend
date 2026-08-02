@@ -16,6 +16,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AuthedAccountsRouteImport } from './routes/_authed/accounts'
+import { Route as AuthedCategoriesRouteImport } from './routes/_authed/categories'
 import { Route as AuthedConnectionsRouteImport } from './routes/_authed/connections'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedInboxRouteImport } from './routes/_authed/inbox'
@@ -25,6 +26,10 @@ import { Route as AuthedRecurringRouteImport } from './routes/_authed/recurring'
 import { Route as AuthedRegisterRouteImport } from './routes/_authed/register'
 import { Route as ConnectOauthReturnRouteImport } from './routes/connect.oauth-return'
 import { Route as AuthedAccountsDebtRouteImport } from './routes/_authed/accounts_.debt'
+import { Route as AuthedCategoriesIndexRouteImport } from './routes/_authed/categories.index'
+import { Route as AuthedCategoriesLearningRouteImport } from './routes/_authed/categories.learning'
+import { Route as AuthedCategoriesRulesRouteImport } from './routes/_authed/categories.rules'
+import { Route as AuthedCategoriesTagsRouteImport } from './routes/_authed/categories.tags'
 import { Route as AuthedPennyConversationIdRouteImport } from './routes/_authed/penny_.$conversationId'
 import { Route as AuthedAccountsDebtAddRouteImport } from './routes/_authed/accounts_.debt.add'
 import { Route as AuthedAccountsDebtAccountIdRouteImport } from './routes/_authed/accounts_.debt_.$accountId'
@@ -62,6 +67,11 @@ const VerifyEmailRoute = VerifyEmailRouteImport.update({
 const AuthedAccountsRoute = AuthedAccountsRouteImport.update({
   id: '/accounts',
   path: '/accounts',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedCategoriesRoute = AuthedCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedConnectionsRoute = AuthedConnectionsRouteImport.update({
@@ -109,6 +119,27 @@ const AuthedAccountsDebtRoute = AuthedAccountsDebtRouteImport.update({
   path: '/accounts/debt',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedCategoriesIndexRoute = AuthedCategoriesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedCategoriesRoute,
+} as any)
+const AuthedCategoriesLearningRoute =
+  AuthedCategoriesLearningRouteImport.update({
+    id: '/learning',
+    path: '/learning',
+    getParentRoute: () => AuthedCategoriesRoute,
+  } as any)
+const AuthedCategoriesRulesRoute = AuthedCategoriesRulesRouteImport.update({
+  id: '/rules',
+  path: '/rules',
+  getParentRoute: () => AuthedCategoriesRoute,
+} as any)
+const AuthedCategoriesTagsRoute = AuthedCategoriesTagsRouteImport.update({
+  id: '/tags',
+  path: '/tags',
+  getParentRoute: () => AuthedCategoriesRoute,
+} as any)
 const AuthedPennyConversationIdRoute =
   AuthedPennyConversationIdRouteImport.update({
     id: '/penny_/$conversationId',
@@ -140,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/accounts': typeof AuthedAccountsRoute
+  '/categories': typeof AuthedCategoriesRouteWithChildren
   '/connections': typeof AuthedConnectionsRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/inbox': typeof AuthedInboxRoute
@@ -149,7 +181,11 @@ export interface FileRoutesByFullPath {
   '/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
   '/accounts/debt': typeof AuthedAccountsDebtRouteWithChildren
+  '/categories/learning': typeof AuthedCategoriesLearningRoute
+  '/categories/rules': typeof AuthedCategoriesRulesRoute
+  '/categories/tags': typeof AuthedCategoriesTagsRoute
   '/penny/$conversationId': typeof AuthedPennyConversationIdRoute
+  '/categories/': typeof AuthedCategoriesIndexRoute
   '/accounts/debt/add': typeof AuthedAccountsDebtAddRoute
   '/accounts/debt/$accountId': typeof AuthedAccountsDebtAccountIdRouteWithChildren
   '/accounts/debt/$accountId/terms': typeof AuthedAccountsDebtAccountIdTermsRoute
@@ -170,7 +206,11 @@ export interface FileRoutesByTo {
   '/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
   '/accounts/debt': typeof AuthedAccountsDebtRouteWithChildren
+  '/categories/learning': typeof AuthedCategoriesLearningRoute
+  '/categories/rules': typeof AuthedCategoriesRulesRoute
+  '/categories/tags': typeof AuthedCategoriesTagsRoute
   '/penny/$conversationId': typeof AuthedPennyConversationIdRoute
+  '/categories': typeof AuthedCategoriesIndexRoute
   '/accounts/debt/add': typeof AuthedAccountsDebtAddRoute
   '/accounts/debt/$accountId': typeof AuthedAccountsDebtAccountIdRouteWithChildren
   '/accounts/debt/$accountId/terms': typeof AuthedAccountsDebtAccountIdTermsRoute
@@ -184,6 +224,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_authed/accounts': typeof AuthedAccountsRoute
+  '/_authed/categories': typeof AuthedCategoriesRouteWithChildren
   '/_authed/connections': typeof AuthedConnectionsRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/inbox': typeof AuthedInboxRoute
@@ -193,7 +234,11 @@ export interface FileRoutesById {
   '/_authed/register': typeof AuthedRegisterRoute
   '/connect/oauth-return': typeof ConnectOauthReturnRoute
   '/_authed/accounts_/debt': typeof AuthedAccountsDebtRouteWithChildren
+  '/_authed/categories/learning': typeof AuthedCategoriesLearningRoute
+  '/_authed/categories/rules': typeof AuthedCategoriesRulesRoute
+  '/_authed/categories/tags': typeof AuthedCategoriesTagsRoute
   '/_authed/penny_/$conversationId': typeof AuthedPennyConversationIdRoute
+  '/_authed/categories/': typeof AuthedCategoriesIndexRoute
   '/_authed/accounts_/debt/add': typeof AuthedAccountsDebtAddRoute
   '/_authed/accounts_/debt_/$accountId': typeof AuthedAccountsDebtAccountIdRouteWithChildren
   '/_authed/accounts_/debt_/$accountId/terms': typeof AuthedAccountsDebtAccountIdTermsRoute
@@ -207,6 +252,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/accounts'
+    | '/categories'
     | '/connections'
     | '/dashboard'
     | '/inbox'
@@ -216,7 +262,11 @@ export interface FileRouteTypes {
     | '/register'
     | '/connect/oauth-return'
     | '/accounts/debt'
+    | '/categories/learning'
+    | '/categories/rules'
+    | '/categories/tags'
     | '/penny/$conversationId'
+    | '/categories/'
     | '/accounts/debt/add'
     | '/accounts/debt/$accountId'
     | '/accounts/debt/$accountId/terms'
@@ -237,7 +287,11 @@ export interface FileRouteTypes {
     | '/register'
     | '/connect/oauth-return'
     | '/accounts/debt'
+    | '/categories/learning'
+    | '/categories/rules'
+    | '/categories/tags'
     | '/penny/$conversationId'
+    | '/categories'
     | '/accounts/debt/add'
     | '/accounts/debt/$accountId'
     | '/accounts/debt/$accountId/terms'
@@ -250,6 +304,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/_authed/accounts'
+    | '/_authed/categories'
     | '/_authed/connections'
     | '/_authed/dashboard'
     | '/_authed/inbox'
@@ -259,7 +314,11 @@ export interface FileRouteTypes {
     | '/_authed/register'
     | '/connect/oauth-return'
     | '/_authed/accounts_/debt'
+    | '/_authed/categories/learning'
+    | '/_authed/categories/rules'
+    | '/_authed/categories/tags'
     | '/_authed/penny_/$conversationId'
+    | '/_authed/categories/'
     | '/_authed/accounts_/debt/add'
     | '/_authed/accounts_/debt_/$accountId'
     | '/_authed/accounts_/debt_/$accountId/terms'
@@ -326,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAccountsRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/categories': {
+      id: '/_authed/categories'
+      path: '/categories'
+      fullPath: '/categories'
+      preLoaderRoute: typeof AuthedCategoriesRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/connections': {
       id: '/_authed/connections'
       path: '/connections'
@@ -389,6 +455,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAccountsDebtRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/categories/': {
+      id: '/_authed/categories/'
+      path: '/'
+      fullPath: '/categories/'
+      preLoaderRoute: typeof AuthedCategoriesIndexRouteImport
+      parentRoute: typeof AuthedCategoriesRoute
+    }
+    '/_authed/categories/learning': {
+      id: '/_authed/categories/learning'
+      path: '/learning'
+      fullPath: '/categories/learning'
+      preLoaderRoute: typeof AuthedCategoriesLearningRouteImport
+      parentRoute: typeof AuthedCategoriesRoute
+    }
+    '/_authed/categories/rules': {
+      id: '/_authed/categories/rules'
+      path: '/rules'
+      fullPath: '/categories/rules'
+      preLoaderRoute: typeof AuthedCategoriesRulesRouteImport
+      parentRoute: typeof AuthedCategoriesRoute
+    }
+    '/_authed/categories/tags': {
+      id: '/_authed/categories/tags'
+      path: '/tags'
+      fullPath: '/categories/tags'
+      preLoaderRoute: typeof AuthedCategoriesTagsRouteImport
+      parentRoute: typeof AuthedCategoriesRoute
+    }
     '/_authed/penny_/$conversationId': {
       id: '/_authed/penny_/$conversationId'
       path: '/penny/$conversationId'
@@ -420,6 +514,23 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthedCategoriesRouteChildren {
+  AuthedCategoriesLearningRoute: typeof AuthedCategoriesLearningRoute
+  AuthedCategoriesRulesRoute: typeof AuthedCategoriesRulesRoute
+  AuthedCategoriesTagsRoute: typeof AuthedCategoriesTagsRoute
+  AuthedCategoriesIndexRoute: typeof AuthedCategoriesIndexRoute
+}
+
+const AuthedCategoriesRouteChildren: AuthedCategoriesRouteChildren = {
+  AuthedCategoriesLearningRoute: AuthedCategoriesLearningRoute,
+  AuthedCategoriesRulesRoute: AuthedCategoriesRulesRoute,
+  AuthedCategoriesTagsRoute: AuthedCategoriesTagsRoute,
+  AuthedCategoriesIndexRoute: AuthedCategoriesIndexRoute,
+}
+
+const AuthedCategoriesRouteWithChildren =
+  AuthedCategoriesRoute._addFileChildren(AuthedCategoriesRouteChildren)
+
 interface AuthedAccountsDebtRouteChildren {
   AuthedAccountsDebtAddRoute: typeof AuthedAccountsDebtAddRoute
 }
@@ -448,6 +559,7 @@ const AuthedAccountsDebtAccountIdRouteWithChildren =
 
 interface AuthedRouteChildren {
   AuthedAccountsRoute: typeof AuthedAccountsRoute
+  AuthedCategoriesRoute: typeof AuthedCategoriesRouteWithChildren
   AuthedConnectionsRoute: typeof AuthedConnectionsRoute
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedInboxRoute: typeof AuthedInboxRoute
@@ -462,6 +574,7 @@ interface AuthedRouteChildren {
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAccountsRoute: AuthedAccountsRoute,
+  AuthedCategoriesRoute: AuthedCategoriesRouteWithChildren,
   AuthedConnectionsRoute: AuthedConnectionsRoute,
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedInboxRoute: AuthedInboxRoute,
