@@ -9702,7 +9702,7 @@
                     "full"
                 ],
                 "title": "RetroApplyTier",
-                "description": "The escalating consent tiers, chosen at rule creation (CONTEXT.md:\nRetro-apply). Cumulative: UNREVIEWED includes forward; FULL includes\nboth. Never re-offered on edit.",
+                "description": "The retro-apply consent tier (F4 Enabler B, #67; CONTEXT.md) —\ncreation-time only, never re-offered on edit. Transfer-marking rules\nare forward-only.",
                 "default": "forward"
             },
             "ReviewBatchIn": {

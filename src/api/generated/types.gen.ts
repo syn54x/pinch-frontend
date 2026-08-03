@@ -1090,9 +1090,9 @@ export type RecurringSummaryOut = {
 /**
  * RetroApplyTier
  *
- * The escalating consent tiers, chosen at rule creation (CONTEXT.md:
- * Retro-apply). Cumulative: UNREVIEWED includes forward; FULL includes
- * both. Never re-offered on edit.
+ * The retro-apply consent tier (F4 Enabler B, #67; CONTEXT.md) —
+ * creation-time only, never re-offered on edit. Transfer-marking rules
+ * are forward-only.
  */
 export type RetroApplyTier = 'forward' | 'unreviewed' | 'full';
 
