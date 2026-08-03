@@ -31,6 +31,7 @@ import {
   totalBalanceMinor,
 } from '@/lib/accounts'
 import { formatMinorUnits } from '@/lib/money'
+import { useHoverReveal } from '@/lib/use-hover-reveal'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_authed/accounts')({
@@ -276,6 +277,7 @@ function AccountRow({
   const debt = isDebtAccount(account)
   const amount = accountBalanceMinor(account)
   const subline = accountSubline(account)
+  const { hovered, bind } = useHoverReveal()
 
   const content = (
     <>
@@ -320,8 +322,9 @@ function AccountRow({
   return (
     <div
       data-testid="account-card"
+      {...bind}
       className={cn(
-        'group flex items-center gap-3 border-b p-4 last:border-b-0',
+        'flex items-center gap-3 border-b p-4 last:border-b-0',
         debt && 'transition-colors hover:bg-muted/40',
       )}
     >
@@ -344,7 +347,10 @@ function AccountRow({
           size="icon-sm"
           variant="ghost"
           aria-label={`Archive ${account.label}`}
-          className="shrink-0 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+          className={cn(
+            'shrink-0 opacity-0 transition-opacity focus-visible:opacity-100',
+            hovered && 'opacity-100',
+          )}
           onClick={onArchive}
         >
           <Archive className="size-3.5" aria-hidden />
@@ -355,7 +361,10 @@ function AccountRow({
           size="icon-sm"
           variant="ghost"
           aria-label={`Delete ${account.label}`}
-          className="shrink-0 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+          className={cn(
+            'shrink-0 opacity-0 transition-opacity focus-visible:opacity-100',
+            hovered && 'opacity-100',
+          )}
           onClick={onDelete}
         >
           <Trash2 className="size-3.5" aria-hidden />
