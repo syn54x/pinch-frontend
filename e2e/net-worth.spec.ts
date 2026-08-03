@@ -7,7 +7,7 @@ import {
 import { authedContext, PASSWORD, seedUser, uniqueEmail } from './helpers/api'
 import { contrastRatio } from './helpers/contrast'
 import { daysAgo } from './helpers/register'
-import { loginViaUi } from './helpers/ui'
+import { loginViaUi, toggleTheme } from './helpers/ui'
 
 // F5 CP2 (#29, wireframe s11/s11e): Net Worth. Seeding is real balance history
 // through the API — backdated balance-entries build the trend, and the client's
@@ -218,7 +218,6 @@ test('net worth holds AA contrast in both themes', async ({ page }) => {
 
   // Whichever theme we start in, then the other.
   await assertContrast()
-  const toggle = page.getByRole('button', { name: /Switch to (light|dark)/ })
-  await toggle.click()
+  await toggleTheme(page)
   await assertContrast()
 })

@@ -1,7 +1,7 @@
 import { expect, type Page, test } from '@playwright/test'
 import { PASSWORD, seedUser, uniqueEmail } from './helpers/api'
 import { dayHeading, daysAgo, RegisterSeeder } from './helpers/register'
-import { loginViaUi } from './helpers/ui'
+import { loginViaUi, setTheme } from './helpers/ui'
 
 // F3 CP1 — the Register (wireframe #8): browse → filter → search → inspect
 // → edit, against real seeded history. Seeding rides the manual-entry API
@@ -86,9 +86,8 @@ test('the register holds in dark mode', async ({ page }) => {
   await seed.dispose()
 
   await openRegister(page, email)
-  // Cycle system → light → dark via the shell toggle (the shell.spec move).
-  await page.getByRole('button', { name: /Switch to light/ }).click()
-  await page.getByRole('button', { name: /Switch to dark/ }).click()
+  // Pin dark via the Profile menu (the shell.spec move).
+  await setTheme(page, 'Dark')
   await expect(page.locator('html')).toHaveClass(/dark/)
 
   // The ledger vocabulary survives the theme: group heading, catpill, amount.

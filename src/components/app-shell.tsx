@@ -1,10 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  Link,
-  useNavigate,
-  useRouter,
-  useRouterState,
-} from '@tanstack/react-router'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import {
   CreditCard,
   Home,
@@ -18,12 +13,11 @@ import {
 import { type ComponentType, type ReactNode, useEffect, useState } from 'react'
 import {
   countUnreviewedTransactionsOptions,
-  logoutMutation,
   meOptions,
   requestEmailVerificationMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
 import { PennyChips } from '@/components/penny/history'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { ProfileMenu } from '@/components/profile-menu'
 import { Button } from '@/components/ui/button'
 
 // Screen titles live on the routes themselves (staticData); the shell's top
@@ -118,17 +112,16 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
         <div className="flex-1" />
         <PennyPill active={onPenny} />
-        <UserRow />
+        <ProfileMenu />
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-[52px] shrink-0 items-center gap-3.5 border-b px-5">
           <h1 className="font-semibold text-sm">{title}</h1>
           <div className="ml-auto flex items-center gap-2">
             {/* s22: on the Penny screen the top bar carries her verbs
-                instead of the (redundant) summon pill. */}
+                instead of the (redundant) summon pill. Theme and logout
+                live in the Profile menu (F7 CP0) — the bar stays lean. */}
             {onPenny ? <PennyChips /> : <AskPenny />}
-            <ThemeToggle />
-            <LogoutButton />
           </div>
         </header>
         <VerifyEmailBanner />
@@ -235,54 +228,6 @@ function InboxCount() {
     >
       {count.data.count}
     </span>
-  )
-}
-
-function UserRow() {
-  // The guard already resolved /me; this render only reads the cache.
-  const me = useQuery(meOptions())
-  if (!me.data) return null
-  const name = me.data.display_name.trim()
-
-  return (
-    <div className="mt-1 flex items-center gap-2.5 px-2 py-1.5">
-      <div className="size-6 shrink-0 rounded-full bg-muted" aria-hidden />
-      <div className="min-w-0">
-        <p className="truncate font-medium text-[11.5px]">
-          {name || me.data.email}
-        </p>
-        {name && (
-          <p className="truncate text-[10px] text-muted-foreground">
-            {me.data.email}
-          </p>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function LogoutButton() {
-  const router = useRouter()
-  const queryClient = useQueryClient()
-  const logout = useMutation({
-    ...logoutMutation(),
-    onSuccess: () => {
-      // The session is gone server-side; drop every cached answer that
-      // presumed it (starting with /me) and go to login.
-      queryClient.clear()
-      router.history.push('/login')
-    },
-  })
-
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      disabled={logout.isPending}
-      onClick={() => logout.mutate({})}
-    >
-      Log out
-    </Button>
   )
 }
 

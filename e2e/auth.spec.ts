@@ -50,6 +50,7 @@ test('logout revokes the session for real', async ({ page }) => {
   await loginViaUi(page, email, PASSWORD)
   await expect(page).toHaveURL(/\/accounts$/)
 
+  await page.getByTestId('profile-menu-trigger').click()
   await page.getByRole('button', { name: 'Log out' }).click()
   await expect(page).toHaveURL(/\/login/)
 

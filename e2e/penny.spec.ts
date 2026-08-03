@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { authedContext, PASSWORD, seedUser, uniqueEmail } from './helpers/api'
 import { contrastRatio } from './helpers/contrast'
-import { loginViaUi } from './helpers/ui'
+import { loginViaUi, toggleTheme } from './helpers/ui'
 
 // F6 CP0 (issue #46): the integration spike's definition of done. The e2e
 // backend runs pydantic-ai's deterministic `test` model — no key, no mock,
@@ -77,7 +77,7 @@ test('CP1: the s22 screen — chips seed the first ask, the URL takes the conver
     }
   }
   await assertContrast()
-  await page.getByRole('button', { name: /Switch to (light|dark)/ }).click()
+  await toggleTheme(page)
   await assertContrast()
 })
 

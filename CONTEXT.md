@@ -24,9 +24,10 @@ _Avoid_: review queue
 
 **App shell**:
 The persistent chrome every authed surface mounts inside: the sidebar (nav
-with live Inbox count, Setup section, Penny pill, user row) and the top bar
-(screen title, search, Ask Penny). Nav shows only surfaces that exist — no
-disabled destinations.
+with live Inbox count, Setup section, Penny pill, and the profile menu on
+the user row) and the top bar (screen title, search, Ask Penny). Theme and
+logout live in the profile menu, not the bar. Nav shows only surfaces that
+exist — no disabled destinations.
 _Avoid_: layout, frame
 
 **Profile menu**:

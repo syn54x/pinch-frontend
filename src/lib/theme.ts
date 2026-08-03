@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react'
 export type ThemePreference = 'light' | 'dark' | 'system'
 
 const STORAGE_KEY = 'pinch-theme'
-const CYCLE: ThemePreference[] = ['system', 'light', 'dark']
 
 export function resolveTheme(
   pref: ThemePreference,
@@ -14,10 +13,6 @@ export function resolveTheme(
 ): 'light' | 'dark' {
   if (pref === 'system') return systemDark ? 'dark' : 'light'
   return pref
-}
-
-export function nextTheme(pref: ThemePreference): ThemePreference {
-  return CYCLE[(CYCLE.indexOf(pref) + 1) % CYCLE.length]
 }
 
 export function getStoredTheme(): ThemePreference {

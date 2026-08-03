@@ -3,7 +3,7 @@ import type { RecurringSeriesOut } from '../src/api/generated/types.gen'
 import { authedContext, PASSWORD, seedUser, uniqueEmail } from './helpers/api'
 import { contrastRatio } from './helpers/contrast'
 import { RegisterSeeder } from './helpers/register'
-import { loginViaUi } from './helpers/ui'
+import { loginViaUi, toggleTheme } from './helpers/ui'
 
 // F5 CP3 (#30, wireframe s12): Recurring. Detection is real-pipeline only — no
 // manual series creation — so seeding is 4 same-payee monthly transactions and a
@@ -154,6 +154,6 @@ test('recurring holds AA contrast in both themes', async ({ page }) => {
   }
 
   await assertContrast()
-  await page.getByRole('button', { name: /Switch to (light|dark)/ }).click()
+  await toggleTheme(page)
   await assertContrast()
 })
