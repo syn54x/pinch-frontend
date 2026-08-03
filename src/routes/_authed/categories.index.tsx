@@ -167,7 +167,7 @@ function CategoryRow({
         {category.emoji ?? categoryEmoji(category.name)}
       </span>
       <span className="font-medium text-(--c)">{category.name}</span>
-      <span className="ml-auto flex items-center gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+      <span className="ml-auto flex items-center gap-1 opacity-0 transition-opacity has-[:focus-visible]:opacity-100 group-hover:opacity-100">
         <Button
           size="icon-sm"
           variant="ghost"
