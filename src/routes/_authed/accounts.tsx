@@ -275,6 +275,8 @@ function AccountRow({
   onDelete?: () => void
 }) {
   const debt = isDebtAccount(account)
+  const investment = account.kind === 'investment'
+  const linksToDetail = debt || investment
   const amount = accountBalanceMinor(account)
   const subline = accountSubline(account)
   const { ref, hovered, bind } = useHoverReveal()
@@ -310,7 +312,7 @@ function AccountRow({
           No balance yet
         </span>
       )}
-      {debt && (
+      {linksToDetail && (
         <ChevronRight
           className="size-4 shrink-0 text-muted-foreground"
           aria-hidden
@@ -326,7 +328,7 @@ function AccountRow({
       {...bind}
       className={cn(
         'flex items-center gap-3 border-b p-4 last:border-b-0',
-        debt && 'transition-colors hover:bg-muted/40',
+        linksToDetail && 'transition-colors hover:bg-muted/40',
       )}
     >
       {debt ? (
@@ -335,6 +337,16 @@ function AccountRow({
         // the link.
         <Link
           to="/accounts/debt/$accountId"
+          params={{ accountId: account.id }}
+          className="flex min-w-0 flex-1 items-center gap-3"
+        >
+          {content}
+        </Link>
+      ) : investment ? (
+        // Brokerages deep-link into the investments view (M10 companion):
+        // holdings and activity, raw truth ahead of the portfolio surface.
+        <Link
+          to="/accounts/investments/$accountId"
           params={{ accountId: account.id }}
           className="flex min-w-0 flex-1 items-center gap-3"
         >

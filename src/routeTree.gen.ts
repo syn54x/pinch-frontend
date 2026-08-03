@@ -33,6 +33,7 @@ import { Route as AuthedCategoriesTagsRouteImport } from './routes/_authed/categ
 import { Route as AuthedPennyConversationIdRouteImport } from './routes/_authed/penny_.$conversationId'
 import { Route as AuthedAccountsDebtAddRouteImport } from './routes/_authed/accounts_.debt.add'
 import { Route as AuthedAccountsDebtAccountIdRouteImport } from './routes/_authed/accounts_.debt_.$accountId'
+import { Route as AuthedAccountsInvestmentsAccountIdRouteImport } from './routes/_authed/accounts_.investments_.$accountId'
 import { Route as AuthedCategoriesRulesIndexRouteImport } from './routes/_authed/categories.rules.index'
 import { Route as AuthedCategoriesRulesRuleIdRouteImport } from './routes/_authed/categories.rules.$ruleId'
 import { Route as AuthedCategoriesRulesNewRouteImport } from './routes/_authed/categories.rules.new'
@@ -160,6 +161,12 @@ const AuthedAccountsDebtAccountIdRoute =
     path: '/accounts/debt/$accountId',
     getParentRoute: () => AuthedRoute,
   } as any)
+const AuthedAccountsInvestmentsAccountIdRoute =
+  AuthedAccountsInvestmentsAccountIdRouteImport.update({
+    id: '/accounts_/investments_/$accountId',
+    path: '/accounts/investments/$accountId',
+    getParentRoute: () => AuthedRoute,
+  } as any)
 const AuthedCategoriesRulesIndexRoute =
   AuthedCategoriesRulesIndexRouteImport.update({
     id: '/',
@@ -209,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/categories/': typeof AuthedCategoriesIndexRoute
   '/accounts/debt/add': typeof AuthedAccountsDebtAddRoute
   '/accounts/debt/$accountId': typeof AuthedAccountsDebtAccountIdRouteWithChildren
+  '/accounts/investments/$accountId': typeof AuthedAccountsInvestmentsAccountIdRoute
   '/categories/rules/$ruleId': typeof AuthedCategoriesRulesRuleIdRoute
   '/categories/rules/new': typeof AuthedCategoriesRulesNewRoute
   '/categories/rules/': typeof AuthedCategoriesRulesIndexRoute
@@ -236,6 +244,7 @@ export interface FileRoutesByTo {
   '/categories': typeof AuthedCategoriesIndexRoute
   '/accounts/debt/add': typeof AuthedAccountsDebtAddRoute
   '/accounts/debt/$accountId': typeof AuthedAccountsDebtAccountIdRouteWithChildren
+  '/accounts/investments/$accountId': typeof AuthedAccountsInvestmentsAccountIdRoute
   '/categories/rules/$ruleId': typeof AuthedCategoriesRulesRuleIdRoute
   '/categories/rules/new': typeof AuthedCategoriesRulesNewRoute
   '/categories/rules': typeof AuthedCategoriesRulesIndexRoute
@@ -267,6 +276,7 @@ export interface FileRoutesById {
   '/_authed/categories/': typeof AuthedCategoriesIndexRoute
   '/_authed/accounts_/debt/add': typeof AuthedAccountsDebtAddRoute
   '/_authed/accounts_/debt_/$accountId': typeof AuthedAccountsDebtAccountIdRouteWithChildren
+  '/_authed/accounts_/investments_/$accountId': typeof AuthedAccountsInvestmentsAccountIdRoute
   '/_authed/categories/rules/$ruleId': typeof AuthedCategoriesRulesRuleIdRoute
   '/_authed/categories/rules/new': typeof AuthedCategoriesRulesNewRoute
   '/_authed/categories/rules/': typeof AuthedCategoriesRulesIndexRoute
@@ -298,6 +308,7 @@ export interface FileRouteTypes {
     | '/categories/'
     | '/accounts/debt/add'
     | '/accounts/debt/$accountId'
+    | '/accounts/investments/$accountId'
     | '/categories/rules/$ruleId'
     | '/categories/rules/new'
     | '/categories/rules/'
@@ -325,6 +336,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/accounts/debt/add'
     | '/accounts/debt/$accountId'
+    | '/accounts/investments/$accountId'
     | '/categories/rules/$ruleId'
     | '/categories/rules/new'
     | '/categories/rules'
@@ -355,6 +367,7 @@ export interface FileRouteTypes {
     | '/_authed/categories/'
     | '/_authed/accounts_/debt/add'
     | '/_authed/accounts_/debt_/$accountId'
+    | '/_authed/accounts_/investments_/$accountId'
     | '/_authed/categories/rules/$ruleId'
     | '/_authed/categories/rules/new'
     | '/_authed/categories/rules/'
@@ -541,6 +554,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAccountsDebtAccountIdRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/accounts_/investments_/$accountId': {
+      id: '/_authed/accounts_/investments_/$accountId'
+      path: '/accounts/investments/$accountId'
+      fullPath: '/accounts/investments/$accountId'
+      preLoaderRoute: typeof AuthedAccountsInvestmentsAccountIdRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/categories/rules/': {
       id: '/_authed/categories/rules/'
       path: '/'
@@ -645,6 +665,7 @@ interface AuthedRouteChildren {
   AuthedAccountsDebtRoute: typeof AuthedAccountsDebtRouteWithChildren
   AuthedPennyConversationIdRoute: typeof AuthedPennyConversationIdRoute
   AuthedAccountsDebtAccountIdRoute: typeof AuthedAccountsDebtAccountIdRouteWithChildren
+  AuthedAccountsInvestmentsAccountIdRoute: typeof AuthedAccountsInvestmentsAccountIdRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
@@ -661,6 +682,8 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedPennyConversationIdRoute: AuthedPennyConversationIdRoute,
   AuthedAccountsDebtAccountIdRoute:
     AuthedAccountsDebtAccountIdRouteWithChildren,
+  AuthedAccountsInvestmentsAccountIdRoute:
+    AuthedAccountsInvestmentsAccountIdRoute,
 }
 
 const AuthedRouteWithChildren =

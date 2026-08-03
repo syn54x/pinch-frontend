@@ -12,6 +12,8 @@ import {
   listAccountsQueryKey,
   listConnectionsOptions,
   listConnectionsQueryKey,
+  listHoldingsQueryKey,
+  listInvestmentActivitiesQueryKey,
   refreshConnectionMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
 import type { ConnectionOut } from '@/api/generated/types.gen'
@@ -30,6 +32,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { WarnChip } from '@/components/ui/warn-chip'
 import { PlaidExitError, usePlaidConnect } from '@/lib/plaid'
 import { relativeTime } from '@/lib/time'
 
@@ -147,6 +150,13 @@ function ConnectionsPage() {
       // failing into error) closes the window without invalidating.
       if (balancesArrived) {
         queryClient.invalidateQueries({ queryKey: listAccountsQueryKey() })
+        // A completed sync may also carry an investments phase (M10):
+        // holdings are mirror-replaced and activities appended, so both
+        // re-ask alongside balances.
+        queryClient.invalidateQueries({ queryKey: listHoldingsQueryKey() })
+        queryClient.invalidateQueries({
+          queryKey: listInvestmentActivitiesQueryKey(),
+        })
       }
     }
   }, [items, syncWindows, queryClient])
@@ -300,11 +310,29 @@ function ConnectionCard({
               {connection.error_detail}
             </p>
           )}
+          {connection.investments_error_detail && (
+            // Partial degradation, not a dead connection: banking still
+            // syncs while the investments phase reports its own health.
+            <WarnChip data-testid="investments-error">
+              Investments: {connection.investments_error_detail}
+            </WarnChip>
+          )}
         </div>
         <span className="flex shrink-0 items-center gap-1">
           {broken && (
-            <RepairButton
+            <UpdateModeLinkButton
               connection={connection}
+              label="Repair"
+              onTriggered={onSyncTriggered}
+            />
+          )}
+          {connection.investments_consent_required && (
+            // The retrofit path (M10): the Item predates investments
+            // consent — update-mode Link collects it, the resync heals.
+            <UpdateModeLinkButton
+              connection={connection}
+              label="Enable investments"
+              testId="enable-investments"
               onTriggered={onSyncTriggered}
             />
           )}
@@ -349,11 +377,15 @@ function RefreshButton({
   )
 }
 
-function RepairButton({
+function UpdateModeLinkButton({
   connection,
+  label,
+  testId,
   onTriggered,
 }: {
   connection: ConnectionOut
+  label: string
+  testId?: string
   onTriggered: (connection: ConnectionOut) => void
 }) {
   const queryClient = useQueryClient()
@@ -361,12 +393,15 @@ function RepairButton({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleRepair() {
+  // One flow, two doors (M7 repair, M10 enable-investments): update-mode
+  // Link on the same Item — never re-create (a fresh connect on top of an
+  // existing connection duplicates accounts). Every update-mode token also
+  // carries the investments consent, so repairing a login and enabling
+  // investments are the same walk with different labels.
+  async function handleLaunch() {
     setError(null)
     setBusy(true)
     try {
-      // Update-mode token for the same Item — repair, never re-create
-      // (a fresh connect on a broken connection duplicates accounts).
       const { data: tokenOut } = await createLinkToken({
         body: { connection_id: connection.id },
         throwOnError: true,
@@ -402,9 +437,10 @@ function RepairButton({
         variant="outline"
         size="sm"
         disabled={busy}
-        onClick={handleRepair}
+        data-testid={testId}
+        onClick={handleLaunch}
       >
-        Repair
+        {label}
       </Button>
     </span>
   )
