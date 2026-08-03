@@ -1,14 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
 
-// F4 CP2 (#60) fills this tab: the law, plus Penny's suggested rules.
+// F4 CP2 (#60): the Rules tab family — the list at the index, the builder
+// at /new and /$ruleId, all inside the Categories & Rules shell.
 export const Route = createFileRoute('/_authed/categories/rules')({
-  component: RulesTab,
+  component: Outlet,
 })
-
-function RulesTab() {
-  return (
-    <p className="text-muted-foreground text-sm" data-testid="rules-tab">
-      Rules land with CP2.
-    </p>
-  )
-}
