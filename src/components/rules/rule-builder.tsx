@@ -319,9 +319,9 @@ export function RuleBuilder({ editing }: { editing: RuleOut | null }) {
             onSelect={() => setTier('unreviewed')}
             title="…and unreviewed transactions"
             badge="default"
-            caption={`Recategorizes ${counts?.unreviewed_count ?? 0} item${
+            caption={`Re-proposes ${counts?.unreviewed_count ?? 0} item${
               (counts?.unreviewed_count ?? 0) === 1 ? '' : 's'
-            } waiting in your inbox`}
+            } waiting in your inbox — they'll carry this rule's suggestion for your review`}
           />
           <TierOption
             checked={tier === 'full'}
