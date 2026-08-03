@@ -1087,6 +1087,67 @@
                 },
                 "deprecated": false
             },
+            "delete": {
+                "summary": "DeleteAccount",
+                "operationId": "delete_account",
+                "parameters": [
+                    {
+                        "name": "account_id",
+                        "in": "path",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true,
+                        "deprecated": false
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Request fulfilled, nothing follows",
+                        "headers": {}
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            },
             "patch": {
                 "summary": "UpdateAccountLabel",
                 "operationId": "update_account_label",
@@ -1190,6 +1251,76 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/AccountOut"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/v1/accounts/{account_id}/deletion-preview": {
+            "get": {
+                "summary": "DeletionPreview",
+                "operationId": "deletion_preview",
+                "parameters": [
+                    {
+                        "name": "account_id",
+                        "in": "path",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true,
+                        "deprecated": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DeletionPreviewOut"
                                 }
                             }
                         }
@@ -7449,6 +7580,30 @@
                     "weighted_apr"
                 ],
                 "title": "DebtOut"
+            },
+            "DeletionPreviewOut": {
+                "properties": {
+                    "transactions": {
+                        "type": "integer"
+                    },
+                    "reviewed": {
+                        "type": "integer"
+                    },
+                    "transfers": {
+                        "type": "integer"
+                    },
+                    "balance_entries": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "balance_entries",
+                    "reviewed",
+                    "transactions",
+                    "transfers"
+                ],
+                "title": "DeletionPreviewOut"
             },
             "Delta": {
                 "properties": {

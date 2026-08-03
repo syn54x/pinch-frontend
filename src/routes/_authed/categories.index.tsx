@@ -17,6 +17,8 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { categoryColorVar } from '@/lib/category-colors'
 import { formatMinorUnits } from '@/lib/money'
+import { useHoverReveal } from '@/lib/use-hover-reveal'
+import { cn } from '@/lib/utils'
 
 // F4 CP1 (#59, wireframe s17): the category tree with identity and this
 // month's rolled-up spend. Identity carries from here into every catpill.
@@ -152,10 +154,13 @@ function CategoryRow({
   const color = category.color
     ? categoryColorVar(category.color)
     : modelColorVar(category.name)
+  const { ref, hovered, bind } = useHoverReveal()
   return (
     <div
       data-testid="category-row"
-      className="group flex items-center gap-2.5 px-3.5 py-2.5 text-sm"
+      ref={ref}
+      {...bind}
+      className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm"
       style={
         {
           '--c': color,
@@ -167,7 +172,12 @@ function CategoryRow({
         {category.emoji ?? categoryEmoji(category.name)}
       </span>
       <span className="font-medium text-(--c)">{category.name}</span>
-      <span className="ml-auto flex items-center gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+      <span
+        className={cn(
+          'ml-auto flex items-center gap-1 opacity-0 has-[:focus-visible]:opacity-100',
+          hovered && 'opacity-100',
+        )}
+      >
         <Button
           size="icon-sm"
           variant="ghost"

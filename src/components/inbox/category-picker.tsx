@@ -9,17 +9,26 @@ import { CategoryPill } from './category-pill'
 // ledger's categories, fully keyboard-drivable — type to narrow, ↑/↓ to
 // move, Enter to pick, Escape to close. Picking stages the correction; the
 // review call happens on Accept (one-shot, #18).
+//
+// #63 (wireframe s7c 2b): when the typed query matches no category name
+// exactly, a "＋ Create" row joins the list — always LAST ("existing
+// categories win the ranking so people don't grow a junk drawer by
+// accident"), reachable by arrows or ⌘↩ from anywhere in the input. The
+// first remaining match wears a "closest match" hint.
 
 export function CategoryPicker({
   categories,
   isPending,
   onPick,
   onClose,
+  onCreate,
 }: {
   categories: CategoryOut[]
   isPending: boolean
   onPick: (category: CategoryRef) => void
   onClose: () => void
+  /** Opens the inline create sheet with the typed name (#63). */
+  onCreate?: (name: string) => void
 }) {
   const [filter, setFilter] = useState('')
   const [active, setActive] = useState(0)
@@ -29,7 +38,19 @@ export function CategoryPicker({
   const matches = categories.filter((category) =>
     category.name.toLowerCase().includes(needle),
   )
-  const activeIndex = Math.min(active, Math.max(matches.length - 1, 0))
+  const creatable =
+    onCreate !== undefined &&
+    needle !== '' &&
+    !categories.some(
+      (category) => category.name.trim().toLowerCase() === needle,
+    )
+  // The create row occupies the index AFTER the last match.
+  const optionCount = matches.length + (creatable ? 1 : 0)
+  const activeIndex = Math.min(active, Math.max(optionCount - 1, 0))
+
+  function create() {
+    if (creatable) onCreate?.(filter.trim())
+  }
 
   function handleKeyDown(event: React.KeyboardEvent) {
     if (event.key === 'Escape') {
@@ -38,14 +59,19 @@ export function CategoryPicker({
       onClose()
     } else if (event.key === 'ArrowDown') {
       event.preventDefault()
-      setActive(Math.min(activeIndex + 1, matches.length - 1))
+      setActive(Math.min(activeIndex + 1, optionCount - 1))
     } else if (event.key === 'ArrowUp') {
       event.preventDefault()
       setActive(Math.max(activeIndex - 1, 0))
+    } else if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+      // ⌘↩ jumps straight to create, wherever the highlight sits.
+      event.preventDefault()
+      create()
     } else if (event.key === 'Enter') {
       event.preventDefault()
       const picked = matches[activeIndex]
       if (picked !== undefined) onPick({ id: picked.id, name: picked.name })
+      else if (creatable && activeIndex === matches.length) create()
     }
   }
 
@@ -78,30 +104,57 @@ export function CategoryPicker({
             <Skeleton className="h-6 w-full" />
             <Skeleton className="h-6 w-2/3" />
           </div>
-        ) : matches.length === 0 ? (
+        ) : matches.length === 0 && !creatable ? (
           <p className="px-3 py-2 text-[11.5px] text-muted-foreground">
             {categories.length === 0
               ? 'No categories yet.'
               : 'No categories match.'}
           </p>
         ) : (
-          matches.map((category, index) => (
-            <button
-              key={category.id}
-              type="button"
-              role="option"
-              aria-selected={index === activeIndex}
-              tabIndex={-1}
-              className={cn(
-                'flex w-full items-center px-2 py-1 text-left',
-                index === activeIndex && 'bg-accent',
-              )}
-              onPointerMove={() => setActive(index)}
-              onClick={() => onPick({ id: category.id, name: category.name })}
-            >
-              <CategoryPill category={category} />
-            </button>
-          ))
+          <>
+            {matches.map((category, index) => (
+              <button
+                key={category.id}
+                type="button"
+                role="option"
+                aria-selected={index === activeIndex}
+                tabIndex={-1}
+                className={cn(
+                  'flex w-full items-center gap-2 px-2 py-1 text-left',
+                  index === activeIndex && 'bg-accent',
+                )}
+                onPointerMove={() => setActive(index)}
+                onClick={() => onPick({ id: category.id, name: category.name })}
+              >
+                <CategoryPill category={category} />
+                {creatable && index === 0 && (
+                  <span className="text-[10.5px] text-muted-foreground">
+                    closest match
+                  </span>
+                )}
+              </button>
+            ))}
+            {creatable && (
+              <button
+                type="button"
+                role="option"
+                aria-selected={activeIndex === matches.length}
+                tabIndex={-1}
+                data-testid="create-category-row"
+                className={cn(
+                  'flex w-full items-center justify-between px-2.5 py-1.5 text-left text-[12.5px]',
+                  activeIndex === matches.length && 'bg-accent',
+                )}
+                onPointerMove={() => setActive(matches.length)}
+                onClick={create}
+              >
+                <span>＋ Create “{filter.trim()}”</span>
+                <kbd className="rounded border px-1 py-px font-mono text-[10px] text-muted-foreground">
+                  ⌘↩
+                </kbd>
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>

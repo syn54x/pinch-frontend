@@ -7,13 +7,20 @@ import {
 import { useState } from 'react'
 import {
   countUnreviewedTransactionsQueryKey,
+  createRuleMutation,
   getTransactionOptions,
   listCategoriesOptions,
+  listRulesQueryKey,
   listTagsOptions,
   listTransactionsQueryKey,
   reviewTransactionMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
-import type { ReviewIn, TransactionOut } from '@/api/generated/types.gen'
+import { previewRule } from '@/api/generated/sdk.gen'
+import type {
+  ReviewIn,
+  RulePreviewOut,
+  TransactionOut,
+} from '@/api/generated/types.gen'
 import {
   initialSplitDraft,
   type SplitDraftLine,
@@ -88,6 +95,8 @@ export function useReviewController({
     null,
   )
   const [panel, setPanel] = useState<ReviewPanel | null>(null)
+  // The create sheet's seed — what they typed into the picker (#63).
+  const [createName, setCreateName] = useState('')
 
   // A focus move (or loss) closes any open panel — a correction targets one
   // row; it never silently retargets another. Reset during render (React's
@@ -111,7 +120,8 @@ export function useReviewController({
 
   const categories = useQuery({
     ...listCategoriesOptions({ query: { limit: 100 } }),
-    enabled: panel === 'category' || panel === 'split',
+    enabled:
+      panel === 'category' || panel === 'split' || panel === 'create-category',
   })
   const tags = useQuery({
     ...listTagsOptions({ query: { limit: 100 } }),
@@ -135,6 +145,28 @@ export function useReviewController({
       ? (accountLabel(counterpart.account_id) ?? payeeOf(counterpart))
       : null
 
+  // The 8b consent counts: how many existing transactions the staged
+  // payee-equals rule would touch, split by tier scope. Only asked while a
+  // rule is actually staged.
+  const rulePayee = txn?.description_normalized ?? null
+  const rulePreview = useQuery<RulePreviewOut | null>({
+    queryKey: ['inspector-rule-preview', rulePayee],
+    enabled: correction.ruleScope !== undefined && rulePayee !== null,
+    queryFn: async () => {
+      const { data } = await previewRule({
+        body: { payee: { op: 'equals', value: rulePayee as string } },
+        throwOnError: true,
+      })
+      return data ?? null
+    },
+  })
+
+  const createRule = useMutation({
+    ...createRuleMutation(),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: listRulesQueryKey() }),
+  })
+
   const review = useMutation({
     ...reviewTransactionMutation(),
     onSuccess: (_data, variables) => {
@@ -152,7 +184,7 @@ export function useReviewController({
     // Reality re-asserts (a 409 means the row is already reviewed).
     onError: () => invalidateReviewData(queryClient),
   })
-  const busy = review.isPending || externalBusy
+  const busy = review.isPending || createRule.isPending || externalBusy
 
   function closePanel() {
     setPanel(null)
@@ -176,7 +208,7 @@ export function useReviewController({
     setSplitDraft({ id: txn.id, lines })
   }
 
-  function accept() {
+  async function accept() {
     if (txn === null || busy) return
     let splits: ReviewIn['splits'] | null = null
     if (splitLines !== null) {
@@ -184,6 +216,27 @@ export function useReviewController({
       // review call — A is inert until the lines balance (the cue says why).
       if (!splitStatus(splitLines, txn).valid) return
       splits = splitsForReview(splitLines, txn)
+    }
+    // #63 (8b): a staged "make a rule" mints the payee-equals rule FIRST —
+    // its tier touches the siblings; this row's decision is the review
+    // below. A failed rule POST stops the accept (nothing half-consented).
+    if (
+      correction.ruleScope !== undefined &&
+      correction.category !== undefined
+    ) {
+      try {
+        await createRule.mutateAsync({
+          body: {
+            condition: {
+              payee: { op: 'equals', value: txn.description_normalized },
+            },
+            action_category_id: correction.category.id,
+            apply: correction.ruleScope,
+          },
+        })
+      } catch {
+        return
+      }
     }
     review.mutate({
       path: { txn_id: txn.id },
@@ -232,6 +285,18 @@ export function useReviewController({
   }
 
   function openCategory() {
+    setPanel('category')
+  }
+
+  /** The picker's create row (#63): swap to the inline sheet, seeded with
+   * what they typed. */
+  function openCreateCategory(name: string) {
+    setCreateName(name)
+    setPanel('create-category')
+  }
+
+  /** ‹ back to list — the sheet returns to the picker. */
+  function backToPicker() {
     setPanel('category')
   }
 
@@ -311,8 +376,13 @@ export function useReviewController({
             label: accountLabel(candidate.account_id) ?? payeeOf(candidate),
           }))
         : [],
+    createName,
+    rulePreview: rulePreview.data ?? null,
+    ruleError: createRule.isError ? createRule.error : null,
     // verbs
     setCorrection,
+    openCreateCategory,
+    backToPicker,
     setSplitLines,
     accept,
     consentTransfer,

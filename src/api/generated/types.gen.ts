@@ -438,6 +438,16 @@ export type DebtOut = {
 };
 
 /**
+ * DeletionPreviewOut
+ */
+export type DeletionPreviewOut = {
+    transactions: number;
+    reviewed: number;
+    transfers: number;
+    balance_entries: number;
+};
+
+/**
  * Delta
  */
 export type Delta = {
@@ -1932,6 +1942,39 @@ export type CreateAccountResponses = {
 
 export type CreateAccountResponse = CreateAccountResponses[keyof CreateAccountResponses];
 
+export type DeleteAccountData = {
+    body?: never;
+    path: {
+        account_id: string;
+    };
+    query?: never;
+    url: '/api/v1/accounts/{account_id}';
+};
+
+export type DeleteAccountErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type DeleteAccountError = DeleteAccountErrors[keyof DeleteAccountErrors];
+
+export type DeleteAccountResponses = {
+    /**
+     * Request fulfilled, nothing follows
+     */
+    204: void;
+};
+
+export type DeleteAccountResponse = DeleteAccountResponses[keyof DeleteAccountResponses];
+
 export type GetAccountData = {
     body?: never;
     path: {
@@ -2030,6 +2073,39 @@ export type ArchiveAccountResponses = {
 };
 
 export type ArchiveAccountResponse = ArchiveAccountResponses[keyof ArchiveAccountResponses];
+
+export type DeletionPreviewData = {
+    body?: never;
+    path: {
+        account_id: string;
+    };
+    query?: never;
+    url: '/api/v1/accounts/{account_id}/deletion-preview';
+};
+
+export type DeletionPreviewErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type DeletionPreviewError = DeletionPreviewErrors[keyof DeletionPreviewErrors];
+
+export type DeletionPreviewResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: DeletionPreviewOut;
+};
+
+export type DeletionPreviewResponse = DeletionPreviewResponses[keyof DeletionPreviewResponses];
 
 export type ListBalanceEntriesData = {
     body?: never;

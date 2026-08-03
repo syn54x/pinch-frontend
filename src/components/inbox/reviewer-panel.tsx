@@ -1,10 +1,17 @@
-import type { CategoryOut, TransactionOut } from '@/api/generated/types.gen'
+import { useState } from 'react'
+import type {
+  CategoryOut,
+  RetroApplyTier,
+  RulePreviewOut,
+  TransactionOut,
+} from '@/api/generated/types.gen'
 import { Button } from '@/components/ui/button'
 import { formatMinorUnits } from '@/lib/money'
 import { type SplitDraftLine, splitStatus } from '@/lib/split-draft'
 import { cn } from '@/lib/utils'
 import { CategoryPicker } from './category-picker'
 import { CategoryPill, UncategorizedPill } from './category-pill'
+import { CreateCategorySheet } from './create-category-sheet'
 import { formatDay } from './day-label'
 import { PairCallout } from './pair-callout'
 import { ProvenanceBadge } from './provenance-badge'
@@ -28,6 +35,10 @@ export function ReviewerPanel({
   panel,
   onOpenCategory,
   onCloseCategory,
+  createName,
+  onOpenCreateCategory,
+  onBackToPicker,
+  rulePreview,
   onAccept,
   accepting,
   categories,
@@ -54,6 +65,12 @@ export function ReviewerPanel({
   panel: ReviewPanel | null
   onOpenCategory: () => void
   onCloseCategory: () => void
+  /** The create sheet's seed — what they typed into the picker (#63). */
+  createName: string
+  onOpenCreateCategory: (name: string) => void
+  onBackToPicker: () => void
+  /** Consent counts for the staged payee-equals rule (8b), null while off. */
+  rulePreview: RulePreviewOut | null
   onAccept: () => void
   accepting: boolean
   categories: CategoryOut[]
@@ -249,7 +266,17 @@ export function ReviewerPanel({
                 </span>
               )}
             </div>
-            {panel === 'category' ? (
+            {panel === 'create-category' ? (
+              <CreateCategorySheet
+                initialName={createName}
+                parents={categories.filter((row) => row.parent_id === null)}
+                onCreated={(created) => {
+                  onCorrectionChange({ ...correction, category: created })
+                  onCloseCategory()
+                }}
+                onBack={onBackToPicker}
+              />
+            ) : panel === 'category' ? (
               <CategoryPicker
                 categories={categories}
                 isPending={categoriesPending}
@@ -258,6 +285,7 @@ export function ReviewerPanel({
                   onCloseCategory()
                 }}
                 onClose={onCloseCategory}
+                onCreate={onOpenCreateCategory}
               />
             ) : (
               <Button
@@ -283,6 +311,20 @@ export function ReviewerPanel({
               onCloseCategory()
             }}
             onClose={onCloseCategory}
+            onCreate={onOpenCreateCategory}
+          />
+        </div>
+      )}
+      {detected && !declining && panel === 'create-category' && (
+        <div className="mt-2">
+          <CreateCategorySheet
+            initialName={createName}
+            parents={categories.filter((row) => row.parent_id === null)}
+            onCreated={(created) => {
+              onCorrectionChange({ ...correction, category: created })
+              onCloseCategory()
+            }}
+            onBack={onBackToPicker}
           />
         </div>
       )}
@@ -304,6 +346,23 @@ export function ReviewerPanel({
           )}
         </div>
       )}
+
+      {correction.category !== undefined &&
+        !splitting &&
+        panel !== 'category' &&
+        panel !== 'create-category' && (
+          <ApplyToBlock
+            payee={payeeOf(txn)}
+            ruleScope={correction.ruleScope}
+            preview={rulePreview}
+            onChange={(scope) => {
+              const next = { ...correction }
+              if (scope === undefined) delete next.ruleScope
+              else next.ruleScope = scope
+              onCorrectionChange(next)
+            }}
+          />
+        )}
 
       <div className="label-caps mt-5">Tags</div>
       <div className="mt-1.5">
@@ -348,7 +407,8 @@ export function ReviewerPanel({
                   : 'Split lines must match the total first'
               }
             >
-              {corrected ? 'Accept correction · A' : 'Accept · A'}
+              {ruleVerb(correction.ruleScope, rulePreview) ??
+                (corrected ? 'Accept correction · A' : 'Accept · A')}
             </Button>
             {splitting && (
               <Button variant="outline" onClick={onOpenSplit}>
@@ -356,6 +416,138 @@ export function ReviewerPanel({
               </Button>
             )}
           </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/** The 8b footer verbs: name the consequence when a rule rides Accept. */
+function ruleVerb(
+  scope: RetroApplyTier | undefined,
+  preview: RulePreviewOut | null,
+): string | null {
+  if (scope === undefined) return null
+  if (scope === 'unreviewed') {
+    return `Create rule & apply to ${preview?.unreviewed_count ?? 0} · A`
+  }
+  if (scope === 'full') {
+    const total =
+      (preview?.unreviewed_count ?? 0) + (preview?.reviewed_count ?? 0)
+    return `Create rule & recategorize ${total} · A`
+  }
+  return 'Accept & create rule · A'
+}
+
+// #63 (wireframe 8b): the Apply-to block under an assigned category. "Make a
+// rule" defaults to going-forward and says so plainly — Change scope expands
+// the same three-way tiers the New Rule screen offers ("the inspector is
+// just a shorter door into it"). Two clicks to touch history, one to not.
+function ApplyToBlock({
+  payee,
+  ruleScope,
+  preview,
+  onChange,
+}: {
+  payee: string
+  ruleScope: RetroApplyTier | undefined
+  preview: RulePreviewOut | null
+  onChange: (scope: RetroApplyTier | undefined) => void
+}) {
+  const [scopeOpen, setScopeOpen] = useState(false)
+  const makingRule = ruleScope !== undefined
+  const existing =
+    (preview?.unreviewed_count ?? 0) + (preview?.reviewed_count ?? 0)
+  return (
+    <div data-testid="apply-to" className="mt-5">
+      <div className="label-caps">Apply to</div>
+      <div className="mt-1.5 grid gap-1.5">
+        <label className="flex items-center gap-2 text-[12.5px]">
+          <input
+            type="radio"
+            name="apply-to"
+            checked={!makingRule}
+            onChange={() => {
+              onChange(undefined)
+              setScopeOpen(false)
+            }}
+          />
+          Just this transaction
+        </label>
+        <label className="flex items-center gap-2 text-[12.5px]">
+          <input
+            type="radio"
+            name="apply-to"
+            checked={makingRule}
+            onChange={() => onChange('forward')}
+          />
+          <span>
+            All from {payee} — <span className="font-medium">make a rule</span>
+          </span>
+        </label>
+        {makingRule && !scopeOpen && (
+          <div className="ml-6 flex items-center gap-2 text-[11.5px] text-muted-foreground">
+            <span data-testid="rule-scope-summary">
+              {ruleScope === 'forward'
+                ? `Going forward only — ${existing} existing transaction${existing === 1 ? '' : 's'} stay as they are`
+                : ruleScope === 'unreviewed'
+                  ? `Also re-proposes the ${preview?.unreviewed_count ?? 0} still waiting in the inbox`
+                  : `Recategorizes all ${existing}, including ${preview?.reviewed_count ?? 0} already reviewed`}
+            </span>
+            <button
+              type="button"
+              className="shrink-0 font-medium text-foreground hover:underline"
+              onClick={() => setScopeOpen(true)}
+            >
+              Change scope ›
+            </button>
+          </div>
+        )}
+        {makingRule && scopeOpen && (
+          <div
+            data-testid="rule-scope-options"
+            className="ml-6 grid gap-1 text-[12.5px]"
+          >
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="rule-scope"
+                checked={ruleScope === 'forward'}
+                onChange={() => onChange('forward')}
+              />
+              Nothing — going forward only
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="rule-scope"
+                checked={ruleScope === 'unreviewed'}
+                onChange={() => onChange('unreviewed')}
+              />
+              The {preview?.unreviewed_count ?? 0} still waiting in the inbox
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="rule-scope"
+                checked={ruleScope === 'full'}
+                onChange={() => onChange('full')}
+              />
+              All {existing}, including {preview?.reviewed_count ?? 0} you
+              already reviewed
+            </label>
+            {ruleScope === 'full' && (preview?.reviewed_count ?? 0) > 0 && (
+              <p
+                data-testid="full-scope-warning"
+                className="rounded-md border border-destructive/40 bg-destructive/5 px-2.5 py-1.5 text-[11.5px]"
+              >
+                This overwrites {preview?.reviewed_count} decision
+                {preview?.reviewed_count === 1 ? '' : 's'} you made. They stay
+                reviewed — nothing returns to your inbox. Logged as one entry in
+                Learning.
+              </p>
+            )}
+          </div>
         )}
       </div>
     </div>

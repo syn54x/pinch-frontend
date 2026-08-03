@@ -89,6 +89,10 @@ export function FixDrawer({
               panel={reviewer.panel}
               onOpenCategory={reviewer.openCategory}
               onCloseCategory={reviewer.closeCategory}
+              createName={reviewer.createName}
+              onOpenCreateCategory={reviewer.openCreateCategory}
+              onBackToPicker={reviewer.backToPicker}
+              rulePreview={reviewer.rulePreview}
               onAccept={reviewer.accept}
               accepting={accepting}
               categories={reviewer.categories}
