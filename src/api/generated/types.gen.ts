@@ -1125,6 +1125,13 @@ export type RulePatchIn = {
     action_rename_to?: string | null;
     action_mark_transfer?: boolean | null;
     status?: RuleStatus | null;
+    /**
+     * A retro-apply tier, honored ONLY when this same PATCH transitions
+     * proposed -> active: accepting a promoted rule IS the creation consent
+     * (CONTEXT.md: Retro-apply). Any other use is a 400 — active law never
+     * re-offers the tiers.
+     */
+    apply?: RetroApplyTier | null;
 };
 
 /**

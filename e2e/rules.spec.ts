@@ -117,6 +117,19 @@ test('a suggested rule is accepted through the builder and another dismisses for
       expect(reviewed.ok()).toBe(true)
     }
   }
+  // An unreviewed BLUE BOTTLE backlog for the acceptance tier to refresh.
+  for (const day of ['04', '05']) {
+    const created = await ctx.post('/api/v1/transactions', {
+      data: {
+        account_id: accounts.items[0].id,
+        date: `2026-07-${day}`,
+        amount_minor: -900,
+        description: 'BLUE BOTTLE',
+      },
+      headers: await csrf(),
+    })
+    expect(created.ok()).toBe(true)
+  }
   await ctx.dispose()
 
   await loginViaUi(page, email, PASSWORD)
@@ -132,13 +145,28 @@ test('a suggested rule is accepted through the builder and another dismisses for
     .click()
   await expect(page.getByRole('heading', { name: 'Create rule' })).toBeVisible()
   await expect(page.getByLabel('Payee value')).toHaveValue('blue bottle')
-  await expect(page.getByTestId('apply-tiers')).toHaveCount(0)
-  await page.getByRole('button', { name: 'Create rule' }).click()
+  // Acceptance is a creation consent: the tiers ARE offered, defaulting
+  // to the unreviewed backlog, the verb naming the consequence.
+  await expect(page.getByTestId('apply-tiers')).toBeVisible()
+  await page.getByRole('button', { name: 'Create rule & apply to 2' }).click()
   const accepted = page
     .getByTestId('rule-row')
     .filter({ hasText: 'blue bottle' })
   await expect(accepted).toBeVisible()
   await expect(accepted).toContainText('promoted from history')
+
+  // The accepted rule's tier refreshed the backlog under rule provenance.
+  await page.getByRole('link', { name: 'Inbox' }).click()
+  const backlogRow = page
+    .getByTestId('inbox-row')
+    .filter({ hasText: 'BLUE BOTTLE' })
+    .first()
+  await expect(backlogRow.getByTestId('provenance-badge')).toHaveAttribute(
+    'data-provenance',
+    'rule',
+    { timeout: 15_000 },
+  )
+  await page.goto('/categories/rules')
 
   // …and dismiss the second: a tombstone, gone from the surface.
   await cards

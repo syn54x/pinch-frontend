@@ -22,10 +22,11 @@ import { formatMinorUnits } from '@/lib/money'
 import { cn } from '@/lib/utils'
 
 // F4 CP2 (#60, wireframes s19/s19b): the rule builder — typed conditions,
-// actions, a live preview with the consent counts, and (at creation only)
-// the retro-apply tiers. Editing and accepting a suggested rule reuse the
-// same form WITHOUT the tiers: retro-apply is a creation-time consent
-// (CONTEXT.md: Retro-apply), and a PATCH never re-offers it.
+// actions, a live preview with the consent counts, and the retro-apply
+// tiers at every CREATION consent: authoring a new rule, or accepting a
+// promoted one (the proposed->active PATCH carries the tier — acceptance
+// is what makes it law, CONTEXT.md: Retro-apply). Editing active law
+// reuses the form without the tiers; a plain PATCH never re-offers them.
 export function RuleBuilder({ editing }: { editing: RuleOut | null }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -138,9 +139,10 @@ export function RuleBuilder({ editing }: { editing: RuleOut | null }) {
           condition,
           ...actions,
           // Accepting a suggested rule is this same PATCH: consent flips
-          // proposed -> active (CP4's promotion contract).
+          // proposed -> active, and — acceptance being the creation
+          // consent — it may carry the retro tier (CONTEXT.md: Retro-apply).
           ...(editing.status === 'proposed'
-            ? { status: 'active' as const }
+            ? { status: 'active' as const, apply: tier }
             : {}),
         },
       })
@@ -150,15 +152,13 @@ export function RuleBuilder({ editing }: { editing: RuleOut | null }) {
   }
 
   const accepting = editing?.status === 'proposed'
-  const submitLabel = editing
-    ? accepting
-      ? 'Create rule'
-      : 'Save changes'
-    : tier === 'forward'
+  const consentLabel =
+    tier === 'forward'
       ? 'Create rule'
       : tier === 'unreviewed'
         ? `Create rule & apply to ${counts?.unreviewed_count ?? 0}`
         : `Create rule & recategorize ${fullTotal}`
+  const submitLabel = editing && !accepting ? 'Save changes' : consentLabel
 
   return (
     <form className="grid max-w-2xl gap-5" onSubmit={submit}>
@@ -303,7 +303,7 @@ export function RuleBuilder({ editing }: { editing: RuleOut | null }) {
         </div>
       )}
 
-      {!editing && (
+      {(!editing || accepting) && (
         <fieldset className="grid gap-1.5" data-testid="apply-tiers">
           <legend className="mb-1 font-semibold text-sm">
             Apply this rule to

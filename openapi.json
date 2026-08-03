@@ -9464,6 +9464,17 @@
                                 "type": "null"
                             }
                         ]
+                    },
+                    "apply": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/RetroApplyTier"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "A retro-apply tier, honored ONLY when this same PATCH transitions\nproposed -> active: accepting a promoted rule IS the creation consent\n(CONTEXT.md: Retro-apply). Any other use is a 400 — active law never\nre-offers the tiers."
                     }
                 },
                 "type": "object",
