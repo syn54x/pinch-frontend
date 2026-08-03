@@ -1,5 +1,6 @@
 import type {
   CategoryRef,
+  RetroApplyTier,
   ReviewIn,
   TransactionOut,
 } from '@/api/generated/types.gen'
@@ -14,12 +15,18 @@ import type {
 export interface Correction {
   category?: CategoryRef
   tags?: string[]
+  /** #63 (wireframe 8b): "All from <payee> — make a rule" staged alongside
+   * the category. Present = mint a payee-equals rule on Accept with this
+   * retro tier (forward is the Inspector's conservative default — "two
+   * clicks to touch history, one to not"). Never sent in the review body —
+   * the rule is its own POST, consented by the same Accept. */
+  ruleScope?: RetroApplyTier
 }
 
 /** Which correction affordance is open in the reviewer: the category picker
  * (C), the split editor (S), or the manual transfer picker (T on a row with
  * no detected pairing). Transfer CONSENT stays inline buttons, not a panel. */
-export type ReviewPanel = 'category' | 'split' | 'transfer'
+export type ReviewPanel = 'category' | 'split' | 'transfer' | 'create-category'
 
 export function payeeOf(txn: TransactionOut): string {
   return txn.proposal?.display_name ?? txn.display_name ?? txn.description_raw

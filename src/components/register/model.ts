@@ -1,9 +1,14 @@
 // Relative imports on purpose: this module is on the vitest path, and the
 // unit-test rig resolves no `@/` alias (the precedent is src/lib's tests).
 import type {
+  CategoryColor,
   ListTransactionsData,
   TransactionOut,
 } from '../../api/generated/types.gen'
+import {
+  CATEGORY_COLOR_SLOTS,
+  categoryColorVar as slotColorVar,
+} from '../../lib/category-colors'
 import { formatMinorUnits } from '../../lib/money'
 
 // Pure Register logic — everything the screen computes that isn't JSX:
@@ -215,19 +220,25 @@ export function payeeOf(txn: TransactionOut): string {
 }
 
 // --- catpill identity -----------------------------------------------------
-// F4 (taxonomy) gives categories user-chosen emoji + color. Until those
-// fields exist on CategoryOut, the catpill derives both deterministically
-// from the name: a stable hash into the muted --cat-1..10 band, and a
-// keyword-matched emoji (fallback 🏷️). Same name, same pill, everywhere.
+// F4 (taxonomy) gave categories user-chosen emoji + color; the derivation
+// below remains the UNSET-identity fallback (and the create sheet's guess):
+// a stable hash into the muted chromatic band, and a keyword-matched emoji
+// (fallback 🏷️). Same name, same pill, everywhere. The hash lands on a
+// named SLOT so guesses and fallbacks agree with stored identity
+// (#63 — the Inspector's create sheet pre-fills from this).
 
-const CAT_COLOR_COUNT = 10
+const CHROMATIC_SLOTS = CATEGORY_COLOR_SLOTS.filter((slot) => slot !== 'slate')
 
-export function categoryColorVar(name: string): string {
+export function categoryColorSlot(name: string): CategoryColor {
   let hash = 0
   for (const char of name.toLowerCase()) {
     hash = (hash * 31 + (char.codePointAt(0) ?? 0)) >>> 0
   }
-  return `var(--cat-${(hash % CAT_COLOR_COUNT) + 1})`
+  return CHROMATIC_SLOTS[hash % CHROMATIC_SLOTS.length]
+}
+
+export function categoryColorVar(name: string): string {
+  return slotColorVar(categoryColorSlot(name))
 }
 
 const EMOJI_KEYWORDS: Array<[RegExp, string]> = [
