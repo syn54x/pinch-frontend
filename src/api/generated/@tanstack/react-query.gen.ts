@@ -3,8 +3,8 @@
 import { type DefaultError, type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { archiveAccount, commitImport, confirmEmailVerification, confirmMapping, confirmPasswordReset, correctionLogStats, countUnreviewedTransactions, createAccount, createBalanceEntry, createCategory, createConnection, createImport, createLinkToken, createPat, createRule, createTag, createTransaction, createTransfer, debtReport, deleteAccount, deleteCategory, deleteConnection, deleteConversation, deleteImport, deleteImportProfile, deleteRule, deleteSplits, deleteTag, deletionPreview, dismissRecurring, dissolveTransfer, getAccount, getCategory, getConnection, getConversation, getImport, getPayoff, getRule, getTransaction, health, ledgerStats, listAccounts, listBalanceEntries, listCategories, listConnections, listConversations, listCorrectionLog, listImportProfiles, listImportRows, listPats, listRecurring, listRules, listSessions, listTags, listTransactions, listTransfers, login, logout, me, netWorthReport, type Options, patchTransaction, pennyChat, pennyStatus, previewRule, putSplits, recurringReport, refreshConnection, renameTag, requestEmailVerification, requestPasswordReset, reviewBatch, reviewTransaction, revokePat, revokeSession, signup, spendingReport, updateAccountLabel, updateCategory, updateMe, updateRecurring, updateRule } from '../sdk.gen';
-import type { ArchiveAccountData, ArchiveAccountError, ArchiveAccountResponse, CommitImportData, CommitImportError, CommitImportResponse, ConfirmEmailVerificationData, ConfirmEmailVerificationError, ConfirmEmailVerificationResponse, ConfirmMappingData, ConfirmMappingError, ConfirmMappingResponse, ConfirmPasswordResetData, ConfirmPasswordResetError, ConfirmPasswordResetResponse, CorrectionLogStatsData, CorrectionLogStatsError, CorrectionLogStatsResponse, CountUnreviewedTransactionsData, CountUnreviewedTransactionsResponse, CreateAccountData, CreateAccountError, CreateAccountResponse, CreateBalanceEntryData, CreateBalanceEntryError, CreateBalanceEntryResponse, CreateCategoryData, CreateCategoryError, CreateCategoryResponse, CreateConnectionData, CreateConnectionError, CreateConnectionResponse, CreateImportData, CreateImportError, CreateImportResponse, CreateLinkTokenData, CreateLinkTokenError, CreateLinkTokenResponse, CreatePatData, CreatePatError, CreatePatResponse, CreateRuleData, CreateRuleError, CreateRuleResponse, CreateTagData, CreateTagError, CreateTagResponse, CreateTransactionData, CreateTransactionError, CreateTransactionResponse, CreateTransferData, CreateTransferError, CreateTransferResponse, DebtReportData, DebtReportError, DebtReportResponse, DeleteAccountData, DeleteAccountError, DeleteAccountResponse, DeleteCategoryData, DeleteCategoryError, DeleteCategoryResponse, DeleteConnectionData, DeleteConnectionError, DeleteConnectionResponse, DeleteConversationData, DeleteConversationError, DeleteConversationResponse, DeleteImportData, DeleteImportError, DeleteImportProfileData, DeleteImportProfileError, DeleteImportProfileResponse, DeleteImportResponse, DeleteRuleData, DeleteRuleError, DeleteRuleResponse, DeleteSplitsData, DeleteSplitsError, DeleteSplitsResponse, DeleteTagData, DeleteTagError, DeleteTagResponse, DeletionPreviewData, DeletionPreviewError, DeletionPreviewResponse, DismissRecurringData, DismissRecurringError, DismissRecurringResponse, DissolveTransferData, DissolveTransferError, DissolveTransferResponse, GetAccountData, GetAccountError, GetAccountResponse, GetCategoryData, GetCategoryError, GetCategoryResponse, GetConnectionData, GetConnectionError, GetConnectionResponse, GetConversationData, GetConversationError, GetConversationResponse, GetImportData, GetImportError, GetImportResponse, GetPayoffData, GetPayoffError, GetPayoffResponse, GetRuleData, GetRuleError, GetRuleResponse, GetTransactionData, GetTransactionError, GetTransactionResponse, HealthData, HealthResponse, LedgerStatsData, LedgerStatsResponse, ListAccountsData, ListAccountsError, ListAccountsResponse, ListBalanceEntriesData, ListBalanceEntriesError, ListBalanceEntriesResponse, ListCategoriesData, ListCategoriesError, ListCategoriesResponse, ListConnectionsData, ListConnectionsError, ListConnectionsResponse, ListConversationsData, ListConversationsError, ListConversationsResponse, ListCorrectionLogData, ListCorrectionLogError, ListCorrectionLogResponse, ListImportProfilesData, ListImportProfilesError, ListImportProfilesResponse, ListImportRowsData, ListImportRowsError, ListImportRowsResponse, ListPatsData, ListPatsError, ListPatsResponse, ListRecurringData, ListRecurringError, ListRecurringResponse, ListRulesData, ListRulesError, ListRulesResponse, ListSessionsData, ListSessionsError, ListSessionsResponse, ListTagsData, ListTagsError, ListTagsResponse, ListTransactionsData, ListTransactionsError, ListTransactionsResponse, ListTransfersData, ListTransfersError, ListTransfersResponse, LoginData, LoginError, LoginResponse, LogoutData, LogoutResponse, MeData, MeResponse, NetWorthReportData, NetWorthReportError, NetWorthReportResponse, PatchTransactionData, PatchTransactionError, PatchTransactionResponse, PennyChatData, PennyStatusData, PennyStatusResponse, PreviewRuleData, PreviewRuleError, PreviewRuleResponse, PutSplitsData, PutSplitsError, PutSplitsResponse, RecurringReportData, RecurringReportError, RecurringReportResponse, RefreshConnectionData, RefreshConnectionError, RenameTagData, RenameTagError, RenameTagResponse, RequestEmailVerificationData, RequestPasswordResetData, RequestPasswordResetError, ReviewBatchData, ReviewBatchError, ReviewBatchResponse, ReviewTransactionData, ReviewTransactionError, ReviewTransactionResponse, RevokePatData, RevokePatError, RevokePatResponse, RevokeSessionData, RevokeSessionError, RevokeSessionResponse, SignupData, SignupError, SignupResponse, SpendingReportData, SpendingReportError, SpendingReportResponse, UpdateAccountLabelData, UpdateAccountLabelError, UpdateAccountLabelResponse, UpdateCategoryData, UpdateCategoryError, UpdateCategoryResponse, UpdateMeData, UpdateMeError, UpdateMeResponse, UpdateRecurringData, UpdateRecurringError, UpdateRecurringResponse, UpdateRuleData, UpdateRuleError, UpdateRuleResponse } from '../types.gen';
+import { archiveAccount, commitImport, confirmEmailVerification, confirmMapping, confirmPasswordReset, correctionLogStats, countUnreviewedTransactions, createAccount, createBalanceEntry, createCategory, createConnection, createImport, createLinkToken, createPat, createRule, createTag, createTransaction, createTransfer, debtReport, deleteAccount, deleteCategory, deleteConnection, deleteConversation, deleteImport, deleteImportProfile, deleteRule, deleteSplits, deleteTag, deletionPreview, dismissRecurring, dissolveTransfer, getAccount, getCategory, getConnection, getConversation, getImport, getPayoff, getRule, getTransaction, health, ledgerStats, listAccounts, listBalanceEntries, listCategories, listConnections, listConversations, listCorrectionLog, listHoldings, listImportProfiles, listImportRows, listInvestmentActivities, listPats, listRecurring, listRules, listSessions, listTags, listTransactions, listTransfers, login, logout, me, netWorthReport, type Options, patchTransaction, pennyChat, pennyStatus, previewRule, putSplits, recurringReport, refreshConnection, renameTag, requestEmailVerification, requestPasswordReset, reviewBatch, reviewTransaction, revokePat, revokeSession, signup, spendingReport, updateAccountLabel, updateCategory, updateMe, updateRecurring, updateRule } from '../sdk.gen';
+import type { ArchiveAccountData, ArchiveAccountError, ArchiveAccountResponse, CommitImportData, CommitImportError, CommitImportResponse, ConfirmEmailVerificationData, ConfirmEmailVerificationError, ConfirmEmailVerificationResponse, ConfirmMappingData, ConfirmMappingError, ConfirmMappingResponse, ConfirmPasswordResetData, ConfirmPasswordResetError, ConfirmPasswordResetResponse, CorrectionLogStatsData, CorrectionLogStatsError, CorrectionLogStatsResponse, CountUnreviewedTransactionsData, CountUnreviewedTransactionsResponse, CreateAccountData, CreateAccountError, CreateAccountResponse, CreateBalanceEntryData, CreateBalanceEntryError, CreateBalanceEntryResponse, CreateCategoryData, CreateCategoryError, CreateCategoryResponse, CreateConnectionData, CreateConnectionError, CreateConnectionResponse, CreateImportData, CreateImportError, CreateImportResponse, CreateLinkTokenData, CreateLinkTokenError, CreateLinkTokenResponse, CreatePatData, CreatePatError, CreatePatResponse, CreateRuleData, CreateRuleError, CreateRuleResponse, CreateTagData, CreateTagError, CreateTagResponse, CreateTransactionData, CreateTransactionError, CreateTransactionResponse, CreateTransferData, CreateTransferError, CreateTransferResponse, DebtReportData, DebtReportError, DebtReportResponse, DeleteAccountData, DeleteAccountError, DeleteAccountResponse, DeleteCategoryData, DeleteCategoryError, DeleteCategoryResponse, DeleteConnectionData, DeleteConnectionError, DeleteConnectionResponse, DeleteConversationData, DeleteConversationError, DeleteConversationResponse, DeleteImportData, DeleteImportError, DeleteImportProfileData, DeleteImportProfileError, DeleteImportProfileResponse, DeleteImportResponse, DeleteRuleData, DeleteRuleError, DeleteRuleResponse, DeleteSplitsData, DeleteSplitsError, DeleteSplitsResponse, DeleteTagData, DeleteTagError, DeleteTagResponse, DeletionPreviewData, DeletionPreviewError, DeletionPreviewResponse, DismissRecurringData, DismissRecurringError, DismissRecurringResponse, DissolveTransferData, DissolveTransferError, DissolveTransferResponse, GetAccountData, GetAccountError, GetAccountResponse, GetCategoryData, GetCategoryError, GetCategoryResponse, GetConnectionData, GetConnectionError, GetConnectionResponse, GetConversationData, GetConversationError, GetConversationResponse, GetImportData, GetImportError, GetImportResponse, GetPayoffData, GetPayoffError, GetPayoffResponse, GetRuleData, GetRuleError, GetRuleResponse, GetTransactionData, GetTransactionError, GetTransactionResponse, HealthData, HealthResponse, LedgerStatsData, LedgerStatsResponse, ListAccountsData, ListAccountsError, ListAccountsResponse, ListBalanceEntriesData, ListBalanceEntriesError, ListBalanceEntriesResponse, ListCategoriesData, ListCategoriesError, ListCategoriesResponse, ListConnectionsData, ListConnectionsError, ListConnectionsResponse, ListConversationsData, ListConversationsError, ListConversationsResponse, ListCorrectionLogData, ListCorrectionLogError, ListCorrectionLogResponse, ListHoldingsData, ListHoldingsError, ListHoldingsResponse, ListImportProfilesData, ListImportProfilesError, ListImportProfilesResponse, ListImportRowsData, ListImportRowsError, ListImportRowsResponse, ListInvestmentActivitiesData, ListInvestmentActivitiesError, ListInvestmentActivitiesResponse, ListPatsData, ListPatsError, ListPatsResponse, ListRecurringData, ListRecurringError, ListRecurringResponse, ListRulesData, ListRulesError, ListRulesResponse, ListSessionsData, ListSessionsError, ListSessionsResponse, ListTagsData, ListTagsError, ListTagsResponse, ListTransactionsData, ListTransactionsError, ListTransactionsResponse, ListTransfersData, ListTransfersError, ListTransfersResponse, LoginData, LoginError, LoginResponse, LogoutData, LogoutResponse, MeData, MeResponse, NetWorthReportData, NetWorthReportError, NetWorthReportResponse, PatchTransactionData, PatchTransactionError, PatchTransactionResponse, PennyChatData, PennyStatusData, PennyStatusResponse, PreviewRuleData, PreviewRuleError, PreviewRuleResponse, PutSplitsData, PutSplitsError, PutSplitsResponse, RecurringReportData, RecurringReportError, RecurringReportResponse, RefreshConnectionData, RefreshConnectionError, RenameTagData, RenameTagError, RenameTagResponse, RequestEmailVerificationData, RequestPasswordResetData, RequestPasswordResetError, ReviewBatchData, ReviewBatchError, ReviewBatchResponse, ReviewTransactionData, ReviewTransactionError, ReviewTransactionResponse, RevokePatData, RevokePatError, RevokePatResponse, RevokeSessionData, RevokeSessionError, RevokeSessionResponse, SignupData, SignupError, SignupResponse, SpendingReportData, SpendingReportError, SpendingReportResponse, UpdateAccountLabelData, UpdateAccountLabelError, UpdateAccountLabelResponse, UpdateCategoryData, UpdateCategoryError, UpdateCategoryResponse, UpdateMeData, UpdateMeError, UpdateMeResponse, UpdateRecurringData, UpdateRecurringError, UpdateRecurringResponse, UpdateRuleData, UpdateRuleError, UpdateRuleResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -1136,6 +1136,102 @@ export const deleteImportProfileMutation = (options?: Partial<Options<DeleteImpo
         }
     };
     return mutationOptions;
+};
+
+export const listHoldingsQueryKey = (options?: Options<ListHoldingsData>) => createQueryKey('listHoldings', options);
+
+/**
+ * ListHoldings
+ */
+export const listHoldingsOptions = (options?: Options<ListHoldingsData>) => queryOptions<ListHoldingsResponse, ListHoldingsError, ListHoldingsResponse, ReturnType<typeof listHoldingsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listHoldings({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listHoldingsQueryKey(options)
+});
+
+export const listHoldingsInfiniteQueryKey = (options?: Options<ListHoldingsData>): QueryKey<Options<ListHoldingsData>> => createQueryKey('listHoldings', options, true);
+
+/**
+ * ListHoldings
+ */
+export const listHoldingsInfiniteOptions = (options?: Options<ListHoldingsData>) => {
+    const opts = infiniteQueryOptions<ListHoldingsResponse, ListHoldingsError, InfiniteData<ListHoldingsResponse>, QueryKey<Options<ListHoldingsData>>, string | null | Pick<QueryKey<Options<ListHoldingsData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+    // @ts-ignore
+    {
+        queryFn: async ({ pageParam, queryKey, signal }) => {
+            // @ts-ignore
+            const page: Pick<QueryKey<Options<ListHoldingsData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+                query: {
+                    cursor: pageParam
+                }
+            };
+            const params = createInfiniteParams(queryKey, page);
+            const { data } = await listHoldings({
+                ...options,
+                ...params,
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: listHoldingsInfiniteQueryKey(options)
+    });
+    return opts as Omit<typeof opts, 'initialData'>;
+};
+
+export const listInvestmentActivitiesQueryKey = (options?: Options<ListInvestmentActivitiesData>) => createQueryKey('listInvestmentActivities', options);
+
+/**
+ * ListInvestmentActivities
+ */
+export const listInvestmentActivitiesOptions = (options?: Options<ListInvestmentActivitiesData>) => queryOptions<ListInvestmentActivitiesResponse, ListInvestmentActivitiesError, ListInvestmentActivitiesResponse, ReturnType<typeof listInvestmentActivitiesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listInvestmentActivities({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listInvestmentActivitiesQueryKey(options)
+});
+
+export const listInvestmentActivitiesInfiniteQueryKey = (options?: Options<ListInvestmentActivitiesData>): QueryKey<Options<ListInvestmentActivitiesData>> => createQueryKey('listInvestmentActivities', options, true);
+
+/**
+ * ListInvestmentActivities
+ */
+export const listInvestmentActivitiesInfiniteOptions = (options?: Options<ListInvestmentActivitiesData>) => {
+    const opts = infiniteQueryOptions<ListInvestmentActivitiesResponse, ListInvestmentActivitiesError, InfiniteData<ListInvestmentActivitiesResponse>, QueryKey<Options<ListInvestmentActivitiesData>>, string | null | Pick<QueryKey<Options<ListInvestmentActivitiesData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+    // @ts-ignore
+    {
+        queryFn: async ({ pageParam, queryKey, signal }) => {
+            // @ts-ignore
+            const page: Pick<QueryKey<Options<ListInvestmentActivitiesData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+                query: {
+                    cursor: pageParam
+                }
+            };
+            const params = createInfiniteParams(queryKey, page);
+            const { data } = await listInvestmentActivities({
+                ...options,
+                ...params,
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: listInvestmentActivitiesInfiniteQueryKey(options)
+    });
+    return opts as Omit<typeof opts, 'initialData'>;
 };
 
 export const ledgerStatsQueryKey = (options?: Options<LedgerStatsData>) => createQueryKey('ledgerStats', options);

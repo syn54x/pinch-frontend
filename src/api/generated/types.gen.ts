@@ -270,6 +270,16 @@ export type ConnectionOut = {
     status: ConnectionStatus;
     last_synced_at: string | null;
     error_detail: string | null;
+    /**
+     * The investments phase's independent health (M10 CP0): set while
+     * holdings can't be fetched, without the connection leaving ``active``.
+     */
+    investments_error_detail: string | null;
+    /**
+     * True when the Item predates investments consent (M10 CP2) — the
+     * frontend's cue to offer Enable investments (update-mode Link).
+     */
+    investments_consent_required: boolean;
     accounts: Array<AccountOut>;
     created_at: string;
 };
@@ -445,6 +455,14 @@ export type DeletionPreviewOut = {
     reviewed: number;
     transfers: number;
     balance_entries: number;
+    /**
+     * Positions that die with an investment account (M10 CP0).
+     */
+    holdings: number;
+    /**
+     * Activity records that die with an investment account (M10 CP1).
+     */
+    investment_activities: number;
 };
 
 /**
@@ -469,6 +487,25 @@ export type ExcludedBalance = {
 export type ExcludedSpending = {
     currency: string;
     total_minor: number;
+};
+
+/**
+ * HoldingOut
+ */
+export type HoldingOut = {
+    id: string;
+    account_id: string;
+    security: SecurityOut;
+    quantity: number;
+    institution_price: number | null;
+    institution_price_as_of: string | null;
+    institution_value_minor: number | null;
+    cost_basis_minor: number | null;
+    currency: string;
+    /**
+     * When the last investments sync observed this position.
+     */
+    updated_at: string;
 };
 
 /**
@@ -533,6 +570,36 @@ export type ImportUploadIn = {
     account_id: string;
     file: Blob | File;
 };
+
+/**
+ * InvestmentActivityOut
+ */
+export type InvestmentActivityOut = {
+    id: string;
+    account_id: string;
+    /**
+     * Absent on securityless cash events (account fees, plain deposits).
+     */
+    security: SecurityOut | null;
+    date: string;
+    name: string;
+    amount_minor: number;
+    quantity: number;
+    price: number | null;
+    fees_minor: number | null;
+    type: InvestmentActivityType;
+    subtype: string | null;
+    currency: string;
+};
+
+/**
+ * InvestmentActivityType
+ *
+ * Plaid's six stable activity types (PRD #72, Decision 14) — the one
+ * piece of provider vocabulary promoted to an enum, because rendering
+ * branches on it. Subtypes stay free strings.
+ */
+export type InvestmentActivityType = 'buy' | 'sell' | 'cash' | 'fee' | 'transfer' | 'cancel';
 
 /**
  * LedgerStatsOut
@@ -694,6 +761,14 @@ export type PageCorrectionLogEntryOut = {
 };
 
 /**
+ * Page[HoldingOut]
+ */
+export type PageHoldingOut = {
+    items: Array<HoldingOut>;
+    next_cursor: string | null;
+};
+
+/**
  * Page[ImportProfileOut]
  */
 export type PageImportProfileOut = {
@@ -706,6 +781,14 @@ export type PageImportProfileOut = {
  */
 export type PageImportRowOut = {
     items: Array<ImportRowOut>;
+    next_cursor: string | null;
+};
+
+/**
+ * Page[InvestmentActivityOut]
+ */
+export type PageInvestmentActivityOut = {
+    items: Array<InvestmentActivityOut>;
     next_cursor: string | null;
 };
 
@@ -1163,6 +1246,17 @@ export type RulePreviewOut = {
  * dismissed one is a tombstone that prevents eternal re-proposal.
  */
 export type RuleStatus = 'proposed' | 'active' | 'disabled' | 'dismissed';
+
+/**
+ * SecurityOut
+ */
+export type SecurityOut = {
+    id: string;
+    name: string;
+    ticker_symbol: string | null;
+    type: string;
+    is_cash_equivalent: boolean;
+};
 
 /**
  * SeriesPoint
@@ -2940,6 +3034,94 @@ export type DeleteImportProfileResponses = {
 };
 
 export type DeleteImportProfileResponse = DeleteImportProfileResponses[keyof DeleteImportProfileResponses];
+
+export type ListHoldingsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Restrict to one account's holdings.
+         */
+        account_id?: string | null;
+        /**
+         * Opaque page position from a previous `next_cursor`.
+         */
+        cursor?: string | null;
+        /**
+         * Page size, 1-100.
+         */
+        limit?: number;
+    };
+    url: '/api/v1/investments/holdings';
+};
+
+export type ListHoldingsErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type ListHoldingsError = ListHoldingsErrors[keyof ListHoldingsErrors];
+
+export type ListHoldingsResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: PageHoldingOut;
+};
+
+export type ListHoldingsResponse = ListHoldingsResponses[keyof ListHoldingsResponses];
+
+export type ListInvestmentActivitiesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Restrict to one account's holdings.
+         */
+        account_id?: string | null;
+        /**
+         * Opaque page position from a previous `next_cursor`.
+         */
+        cursor?: string | null;
+        /**
+         * Page size, 1-100.
+         */
+        limit?: number;
+    };
+    url: '/api/v1/investments/activities';
+};
+
+export type ListInvestmentActivitiesErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type ListInvestmentActivitiesError = ListInvestmentActivitiesErrors[keyof ListInvestmentActivitiesErrors];
+
+export type ListInvestmentActivitiesResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: PageInvestmentActivityOut;
+};
+
+export type ListInvestmentActivitiesResponse = ListInvestmentActivitiesResponses[keyof ListInvestmentActivitiesResponses];
 
 export type LedgerStatsData = {
     body?: never;

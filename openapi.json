@@ -3324,6 +3324,240 @@
                 "deprecated": false
             }
         },
+        "/api/v1/investments/holdings": {
+            "get": {
+                "summary": "ListHoldings",
+                "operationId": "list_holdings",
+                "parameters": [
+                    {
+                        "name": "account_id",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "string",
+                                    "format": "uuid"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Restrict to one account's holdings."
+                        },
+                        "description": "Restrict to one account's holdings.",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Opaque page position from a previous `next_cursor`."
+                        },
+                        "description": "Opaque page position from a previous `next_cursor`.",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100.0,
+                            "minimum": 1.0,
+                            "description": "Page size, 1-100.",
+                            "default": 50
+                        },
+                        "description": "Page size, 1-100.",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Page_HoldingOut_"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/v1/investments/activities": {
+            "get": {
+                "summary": "ListInvestmentActivities",
+                "operationId": "list_investment_activities",
+                "parameters": [
+                    {
+                        "name": "account_id",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "string",
+                                    "format": "uuid"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Restrict to one account's holdings."
+                        },
+                        "description": "Restrict to one account's holdings.",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    },
+                    {
+                        "name": "cursor",
+                        "in": "query",
+                        "schema": {
+                            "oneOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Opaque page position from a previous `next_cursor`."
+                        },
+                        "description": "Opaque page position from a previous `next_cursor`.",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100.0,
+                            "minimum": 1.0,
+                            "description": "Page size, 1-100.",
+                            "default": 50
+                        },
+                        "description": "Page size, 1-100.",
+                        "required": false,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "allowReserved": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Page_InvestmentActivityOut_"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request syntax or unsupported method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status_code": {
+                                            "type": "integer"
+                                        },
+                                        "detail": {
+                                            "type": "string"
+                                        },
+                                        "extra": {
+                                            "additionalProperties": {},
+                                            "type": [
+                                                "null",
+                                                "object",
+                                                "array"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object",
+                                    "required": [
+                                        "detail",
+                                        "status_code"
+                                    ],
+                                    "description": "Validation Exception",
+                                    "examples": [
+                                        {
+                                            "status_code": 400,
+                                            "detail": "Bad Request",
+                                            "extra": {}
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
         "/api/v1/ledgers/current/stats": {
             "get": {
                 "summary": "LedgerStats",
@@ -6849,6 +7083,21 @@
                             }
                         ]
                     },
+                    "investments_error_detail": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "The investments phase's independent health (M10 CP0): set while\nholdings can't be fetched, without the connection leaving ``active``."
+                    },
+                    "investments_consent_required": {
+                        "type": "boolean",
+                        "description": "True when the Item predates investments consent (M10 CP2) — the\nfrontend's cue to offer Enable investments (update-mode Link)."
+                    },
                     "accounts": {
                         "items": {
                             "$ref": "#/components/schemas/AccountOut"
@@ -6867,6 +7116,8 @@
                     "error_detail",
                     "id",
                     "institution_name",
+                    "investments_consent_required",
+                    "investments_error_detail",
                     "last_synced_at",
                     "provider",
                     "status"
@@ -7594,11 +7845,21 @@
                     },
                     "balance_entries": {
                         "type": "integer"
+                    },
+                    "holdings": {
+                        "type": "integer",
+                        "description": "Positions that die with an investment account (M10 CP0)."
+                    },
+                    "investment_activities": {
+                        "type": "integer",
+                        "description": "Activity records that die with an investment account (M10 CP1)."
                     }
                 },
                 "type": "object",
                 "required": [
                     "balance_entries",
+                    "holdings",
+                    "investment_activities",
                     "reviewed",
                     "transactions",
                     "transfers"
@@ -7659,6 +7920,87 @@
                     "total_minor"
                 ],
                 "title": "ExcludedSpending"
+            },
+            "HoldingOut": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "account_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "security": {
+                        "$ref": "#/components/schemas/SecurityOut"
+                    },
+                    "quantity": {
+                        "type": "number"
+                    },
+                    "institution_price": {
+                        "oneOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "institution_price_as_of": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "institution_value_minor": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "cost_basis_minor": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "currency": {
+                        "type": "string"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "When the last investments sync observed this position."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "account_id",
+                    "cost_basis_minor",
+                    "currency",
+                    "id",
+                    "institution_price",
+                    "institution_price_as_of",
+                    "institution_value_minor",
+                    "quantity",
+                    "security",
+                    "updated_at"
+                ],
+                "title": "HoldingOut"
             },
             "ImportOut": {
                 "properties": {
@@ -7892,6 +8234,107 @@
                     "file"
                 ],
                 "title": "ImportUploadIn"
+            },
+            "InvestmentActivityOut": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "account_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "security": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/SecurityOut"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Absent on securityless cash events (account fees, plain deposits)."
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "amount_minor": {
+                        "type": "integer"
+                    },
+                    "quantity": {
+                        "type": "number"
+                    },
+                    "price": {
+                        "oneOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "fees_minor": {
+                        "oneOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/InvestmentActivityType"
+                    },
+                    "subtype": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "currency": {
+                        "type": "string"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "account_id",
+                    "amount_minor",
+                    "currency",
+                    "date",
+                    "fees_minor",
+                    "id",
+                    "name",
+                    "price",
+                    "quantity",
+                    "security",
+                    "subtype",
+                    "type"
+                ],
+                "title": "InvestmentActivityOut"
+            },
+            "InvestmentActivityType": {
+                "type": "string",
+                "enum": [
+                    "buy",
+                    "sell",
+                    "cash",
+                    "fee",
+                    "transfer",
+                    "cancel"
+                ],
+                "title": "InvestmentActivityType",
+                "description": "Plaid's six stable activity types (PRD #72, Decision 14) — the one\npiece of provider vocabulary promoted to an enum, because rendering\nbranches on it. Subtypes stay free strings."
             },
             "LedgerStatsOut": {
                 "properties": {
@@ -8321,6 +8764,32 @@
                 ],
                 "title": "Page[CorrectionLogEntryOut]"
             },
+            "Page_HoldingOut_": {
+                "properties": {
+                    "items": {
+                        "items": {
+                            "$ref": "#/components/schemas/HoldingOut"
+                        },
+                        "type": "array"
+                    },
+                    "next_cursor": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "items",
+                    "next_cursor"
+                ],
+                "title": "Page[HoldingOut]"
+            },
             "Page_ImportProfileOut_": {
                 "properties": {
                     "items": {
@@ -8372,6 +8841,32 @@
                     "next_cursor"
                 ],
                 "title": "Page[ImportRowOut]"
+            },
+            "Page_InvestmentActivityOut_": {
+                "properties": {
+                    "items": {
+                        "items": {
+                            "$ref": "#/components/schemas/InvestmentActivityOut"
+                        },
+                        "type": "array"
+                    },
+                    "next_cursor": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "items",
+                    "next_cursor"
+                ],
+                "title": "Page[InvestmentActivityOut]"
             },
             "Page_PatOut_": {
                 "properties": {
@@ -9677,6 +10172,42 @@
                 ],
                 "title": "RuleStatus",
                 "description": "Only ACTIVE rules are law (evaluated by the pipeline). PROPOSED and\nDISMISSED exist for CP4's promotion: a proposed rule awaits consent, a\ndismissed one is a tombstone that prevents eternal re-proposal."
+            },
+            "SecurityOut": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "ticker_symbol": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "is_cash_equivalent": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "is_cash_equivalent",
+                    "name",
+                    "ticker_symbol",
+                    "type"
+                ],
+                "title": "SecurityOut"
             },
             "SeriesPoint": {
                 "properties": {
