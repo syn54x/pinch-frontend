@@ -29,6 +29,12 @@ with live Inbox count, Setup section, Penny pill, user row) and the top bar
 disabled destinations.
 _Avoid_: layout, frame
 
+**Profile menu**:
+The popout anchored on the sidebar's user row: identity header, the Settings
+entry, the theme control, Log out. Account-scoped chrome only — nothing
+destructive lives here.
+_Avoid_: account menu (Account is a financial term in Pinch), user menu, avatar dropdown
+
 **Inspector**:
 The detail pane beside a list surface (Inbox, Register) where one
 transaction is examined and edited in place — category, tags, notes, split
