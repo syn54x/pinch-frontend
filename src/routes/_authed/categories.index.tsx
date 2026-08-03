@@ -154,10 +154,11 @@ function CategoryRow({
   const color = category.color
     ? categoryColorVar(category.color)
     : modelColorVar(category.name)
-  const { hovered, bind } = useHoverReveal()
+  const { ref, hovered, bind } = useHoverReveal()
   return (
     <div
       data-testid="category-row"
+      ref={ref}
       {...bind}
       className="flex items-center gap-2.5 px-3.5 py-2.5 text-sm"
       style={

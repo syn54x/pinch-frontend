@@ -277,7 +277,7 @@ function AccountRow({
   const debt = isDebtAccount(account)
   const amount = accountBalanceMinor(account)
   const subline = accountSubline(account)
-  const { hovered, bind } = useHoverReveal()
+  const { ref, hovered, bind } = useHoverReveal()
 
   const content = (
     <>
@@ -322,6 +322,7 @@ function AccountRow({
   return (
     <div
       data-testid="account-card"
+      ref={ref}
       {...bind}
       className={cn(
         'flex items-center gap-3 border-b p-4 last:border-b-0',
