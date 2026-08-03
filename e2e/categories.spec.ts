@@ -78,6 +78,7 @@ test('editing identity propagates and the delete is guarded', async ({
   // Parent + child, then deleting the parent is refused with the reason.
   await page.getByRole('button', { name: 'New' }).click()
   await page.getByLabel('Name').fill('Hobby Farm')
+  await page.getByRole('button', { name: 'Color violet' }).click()
   await page.getByRole('button', { name: 'Create category' }).click()
   await expect(
     page.getByTestId('category-row').filter({ hasText: 'Hobby Farm' }),
@@ -86,6 +87,11 @@ test('editing identity propagates and the delete is guarded', async ({
   await page.getByRole('button', { name: 'New' }).click()
   await page.getByLabel('Name').fill('Chickens')
   await page.getByLabel('Parent').selectOption({ label: 'Hobby Farm' })
+  // Children default to the family color — inherited on parent pick,
+  // still overridable.
+  await expect(
+    page.getByRole('button', { name: 'Color violet' }),
+  ).toHaveAttribute('aria-pressed', 'true')
   await page.getByRole('button', { name: 'Create category' }).click()
   const child = page.getByTestId('category-row').filter({ hasText: 'Chickens' })
   await expect(child).toBeVisible()

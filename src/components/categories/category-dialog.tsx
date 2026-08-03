@@ -43,6 +43,10 @@ export function CategoryDialog({
   const [color, setColor] = useState<CategoryColor | null>(
     editing?.color ?? null,
   )
+  // Children default to the family color (wireframe: identity carries
+  // through the tree) — but an explicit swatch pick always wins, and
+  // re-picking a parent never clobbers it.
+  const [colorPicked, setColorPicked] = useState(editing?.color != null)
   const [error, setError] = useState<string | null>(null)
   const emojiFieldId = useId()
   const parentFieldId = useId()
@@ -133,7 +137,16 @@ export function CategoryDialog({
               <select
                 id={parentFieldId}
                 value={parentId}
-                onChange={(event) => setParentId(event.target.value)}
+                onChange={(event) => {
+                  const nextParentId = event.target.value
+                  setParentId(nextParentId)
+                  if (!colorPicked) {
+                    const parent = parents.find(
+                      (candidate) => candidate.id === nextParentId,
+                    )
+                    setColor(parent?.color ?? null)
+                  }
+                }}
                 className="h-9 rounded-md border bg-transparent px-2 text-sm"
               >
                 <option value="">None — top level</option>
@@ -157,7 +170,11 @@ export function CategoryDialog({
                   title={slot}
                   aria-label={`Color ${slot}`}
                   aria-pressed={color === slot}
-                  onClick={() => setColor(color === slot ? null : slot)}
+                  onClick={() => {
+                    const next = color === slot ? null : slot
+                    setColor(next)
+                    setColorPicked(next !== null)
+                  }}
                   className={cn(
                     'size-6 rounded-full border transition-transform hover:scale-110',
                     color === slot &&
