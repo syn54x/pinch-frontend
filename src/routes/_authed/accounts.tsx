@@ -349,7 +349,13 @@ function AccountRow({
           variant="ghost"
           aria-label={`Archive ${account.label}`}
           className={cn(
-            'shrink-0 opacity-0 transition-opacity focus-visible:opacity-100',
+            // transition-colors overrides the Button base's transition-all
+            // (tailwind-merge resolves same-group conflicts by last-wins):
+            // opacity must flip instantly, never animate. Safari can hold a
+            // stale compositor layer for an animated opacity property on a
+            // button with an SVG child, painting it "revealed" long after
+            // the state (and every other engine) says it's hidden.
+            'shrink-0 opacity-0 transition-colors focus-visible:opacity-100',
             hovered && 'opacity-100',
           )}
           onClick={onArchive}
@@ -363,7 +369,9 @@ function AccountRow({
           variant="ghost"
           aria-label={`Delete ${account.label}`}
           className={cn(
-            'shrink-0 opacity-0 transition-opacity focus-visible:opacity-100',
+            // See the Archive button above: transition-colors overrides
+            // the Button base's transition-all so opacity flips instantly.
+            'shrink-0 opacity-0 transition-colors focus-visible:opacity-100',
             hovered && 'opacity-100',
           )}
           onClick={onDelete}

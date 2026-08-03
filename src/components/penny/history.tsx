@@ -148,7 +148,12 @@ function HistoryList({ onNavigate }: { onNavigate: () => void }) {
             <button
               type="button"
               aria-label={`Delete conversation: ${conversation.title ?? 'Untitled'}`}
-              className="absolute top-2 right-2 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100"
+              // No transition-opacity: an animated opacity property on an
+              // icon button is a documented Safari repaint hazard (a stale
+              // compositor layer can hold the "revealed" paint after the
+              // state — and every other engine — says it's hidden). The
+              // reveal/hide here is a discrete flip, never an animation.
+              className="absolute top-2 right-2 rounded p-1 text-muted-foreground opacity-0 hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100"
               onClick={() =>
                 setPendingDelete({
                   id: conversation.id,

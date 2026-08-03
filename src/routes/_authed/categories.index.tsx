@@ -174,7 +174,7 @@ function CategoryRow({
       <span className="font-medium text-(--c)">{category.name}</span>
       <span
         className={cn(
-          'ml-auto flex items-center gap-1 opacity-0 transition-opacity has-[:focus-visible]:opacity-100',
+          'ml-auto flex items-center gap-1 opacity-0 has-[:focus-visible]:opacity-100',
           hovered && 'opacity-100',
         )}
       >

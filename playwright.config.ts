@@ -29,12 +29,6 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
       testIgnore: /penny-unavailable/,
     },
-    // TEMP webkit probe project (hover investigation)
-    {
-      name: 'webkit-probe',
-      use: { ...devices['Desktop Safari'] },
-      testMatch: /hover-probe/,
-    },
     // The Penny-unavailable stack: same app, a backend with no chat model
     // (port 8101 → frontend 5184). The disabled state is asserted against
     // the real backend refusing, never a mocked status.
