@@ -12,6 +12,7 @@ import {
   Link as LinkIcon,
   List,
   RefreshCw,
+  Shapes,
   TrendingUp,
 } from 'lucide-react'
 import { type ComponentType, type ReactNode, useEffect, useState } from 'react'
@@ -110,6 +111,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="label-caps mt-3.5 mb-1 px-2">Setup</div>
           <NavItem to="/connections" icon={LinkIcon}>
             Connections
+          </NavItem>
+          <NavItem to="/categories" icon={Shapes}>
+            Categories & Rules
           </NavItem>
         </nav>
         <div className="flex-1" />

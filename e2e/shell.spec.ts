@@ -35,7 +35,7 @@ test('logged out, / funnels through login and still lands on the Dashboard', asy
   await expect(page).toHaveURL(/\/dashboard$/)
 })
 
-test('the nav is exactly Dashboard, Inbox, Register, Net Worth, Recurring, Accounts, Setup → Connections — and Penny is reachable from every screen', async ({
+test('the nav is exactly Dashboard, Inbox, Register, Net Worth, Recurring, Accounts, Setup → Connections + Categories & Rules — and Penny is reachable from every screen', async ({
   page,
 }) => {
   const email = uniqueEmail('shell-lean')
@@ -53,6 +53,7 @@ test('the nav is exactly Dashboard, Inbox, Register, Net Worth, Recurring, Accou
     'Recurring',
     'Accounts',
     'Connections',
+    'Categories & Rules', // F4 CP0 (#58)
   ])
   const sidebar = page.locator('aside')
   await expect(sidebar.getByText('Setup')).toBeVisible() // the section label

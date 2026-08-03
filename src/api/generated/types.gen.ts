@@ -135,6 +135,17 @@ export type BucketSlice = {
 };
 
 /**
+ * CategoryColor
+ *
+ * The named palette slots a category's color may take (F4, CONTEXT.md:
+ * Category identity): 15 chromatic hues plus slate, the neutral. The enum
+ * is APPEND-ONLY — a name binds to "a color that reads as that name", the
+ * frontend owns the actual values, and removing or repurposing a name
+ * would silently re-color stored data. Grow it; never shrink it.
+ */
+export type CategoryColor = 'rust' | 'amber' | 'gold' | 'olive' | 'green' | 'sage' | 'teal' | 'cyan' | 'sky' | 'blue' | 'indigo' | 'violet' | 'purple' | 'magenta' | 'rose' | 'slate';
+
+/**
  * CategoryCreateIn
  */
 export type CategoryCreateIn = {
@@ -144,6 +155,14 @@ export type CategoryCreateIn = {
      * (depth-capped, validated server-side).
      */
     parent_id?: string | null;
+    /**
+     * Identity glyph — one emoji (ZWJ sequences fit the bound); null = unset.
+     */
+    emoji?: string | null;
+    /**
+     * A named palette slot (append-only enum); null = unset.
+     */
+    color?: CategoryColor | null;
 };
 
 /**
@@ -165,6 +184,8 @@ export type CategoryOut = {
     id: string;
     name: string;
     parent_id: string | null;
+    emoji: string | null;
+    color: CategoryColor | null;
     created_at: string;
 };
 
@@ -204,6 +225,14 @@ export type CategoryUpdateIn = {
      * "move to top level" from "don't touch the parent" without a sentinel.
      */
     reparent?: boolean;
+    /**
+     * Present-and-null clears; absent leaves unchanged (model_fields_set).
+     */
+    emoji?: string | null;
+    /**
+     * Present-and-null clears; absent leaves unchanged (model_fields_set).
+     */
+    color?: CategoryColor | null;
 };
 
 /**
@@ -327,9 +356,23 @@ export type CorrectionLogEntryOut = {
     decision_transfer: {
         [key: string]: unknown;
     } | null;
+    accepted_untouched: boolean | null;
+    batch_id: string | null;
     voids: string | null;
     void_reason: string | null;
     created_at: string;
+};
+
+/**
+ * CorrectionLogStatsOut
+ */
+export type CorrectionLogStatsOut = {
+    reviews_total: number;
+    corrections_total: number;
+    accepted_untouched_pct: number | null;
+    current_month_pct: number | null;
+    previous_month_pct: number | null;
+    promoted_rules_accepted: number;
 };
 
 /**
@@ -952,6 +995,15 @@ export type RecurringSummaryOut = {
 };
 
 /**
+ * RetroApplyTier
+ *
+ * The escalating consent tiers, chosen at rule creation (CONTEXT.md:
+ * Retro-apply). Cumulative: UNREVIEWED includes forward; FULL includes
+ * both. Never re-offered on edit.
+ */
+export type RetroApplyTier = 'forward' | 'unreviewed' | 'full';
+
+/**
  * ReviewBatchIn
  */
 export type ReviewBatchIn = {
@@ -996,6 +1048,17 @@ export type ReviewTransferIn = {
 };
 
 /**
+ * RuleApplyReport
+ */
+export type RuleApplyReport = {
+    tier: RetroApplyTier;
+    refreshed_unreviewed: number;
+    recategorized_reviewed: number;
+    skipped: number;
+    batch_id: string | null;
+};
+
+/**
  * RuleCreateIn
  */
 export type RuleCreateIn = {
@@ -1014,7 +1077,19 @@ export type RuleCreateIn = {
      * action_category_id — one rule, one classification stance.
      */
     action_mark_transfer?: boolean;
+    apply?: RetroApplyTier;
 };
+
+/**
+ * RuleOrigin
+ *
+ * How a rule came to be (F4, CONTEXT.md: Rule origin) — authored by the
+ * user, or minted by promotion from their own repeated filings. Fixed at
+ * creation and permanent: without it, an accepted promoted rule would be
+ * indistinguishable from a hand-authored one, and that provenance can't
+ * be reconstructed later.
+ */
+export type RuleOrigin = 'user' | 'promotion';
 
 /**
  * RuleOut
@@ -1022,6 +1097,8 @@ export type RuleCreateIn = {
 export type RuleOut = {
     id: string;
     status: RuleStatus;
+    origin: RuleOrigin;
+    matched_count: number;
     condition: {
         [key: string]: unknown;
     };
@@ -1029,6 +1106,7 @@ export type RuleOut = {
     action_add_tags: Array<string>;
     action_rename_to: string | null;
     action_mark_transfer: boolean;
+    applied?: RuleApplyReport | null;
     created_at: string;
 };
 
@@ -1047,6 +1125,13 @@ export type RulePatchIn = {
     action_rename_to?: string | null;
     action_mark_transfer?: boolean | null;
     status?: RuleStatus | null;
+    /**
+     * A retro-apply tier, honored ONLY when this same PATCH transitions
+     * proposed -> active: accepting a promoted rule IS the creation consent
+     * (CONTEXT.md: Retro-apply). Any other use is a 400 — active law never
+     * re-offers the tiers.
+     */
+    apply?: RetroApplyTier | null;
 };
 
 /**
@@ -1055,6 +1140,9 @@ export type RulePatchIn = {
 export type RulePreviewOut = {
     items: Array<TransactionOut>;
     truncated: boolean;
+    unreviewed_count: number;
+    reviewed_count: number;
+    skipped_count: number;
 };
 
 /**
@@ -1179,6 +1267,9 @@ export type TagCreateIn = {
 export type TagOut = {
     id: string;
     name: string;
+    transaction_count: number;
+    net_minor: number;
+    pending_minor: number;
     created_at: string;
 };
 
@@ -2463,6 +2554,39 @@ export type ListCorrectionLogResponses = {
 
 export type ListCorrectionLogResponse = ListCorrectionLogResponses[keyof ListCorrectionLogResponses];
 
+export type CorrectionLogStatsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        as_of?: string | null;
+    };
+    url: '/api/v1/correction-log/stats';
+};
+
+export type CorrectionLogStatsErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type CorrectionLogStatsError = CorrectionLogStatsErrors[keyof CorrectionLogStatsErrors];
+
+export type CorrectionLogStatsResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: CorrectionLogStatsOut;
+};
+
+export type CorrectionLogStatsResponse = CorrectionLogStatsResponses[keyof CorrectionLogStatsResponses];
+
 export type CreateImportData = {
     body: ImportUploadIn;
     path?: never;
@@ -3200,6 +3324,39 @@ export type DeleteTagResponses = {
 };
 
 export type DeleteTagResponse = DeleteTagResponses[keyof DeleteTagResponses];
+
+export type RenameTagData = {
+    body: TagCreateIn;
+    path: {
+        tag_id: string;
+    };
+    query?: never;
+    url: '/api/v1/tags/{tag_id}';
+};
+
+export type RenameTagErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type RenameTagError = RenameTagErrors[keyof RenameTagErrors];
+
+export type RenameTagResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: TagOut;
+};
+
+export type RenameTagResponse = RenameTagResponses[keyof RenameTagResponses];
 
 export type ListTransactionsData = {
     body?: never;

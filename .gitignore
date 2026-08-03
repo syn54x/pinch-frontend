@@ -35,3 +35,4 @@ playwright-report/
 .cursor/
 .github/hooks/
 .github/skills/
+.tanstack/
