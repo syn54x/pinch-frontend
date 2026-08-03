@@ -66,3 +66,48 @@ test('a fresh user sees the honest empty state', async ({ page }) => {
   await expect(page.getByText(/No accounts yet/)).toBeVisible()
   await expect(page.getByText(/CLI/)).toBeVisible()
 })
+
+test('archive is one-way from the app: account leaves the total, keeps its history section', async ({
+  page,
+}) => {
+  const email = uniqueEmail('archive')
+  await seedUser(email, PASSWORD, [
+    {
+      kind: 'depository',
+      label: 'Everyday Checking',
+      currency: 'USD',
+      balanceMinor: 100000,
+    },
+    {
+      kind: 'depository',
+      label: 'Old Stash Duplicate',
+      currency: 'USD',
+      balanceMinor: 25000,
+    },
+  ])
+
+  await loginViaUi(page, email, PASSWORD)
+  await expect(page).toHaveURL(/\/accounts$/)
+  await expect(page.getByText('Total across 2 accounts')).toBeVisible()
+  await expect(page.getByText('$1,250.00').first()).toBeVisible()
+
+  const stale = cardFor(page, 'Old Stash Duplicate')
+  await stale.hover()
+  await stale
+    .getByRole('button', { name: 'Archive Old Stash Duplicate' })
+    .click()
+  await expect(
+    page.getByRole('heading', { name: 'Archive Old Stash Duplicate?' }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Archive account' }).click()
+
+  // Out of the total and the groups; into the dimmed Archived section.
+  await expect(page.getByText('Total across 1 accounts')).toBeVisible()
+  await expect(page.getByText('$1,000.00').first()).toBeVisible()
+  const archivedSection = page.getByTestId('archived-section')
+  await expect(archivedSection).toContainText('Old Stash Duplicate')
+  // No archive verb on an already-archived row — one-way, no re-offer.
+  await expect(
+    archivedSection.getByRole('button', { name: /Archive/ }),
+  ).toHaveCount(0)
+})

@@ -70,9 +70,7 @@ test('the picker creates a category inline — create row last, sheet prefilled,
 
   // Still in the Inbox: the new category is staged, Apply-to defaults to
   // just-this-transaction, and Accept files it.
-  await expect(inspector.getByTestId('category-pill')).toContainText(
-    'Bakeries',
-  )
+  await expect(inspector.getByTestId('category-pill')).toContainText('Bakeries')
   const applyTo = inspector.getByTestId('apply-to')
   await expect(applyTo.getByLabel('Just this transaction')).toBeChecked()
   await inspector.getByRole('button', { name: 'Accept correction · A' }).click()
@@ -110,7 +108,10 @@ test('make-a-rule defaults to going-forward; the scope door escalates and applie
 
   const inspector = page.getByTestId('inbox-inspector')
   await inspector.getByRole('button', { name: /Correct category/ }).click()
-  await page.getByTestId('category-picker').getByRole('combobox').fill('Florists')
+  await page
+    .getByTestId('category-picker')
+    .getByRole('combobox')
+    .fill('Florists')
   await page.getByTestId('create-category-row').click()
   await page
     .getByTestId('create-category-sheet')
