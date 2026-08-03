@@ -1,12 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Archive, ChevronRight } from 'lucide-react'
+import { Archive, ChevronRight, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import {
   archiveAccountMutation,
   debtReportQueryKey,
+  deleteAccountMutation,
+  deletionPreviewOptions,
   listAccountsOptions,
   listAccountsQueryKey,
+  listTransactionsQueryKey,
   netWorthReportQueryKey,
 } from '@/api/generated/@tanstack/react-query.gen'
 import type { AccountOut } from '@/api/generated/types.gen'
@@ -48,6 +51,7 @@ function AccountsPage() {
   // boundary rather than rendering a silent empty page.
   const accounts = useQuery({ ...listAccountsOptions(), throwOnError: true })
   const [archiving, setArchiving] = useState<AccountOut | null>(null)
+  const [deleting, setDeleting] = useState<AccountOut | null>(null)
 
   if (accounts.isPending) {
     return (
@@ -111,6 +115,12 @@ function AccountsPage() {
                 key={account.id}
                 account={account}
                 onArchive={() => setArchiving(account)}
+                onDelete={
+                  // Hard delete is for disconnected debris only — a
+                  // connected account 409s server-side (the next sync would
+                  // re-create it), so the verb never shows there.
+                  account.manual ? () => setDeleting(account) : undefined
+                }
               />
             ))}
           </div>
@@ -138,6 +148,10 @@ function AccountsPage() {
       <ArchiveDialog
         account={archiving}
         onOpenChange={() => setArchiving(null)}
+      />
+      <DeleteAccountDialog
+        account={deleting}
+        onOpenChange={() => setDeleting(null)}
       />
     </div>
   )
@@ -189,12 +203,75 @@ function ArchiveDialog({
   )
 }
 
+function DeleteAccountDialog({
+  account,
+  onOpenChange,
+}: {
+  account: AccountOut | null
+  onOpenChange: (open: boolean) => void
+}) {
+  const queryClient = useQueryClient()
+  const preview = useQuery({
+    ...deletionPreviewOptions({ path: { account_id: account?.id ?? '' } }),
+    enabled: account !== null,
+  })
+  const remove = useMutation({
+    ...deleteAccountMutation(),
+    onSuccess: () => {
+      // Deleting transactions moves every ledger surface — invalidate wide.
+      void queryClient.invalidateQueries({ queryKey: listAccountsQueryKey() })
+      void queryClient.invalidateQueries({
+        queryKey: listTransactionsQueryKey(),
+      })
+      void queryClient.invalidateQueries({ queryKey: netWorthReportQueryKey() })
+      void queryClient.invalidateQueries({ queryKey: debtReportQueryKey() })
+      onOpenChange(false)
+    },
+  })
+  if (account === null) return null
+  const counts = preview.data
+  return (
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogTitle>Delete {account.label}?</DialogTitle>
+        <DialogDescription data-testid="delete-account-consent">
+          {counts
+            ? `Permanently deletes ${counts.transactions} transaction${
+                counts.transactions === 1 ? '' : 's'
+              } (${counts.reviewed} reviewed)` +
+              (counts.transfers > 0
+                ? `, dissolves ${counts.transfers} transfer${
+                    counts.transfers === 1 ? '' : 's'
+                  }`
+                : '') +
+              ` and voids their decisions in Learning. This cannot be undone.`
+            : 'Counting what this takes with it…'}
+        </DialogDescription>
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            disabled={remove.isPending || !counts}
+            onClick={() => remove.mutate({ path: { account_id: account.id } })}
+          >
+            Delete account & data
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 function AccountRow({
   account,
   onArchive,
+  onDelete,
 }: {
   account: AccountOut
   onArchive?: () => void
+  onDelete?: () => void
 }) {
   const debt = isDebtAccount(account)
   const amount = accountBalanceMinor(account)
@@ -271,6 +348,17 @@ function AccountRow({
           onClick={onArchive}
         >
           <Archive className="size-3.5" aria-hidden />
+        </Button>
+      )}
+      {onDelete && (
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          aria-label={`Delete ${account.label}`}
+          className="shrink-0 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+          onClick={onDelete}
+        >
+          <Trash2 className="size-3.5" aria-hidden />
         </Button>
       )}
     </div>
