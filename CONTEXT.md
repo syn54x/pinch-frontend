@@ -24,10 +24,25 @@ _Avoid_: review queue
 
 **App shell**:
 The persistent chrome every authed surface mounts inside: the sidebar (nav
-with live Inbox count, Setup section, Penny pill, user row) and the top bar
-(screen title, search, Ask Penny). Nav shows only surfaces that exist — no
-disabled destinations.
+with live Inbox count, Setup section, Penny pill, and the profile menu on
+the user row) and the top bar (screen title, search, Ask Penny). Theme and
+logout live in the profile menu, not the bar. Nav shows only surfaces that
+exist — no disabled destinations.
 _Avoid_: layout, frame
+
+**Profile menu**:
+The popout anchored on the sidebar's user row: identity header, the Settings
+entry, the theme control, Log out. Account-scoped chrome only — nothing
+destructive lives here.
+_Avoid_: account menu (Account is a financial term in Pinch), user menu, avatar dropdown
+
+**Settings**:
+The account-configuration surface behind the profile menu — deep-linkable
+panes (Profile, Preferences, Security, Developer API) for what you visit
+twice a year. Never in the Setup nav: Setup holds surfaces you work in;
+Settings is configuration about the account itself.
+_Avoid_: account settings (Account is a financial term), preferences page
+(Preferences is one pane of it)
 
 **Inspector**:
 The detail pane beside a list surface (Inbox, Register) where one

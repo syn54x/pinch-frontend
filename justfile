@@ -58,6 +58,7 @@ e2e-backend backend="../pinch-backend" db="docker":
     mkdir -p test-results
     cd {{ backend }} && \
       PINCH_DATABASE_URL=postgres://postgres:password@localhost:5432/pinch_e2e \
+      PINCH_PLAID_WEBHOOK_URL=https://e2e.invalid/webhooks/plaid \
       PINCH_FRONTEND_BASE_URL=http://localhost:5183 \
       PINCH_BREACH_CHECK_ENABLED=false \
       PINCH_AI_CHAT_MODEL=test \
@@ -78,6 +79,7 @@ e2e-backend-noai backend="../pinch-backend" db="docker":
     mkdir -p test-results
     cd {{ backend }} && \
       PINCH_DATABASE_URL=postgres://postgres:password@localhost:5432/pinch_e2e_noai \
+      PINCH_PLAID_WEBHOOK_URL=https://e2e.invalid/webhooks/plaid \
       PINCH_FRONTEND_BASE_URL=http://localhost:5184 \
       PINCH_BREACH_CHECK_ENABLED=false \
       PINCH_AI_CHAT_MODEL= \

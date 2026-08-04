@@ -1,7 +1,7 @@
 import { expect, type Page, test } from '@playwright/test'
 import { authedContext, PASSWORD, seedUser, uniqueEmail } from './helpers/api'
 import { contrastRatio } from './helpers/contrast'
-import { loginViaUi } from './helpers/ui'
+import { loginViaUi, toggleTheme } from './helpers/ui'
 
 // F5 CP4 (#31, wireframe s14/s15/s15b): the Debt suite. Seeding is a real loan
 // account (+ optional balance) through seedUser, with terms set via the accounts
@@ -132,6 +132,6 @@ test('debt holds AA contrast in both themes', async ({ page }) => {
   }
 
   await assertContrast()
-  await page.getByRole('button', { name: /Switch to (light|dark)/ }).click()
+  await toggleTheme(page)
   await assertContrast()
 })

@@ -1,6 +1,6 @@
 import { expect, type Page, test } from '@playwright/test'
 import { PASSWORD, seedUser, uniqueEmail } from './helpers/api'
-import { loginViaUi } from './helpers/ui'
+import { loginViaUi, setTheme } from './helpers/ui'
 
 // The App shell (F3 CP0, wireframe #24): persistent sidebar + top bar around
 // every authed surface, a lean nav, and `/` landing on the Dashboard (F5 CP5).
@@ -201,10 +201,9 @@ test('the shell holds in dark mode', async ({ page }) => {
   await loginViaUi(page, email, PASSWORD)
   await expect(page).toHaveURL(/\/accounts$/)
 
-  // Cycle system → light → dark via the top-bar toggle (the accessible name
-  // announces each move) and confirm the shell re-renders under .dark.
-  await page.getByRole('button', { name: /Switch to light/ }).click()
-  await page.getByRole('button', { name: /Switch to dark/ }).click()
+  // Pin dark via the Profile menu (theme's F7 CP0 home) and confirm the
+  // shell re-renders under .dark.
+  await setTheme(page, 'Dark')
   await expect(page.locator('html')).toHaveClass(/dark/)
   await expect(
     primaryNav(page).getByRole('link', { name: 'Inbox' }),

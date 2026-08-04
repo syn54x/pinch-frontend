@@ -2,7 +2,7 @@ import { expect, type Page, test } from '@playwright/test'
 import { API, PASSWORD, seedUser, uniqueEmail } from './helpers/api'
 import { mintSandboxPublicToken } from './helpers/plaid'
 import { armPlaidFake } from './helpers/plaid-fake'
-import { loginViaUi } from './helpers/ui'
+import { loginViaUi, setTheme } from './helpers/ui'
 
 // F3 CP4 (#20, wireframe #5): the inferred first-run wizard. The trigger is
 // stateless (an empty ledger IS the state), the connect step is the F2 flow
@@ -44,11 +44,10 @@ test('signup → wizard → currency saves → connect → honest progress → a
   ).toBe('EUR')
 
   // The wizard holds in dark too (wireframe pair 1s/1s-d).
-  await page.getByRole('button', { name: /Switch to light/ }).click()
-  await page.getByRole('button', { name: /Switch to dark/ }).click()
+  await setTheme(page, 'Dark')
   await expect(page.locator('html')).toHaveClass(/dark/)
   await expect(wizard(page)).toBeVisible()
-  await page.getByRole('button', { name: /Switch to system/ }).click()
+  await setTheme(page, 'System')
 
   // Connect a bank — the F2 flow behind the wizard's card.
   await wizard(page)

@@ -7,7 +7,7 @@ import {
 import { authedContext, PASSWORD, seedUser, uniqueEmail } from './helpers/api'
 import { contrastRatio } from './helpers/contrast'
 import { daysAgo, RegisterSeeder } from './helpers/register'
-import { loginViaUi } from './helpers/ui'
+import { loginViaUi, toggleTheme } from './helpers/ui'
 
 // F5 CP5 (#32, wireframe s6/s6b/s6e): the Dashboard, the new home. Seeding is
 // real through the API — backdated balances build the net-worth trend, and bare
@@ -234,6 +234,6 @@ test('the dashboard holds AA contrast in both themes', async ({ page }) => {
   }
 
   await assertContrast()
-  await page.getByRole('button', { name: /Switch to (light|dark)/ }).click()
+  await toggleTheme(page)
   await assertContrast()
 })

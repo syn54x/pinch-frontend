@@ -17,3 +17,12 @@ export function relativeTime(iso: string): string {
   }
   return 'just now'
 }
+
+/** "Mar 4, 2026" — absolute dates for row metadata (sessions, tokens). */
+export function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}

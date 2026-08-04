@@ -8,7 +8,7 @@ import {
   reviewOneViaApi,
   stageAiProposal,
 } from './helpers/seed'
-import { loginViaUi } from './helpers/ui'
+import { loginViaUi, setTheme } from './helpers/ui'
 
 // F3 CP2 (#18, wireframe #7): the Inbox's core review loop. Seeding is the
 // honest seam: a fake-bank (Plaid sandbox) connect → sync runs the real
@@ -237,12 +237,12 @@ test('provenance and category badges hold AA contrast in both themes', async ({
     expect(await contrastRatio(uncategorized)).toBeGreaterThanOrEqual(4.5)
   }
 
-  // Light (the toggle starts at system; pin light explicitly)…
-  await page.getByRole('button', { name: /Switch to light/ }).click()
+  // Light (the preference starts at system; pin light explicitly)…
+  await setTheme(page, 'Light')
   await assertContrast()
 
   // …and dark, wireframe #7's right column.
-  await page.getByRole('button', { name: /Switch to dark/ }).click()
+  await setTheme(page, 'Dark')
   await expect(page.locator('html')).toHaveClass(/dark/)
   await assertContrast()
 })

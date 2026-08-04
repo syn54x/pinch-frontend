@@ -3,7 +3,7 @@ import { PASSWORD, seedUser, uniqueEmail } from './helpers/api'
 import { pollUnreviewed, waitForDetectedPair } from './helpers/detection'
 import { daysAgo, RegisterSeeder } from './helpers/register'
 import { createCategory } from './helpers/seed'
-import { loginViaUi } from './helpers/ui'
+import { loginViaUi, setTheme } from './helpers/ui'
 
 // F3 CP3 (#19, wireframe #7's Inspector column): the Inbox's deep verbs —
 // the split editor and transfer consent. Seeding is the honest seam again:
@@ -72,11 +72,10 @@ test('the Costco case: S drafts categoried lines, the guard blocks a mismatch, M
   ).toBeDisabled()
 
   // The editor holds in dark too (wireframe pair 1c/1f).
-  await page.getByRole('button', { name: /Switch to light/ }).click()
-  await page.getByRole('button', { name: /Switch to dark/ }).click()
+  await setTheme(page, 'Dark')
   await expect(page.locator('html')).toHaveClass(/dark/)
   await expect(editor).toBeVisible()
-  await page.getByRole('button', { name: /Switch to system/ }).click()
+  await setTheme(page, 'System')
 
   // Merge back restores the single, unsplit line — reversible in place.
   await editor.getByRole('button', { name: 'Merge back' }).click()
@@ -163,11 +162,10 @@ test('the Venmo → Ally case: the pair speaks the canonical copy, one consent c
   await expect(callout).toContainText('both excluded from spending')
 
   // The callout holds in dark (wireframe 1g's det row).
-  await page.getByRole('button', { name: /Switch to light/ }).click()
-  await page.getByRole('button', { name: /Switch to dark/ }).click()
+  await setTheme(page, 'Dark')
   await expect(page.locator('html')).toHaveClass(/dark/)
   await expect(callout).toBeVisible()
-  await page.getByRole('button', { name: /Switch to system/ }).click()
+  await setTheme(page, 'System')
 
   // Focus the outflow: the Inspector offers consent with the same callout.
   await rows(page).filter({ hasText: 'VENMO PAYMENT' }).click()
