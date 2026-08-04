@@ -36,6 +36,14 @@ entry, the theme control, Log out. Account-scoped chrome only — nothing
 destructive lives here.
 _Avoid_: account menu (Account is a financial term in Pinch), user menu, avatar dropdown
 
+**Settings**:
+The account-configuration surface behind the profile menu — deep-linkable
+panes (Profile, Preferences, Security, Developer API) for what you visit
+twice a year. Never in the Setup nav: Setup holds surfaces you work in;
+Settings is configuration about the account itself.
+_Avoid_: account settings (Account is a financial term), preferences page
+(Preferences is one pane of it)
+
 **Inspector**:
 The detail pane beside a list surface (Inbox, Register) where one
 transaction is examined and edited in place — category, tags, notes, split

@@ -19,6 +19,7 @@ import type { AccountKind } from '@/api/generated/types.gen'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { currencyLabel, currencyOptions } from '@/lib/currencies'
 import { onboardingStatsLine } from '@/lib/onboarding'
 import { PlaidExitError, usePlaidConnect } from '@/lib/plaid'
 import { cn } from '@/lib/utils'
@@ -40,32 +41,6 @@ let skippedThisLoad = false
 
 export function onboardingSkippedThisLoad(): boolean {
   return skippedThisLoad
-}
-
-const CURRENCIES = [
-  'USD',
-  'EUR',
-  'GBP',
-  'CAD',
-  'AUD',
-  'JPY',
-  'CHF',
-  'CNY',
-  'INR',
-  'BRL',
-  'MXN',
-  'SEK',
-  'NOK',
-  'DKK',
-  'NZD',
-  'SGD',
-  'HKD',
-  'ZAR',
-]
-
-function currencyLabel(code: string): string {
-  const name = new Intl.DisplayNames(undefined, { type: 'currency' }).of(code)
-  return name !== undefined && name !== code ? `${code} — ${name}` : code
 }
 
 const KIND_LABELS: Record<AccountKind, string> = {
@@ -187,9 +162,7 @@ function CurrencyStep({
   const [choice, setChoice] = useState<string | null>(null)
   const current = me.data?.primary_currency ?? 'USD'
   const value = choice ?? current
-  const codes = CURRENCIES.includes(current)
-    ? CURRENCIES
-    : [current, ...CURRENCIES]
+  const codes = currencyOptions(current)
 
   const save = useMutation({
     ...updateMeMutation(),

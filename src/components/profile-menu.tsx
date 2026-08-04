@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useRouter } from '@tanstack/react-router'
+import { Link, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import {
   logoutMutation,
@@ -12,18 +12,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { SegmentedControl } from '@/components/ui/segmented-control'
-import { type ThemePreference, useTheme } from '@/lib/theme'
-
-const THEME_OPTIONS = [
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
-  { value: 'system', label: 'System' },
-] as const satisfies readonly { value: ThemePreference; label: string }[]
+import { THEME_OPTIONS, useTheme } from '@/lib/theme'
 
 // The Profile menu (CONTEXT.md; wireframe s23b): the popout on the user row —
-// identity header, theme, Log out. Account-scoped chrome only, nothing
-// destructive; the Settings entry arrives with the surface (F7 CP1), never
-// as a dead link before it.
+// identity header, the Settings entry, theme, Log out. Account-scoped chrome
+// only, nothing destructive.
 export function ProfileMenu() {
   // The guard already resolved /me; this render only reads the cache.
   const me = useQuery(meOptions())
@@ -82,6 +75,15 @@ export function ProfileMenu() {
               {me.data.email}
             </p>
           )}
+        </div>
+        <div className="border-b p-1">
+          <Link
+            to="/settings"
+            onClick={() => setOpen(false)}
+            className="flex items-center rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent"
+          >
+            Settings
+          </Link>
         </div>
         <div className="flex items-center justify-between gap-2 px-3 py-2.5">
           <span className="label-caps">Theme</span>

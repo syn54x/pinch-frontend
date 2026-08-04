@@ -2,10 +2,9 @@ import { expect, test } from '@playwright/test'
 import { PASSWORD, seedUser, uniqueEmail } from './helpers/api'
 import { loginViaUi, setTheme } from './helpers/ui'
 
-// The Profile menu (F7 CP0, wireframe s23b): the user row — which used to
-// show your name and do nothing — is now the popout holding identity, theme,
-// and Log out. No Settings entry until the surface exists (CP1): the shell's
-// no-disabled-destinations law extends to menu items.
+// The Profile menu (F7 CP0+CP1, wireframe s23b): the user row — which used
+// to show your name and do nothing — is now the popout holding identity, the
+// Settings entry, theme, and Log out. Nothing destructive lives here.
 
 test('the user row opens the menu — identity, theme, Log out, and both dismissals', async ({
   page,
@@ -23,7 +22,7 @@ test('the user row opens the menu — identity, theme, Log out, and both dismiss
   await expect(
     menu.getByRole('group', { name: 'Theme' }).getByRole('button'),
   ).toHaveCount(3)
-  await expect(menu.getByText('Settings')).toHaveCount(0) // CP1's, not yet
+  await expect(menu.getByRole('link', { name: 'Settings' })).toBeVisible()
 
   await page.keyboard.press('Escape')
   await expect(menu).not.toBeVisible()
@@ -78,14 +77,20 @@ test('the menu is keyboard-operable end to end', async ({ page }) => {
   const menu = page.getByTestId('profile-menu')
   await expect(menu).toBeVisible()
 
-  // Opening lands focus on the first control; Tab walks every stop — this
-  // enumeration is deliberate, so CP1's Settings entry must extend it.
+  // Opening lands focus on the first *button* (Radix skips links on
+  // auto-focus so opening never scrolls); Tab then walks every stop and
+  // wraps to the Settings link — this enumeration is deliberate: a new
+  // menu item must extend it.
   await expect(menu.getByRole('button', { name: 'Light' })).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(menu.getByRole('button', { name: 'Dark' })).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(menu.getByRole('button', { name: 'System' })).toBeFocused()
   await page.keyboard.press('Tab')
+  await expect(menu.getByRole('button', { name: 'Log out' })).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(menu.getByRole('link', { name: 'Settings' })).toBeFocused()
+  await page.keyboard.press('Shift+Tab')
   await expect(menu.getByRole('button', { name: 'Log out' })).toBeFocused()
 
   // Enter on Log out works without a pointer: the session actually dies.
