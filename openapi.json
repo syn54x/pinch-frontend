@@ -2107,22 +2107,15 @@
                 "deprecated": false
             }
         },
-        "/api/v1/connections/link-token": {
+        "/api/v1/connections/connect-session": {
             "post": {
-                "summary": "CreateLinkToken",
-                "operationId": "create_link_token",
+                "summary": "CreateConnectSession",
+                "operationId": "create_connect_session",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "oneOf": [
-                                    {
-                                        "$ref": "#/components/schemas/LinkTokenIn"
-                                    },
-                                    {
-                                        "type": "null"
-                                    }
-                                ]
+                                "$ref": "#/components/schemas/ConnectSessionIn"
                             }
                         }
                     },
@@ -2135,7 +2128,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/LinkTokenOut"
+                                    "$ref": "#/components/schemas/ConnectSessionOut"
                                 }
                             }
                         }
@@ -2174,6 +2167,29 @@
                                             "extra": {}
                                         }
                                     ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false
+            }
+        },
+        "/api/v1/connections/providers": {
+            "get": {
+                "summary": "ListProviders",
+                "operationId": "list_providers",
+                "responses": {
+                    "200": {
+                        "description": "Request fulfilled, document follows",
+                        "headers": {},
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/ProviderCatalogEntry"
+                                    },
+                                    "type": "array"
                                 }
                             }
                         }
@@ -7096,15 +7112,61 @@
                 "required": [],
                 "title": "CommitIn"
             },
-            "ConnectionCreateIn": {
+            "ConnectSessionIn": {
                 "properties": {
-                    "public_token": {
-                        "type": "string"
+                    "provider": {
+                        "$ref": "#/components/schemas/ConnectionProvider"
+                    },
+                    "connection_id": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "Absent: a fresh connect. Present: a repair session for this\nconnection's login (PRD #31 reauth) — no completion follows; the\nnext successful sync is the healer."
                     }
                 },
                 "type": "object",
                 "required": [
-                    "public_token"
+                    "provider"
+                ],
+                "title": "ConnectSessionIn"
+            },
+            "ConnectSessionOut": {
+                "properties": {
+                    "provider": {
+                        "$ref": "#/components/schemas/ConnectionProvider"
+                    },
+                    "token": {
+                        "type": "string",
+                        "description": "Opaque: whatever the provider's widget consumes (Plaid: a\nlink_token; MX: a widget URL)."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "provider",
+                    "token"
+                ],
+                "title": "ConnectSessionOut"
+            },
+            "ConnectionCreateIn": {
+                "properties": {
+                    "provider": {
+                        "$ref": "#/components/schemas/ConnectionProvider"
+                    },
+                    "token": {
+                        "type": "string",
+                        "description": "The provider's completion handle (Plaid: the public_token Link\nanswered with) — verified server-side, never trusted naked."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "provider",
+                    "token"
                 ],
                 "title": "ConnectionCreateIn"
             },
@@ -7116,6 +7178,17 @@
                     },
                     "provider": {
                         "$ref": "#/components/schemas/ConnectionProvider"
+                    },
+                    "provider_institution_id": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "description": "The provider's institution identity (M13 CP1) — the frontend dupe\nguard's basis for \"you already connected this bank\"."
                     },
                     "institution_name": {
                         "oneOf": [
@@ -7188,6 +7261,7 @@
                     "investments_error_detail",
                     "last_synced_at",
                     "provider",
+                    "provider_institution_id",
                     "status"
                 ],
                 "title": "ConnectionOut"
@@ -7195,9 +7269,11 @@
             "ConnectionProvider": {
                 "type": "string",
                 "enum": [
-                    "plaid"
+                    "plaid",
+                    "mx"
                 ],
-                "title": "ConnectionProvider"
+                "title": "ConnectionProvider",
+                "description": "The sync provider the user chose — per connection, at connect time\n(CONTEXT.md: Sync provider)."
             },
             "ConnectionStatus": {
                 "type": "string",
@@ -8454,37 +8530,6 @@
                 ],
                 "title": "LedgerStatsOut"
             },
-            "LinkTokenIn": {
-                "properties": {
-                    "connection_id": {
-                        "oneOf": [
-                            {
-                                "type": "string",
-                                "format": "uuid"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "description": "Absent: a fresh connect. Present: an update-mode token repairing\nthis connection's login (PRD #31 reauth) — no exchange follows; the\nnext successful sync is the healer."
-                    }
-                },
-                "type": "object",
-                "required": [],
-                "title": "LinkTokenIn"
-            },
-            "LinkTokenOut": {
-                "properties": {
-                    "link_token": {
-                        "type": "string"
-                    }
-                },
-                "type": "object",
-                "required": [
-                    "link_token"
-                ],
-                "title": "LinkTokenOut"
-            },
             "LoginRequest": {
                 "properties": {
                     "email": {
@@ -9627,6 +9672,37 @@
                 ],
                 "title": "ProposalProvenance",
                 "description": "Who decided the proposal (PRD M5 D11/D13; M7 #31): a rule, exact\npayee history, the AI classifier (unreachable until M9's Penny — v0\ndeterministically abstains), the transfer detector (M7 CP4 — it matched\na counterpart transaction), or nobody (the empty proposal). Contributing\nrules for tags/rename ride in provenance_detail regardless."
+            },
+            "ProviderCatalogEntry": {
+                "properties": {
+                    "provider": {
+                        "$ref": "#/components/schemas/ConnectionProvider"
+                    },
+                    "configured": {
+                        "type": "boolean",
+                        "description": "Whether this instance holds the provider's credentials — an\nunconfigured provider's endpoints refuse cleanly (story 16)."
+                    },
+                    "capabilities": {
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "transactions",
+                                "balances",
+                                "holdings",
+                                "activity"
+                            ]
+                        },
+                        "type": "array",
+                        "description": "What the provider delivers (CONTEXT.md: Provider capability). A\nmissing atom is a stated limit, never an error."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "capabilities",
+                    "configured",
+                    "provider"
+                ],
+                "title": "ProviderCatalogEntry"
             },
             "RecurringCadence": {
                 "type": "string",

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { PASSWORD, seedUser, uniqueEmail } from './helpers/api'
 import { mintSandboxPublicToken } from './helpers/plaid'
 import { armPlaidFake } from './helpers/plaid-fake'
-import { loginViaUi } from './helpers/ui'
+import { connectViaPicker, loginViaUi } from './helpers/ui'
 
 test('connect a bank: widget → exchange → first sync → balances materialize', async ({
   page,
@@ -16,7 +16,7 @@ test('connect a bank: widget → exchange → first sync → balances materializ
 
   await loginViaUi(page, email, PASSWORD)
   await page.getByRole('link', { name: 'Connections' }).click()
-  await page.getByRole('button', { name: 'Connect bank' }).click()
+  await connectViaPicker(page)
 
   // The exchange lands the row immediately, in first-sync state.
   const row = page.getByTestId('connection-card')
@@ -48,10 +48,11 @@ test('cancelling the widget leaves no residue', async ({ page }) => {
 
   await loginViaUi(page, email, PASSWORD)
   await page.getByRole('link', { name: 'Connections' }).click()
-  await page.getByRole('button', { name: 'Connect bank' }).click()
+  await connectViaPicker(page)
 
-  // The flow ends (button re-enables) — then assert nothing was left behind.
+  // Dismissal is silence: the picker stays closed, nothing was left behind.
   await expect(page.getByRole('button', { name: 'Connect bank' })).toBeEnabled()
+  await expect(page.getByTestId('provider-picker')).toHaveCount(0)
   await expect(page.getByTestId('connection-card')).toHaveCount(0)
   await expect(page.getByRole('alert')).toHaveCount(0)
 })
@@ -63,8 +64,10 @@ test('a widget error shows an inline notice', async ({ page }) => {
 
   await loginViaUi(page, email, PASSWORD)
   await page.getByRole('link', { name: 'Connections' }).click()
-  await page.getByRole('button', { name: 'Connect bank' }).click()
+  await connectViaPicker(page)
 
+  // A widget error reopens the picker with the notice inline.
+  await expect(page.getByTestId('provider-picker')).toBeVisible()
   await expect(page.getByRole('alert')).toContainText('Simulated Plaid failure')
   await expect(page.getByTestId('connection-card')).toHaveCount(0)
 })

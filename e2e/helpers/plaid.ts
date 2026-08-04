@@ -93,7 +93,7 @@ async function exchangeViaBackend(
   const { ctx, csrf } = await authedContext(email, password)
   try {
     const created = await ctx.post('/api/v1/connections', {
-      data: { public_token: publicToken },
+      data: { provider: 'plaid', token: publicToken },
       headers: await csrf(),
     })
     if (!created.ok()) {

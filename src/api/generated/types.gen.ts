@@ -254,10 +254,40 @@ export type CommitIn = {
 };
 
 /**
+ * ConnectSessionIn
+ */
+export type ConnectSessionIn = {
+    provider: ConnectionProvider;
+    /**
+     * Absent: a fresh connect. Present: a repair session for this
+     * connection's login (PRD #31 reauth) — no completion follows; the
+     * next successful sync is the healer.
+     */
+    connection_id?: string | null;
+};
+
+/**
+ * ConnectSessionOut
+ */
+export type ConnectSessionOut = {
+    provider: ConnectionProvider;
+    /**
+     * Opaque: whatever the provider's widget consumes (Plaid: a
+     * link_token; MX: a widget URL).
+     */
+    token: string;
+};
+
+/**
  * ConnectionCreateIn
  */
 export type ConnectionCreateIn = {
-    public_token: string;
+    provider: ConnectionProvider;
+    /**
+     * The provider's completion handle (Plaid: the public_token Link
+     * answered with) — verified server-side, never trusted naked.
+     */
+    token: string;
 };
 
 /**
@@ -266,6 +296,11 @@ export type ConnectionCreateIn = {
 export type ConnectionOut = {
     id: string;
     provider: ConnectionProvider;
+    /**
+     * The provider's institution identity (M13 CP1) — the frontend dupe
+     * guard's basis for "you already connected this bank".
+     */
+    provider_institution_id: string | null;
     institution_name: string | null;
     status: ConnectionStatus;
     last_synced_at: string | null;
@@ -286,8 +321,11 @@ export type ConnectionOut = {
 
 /**
  * ConnectionProvider
+ *
+ * The sync provider the user chose — per connection, at connect time
+ * (CONTEXT.md: Sync provider).
  */
-export type ConnectionProvider = 'plaid';
+export type ConnectionProvider = 'plaid' | 'mx';
 
 /**
  * ConnectionStatus
@@ -613,25 +651,6 @@ export type LedgerStatsOut = {
     };
     recurring_found: number | null;
     last_synced_at: string | null;
-};
-
-/**
- * LinkTokenIn
- */
-export type LinkTokenIn = {
-    /**
-     * Absent: a fresh connect. Present: an update-mode token repairing
-     * this connection's login (PRD #31 reauth) — no exchange follows; the
-     * next successful sync is the healer.
-     */
-    connection_id?: string | null;
-};
-
-/**
- * LinkTokenOut
- */
-export type LinkTokenOut = {
-    link_token: string;
 };
 
 /**
@@ -1046,6 +1065,23 @@ export type ProposalOut = {
  * rules for tags/rename ride in provenance_detail regardless.
  */
 export type ProposalProvenance = 'rule' | 'history' | 'ai' | 'detection' | 'none';
+
+/**
+ * ProviderCatalogEntry
+ */
+export type ProviderCatalogEntry = {
+    provider: ConnectionProvider;
+    /**
+     * Whether this instance holds the provider's credentials — an
+     * unconfigured provider's endpoints refuse cleanly (story 16).
+     */
+    configured: boolean;
+    /**
+     * What the provider delivers (CONTEXT.md: Provider capability). A
+     * missing atom is a stated limit, never an error.
+     */
+    capabilities: Array<'transactions' | 'balances' | 'holdings' | 'activity'>;
+};
 
 /**
  * RecurringCadence
@@ -2536,14 +2572,14 @@ export type UpdateCategoryResponses = {
 
 export type UpdateCategoryResponse = UpdateCategoryResponses[keyof UpdateCategoryResponses];
 
-export type CreateLinkTokenData = {
-    body: LinkTokenIn | null;
+export type CreateConnectSessionData = {
+    body: ConnectSessionIn;
     path?: never;
     query?: never;
-    url: '/api/v1/connections/link-token';
+    url: '/api/v1/connections/connect-session';
 };
 
-export type CreateLinkTokenErrors = {
+export type CreateConnectSessionErrors = {
     /**
      * Validation Exception
      */
@@ -2556,16 +2592,32 @@ export type CreateLinkTokenErrors = {
     };
 };
 
-export type CreateLinkTokenError = CreateLinkTokenErrors[keyof CreateLinkTokenErrors];
+export type CreateConnectSessionError = CreateConnectSessionErrors[keyof CreateConnectSessionErrors];
 
-export type CreateLinkTokenResponses = {
+export type CreateConnectSessionResponses = {
     /**
      * Document created, URL follows
      */
-    201: LinkTokenOut;
+    201: ConnectSessionOut;
 };
 
-export type CreateLinkTokenResponse = CreateLinkTokenResponses[keyof CreateLinkTokenResponses];
+export type CreateConnectSessionResponse = CreateConnectSessionResponses[keyof CreateConnectSessionResponses];
+
+export type ListProvidersData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/connections/providers';
+};
+
+export type ListProvidersResponses = {
+    /**
+     * Request fulfilled, document follows
+     */
+    200: Array<ProviderCatalogEntry>;
+};
+
+export type ListProvidersResponse = ListProvidersResponses[keyof ListProvidersResponses];
 
 export type ListConnectionsData = {
     body?: never;

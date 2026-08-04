@@ -1,12 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useCallback, useEffect, useState } from 'react'
-import { errorDetail, statusOf } from '@/api/client'
-import {
-  createConnection,
-  createLinkToken,
-  refreshConnection,
-} from '@/api/generated'
+import { errorDetail } from '@/api/client'
+import { createConnectSession, refreshConnection } from '@/api/generated'
 import {
   deleteConnectionMutation,
   listAccountsQueryKey,
@@ -17,6 +13,7 @@ import {
   refreshConnectionMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
 import type { ConnectionOut } from '@/api/generated/types.gen'
+import { ProviderPicker } from '@/components/connect/provider-picker'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -206,59 +203,22 @@ function ConnectBank({
 }: {
   onConnected: (connection: ConnectionOut) => void
 }) {
-  const queryClient = useQueryClient()
-  const connect = usePlaidConnect()
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const [open, setOpen] = useState(false)
 
-  async function handleConnect() {
-    setError(null)
-    setBusy(true)
-    try {
-      let tokenOut: { link_token: string }
-      try {
-        ;({ data: tokenOut } = await createLinkToken({
-          body: null, // creation mode; repair passes a connection_id (CP2)
-          throwOnError: true,
-        }))
-      } catch (caught) {
-        // A 403 on link-token means the keyless stance: Plaid isn't
-        // configured on this instance (status-keyed, not prose-sniffed).
-        setError(
-          statusOf(caught) === 403
-            ? `${errorDetail(caught)} — set PINCH_PLAID_CLIENT_ID and PINCH_PLAID_SECRET on the backend to enable bank connections.`
-            : errorDetail(caught),
-        )
-        return
-      }
-      const publicToken = await connect(tokenOut.link_token)
-      if (publicToken === null) return // dismissed — not an error
-      const { data: connection } = await createConnection({
-        body: { public_token: publicToken },
-        throwOnError: true,
-      })
-      queryClient.invalidateQueries({ queryKey: listConnectionsQueryKey() })
-      onConnected(connection)
-    } catch (caught) {
-      setError(
-        caught instanceof PlaidExitError ? caught.message : errorDetail(caught),
-      )
-    } finally {
-      setBusy(false)
-    }
-  }
-
+  // The button opens the picker (wireframe 7a) — the connect flow itself,
+  // keyless copy included, lives inside ProviderPicker since F8 CP0.
   return (
-    <div className="flex items-center gap-3">
-      {error && (
-        <p role="alert" className="text-destructive text-sm">
-          {error}
-        </p>
-      )}
-      <Button onClick={handleConnect} disabled={busy}>
-        Connect bank
-      </Button>
-    </div>
+    <>
+      <Button onClick={() => setOpen(true)}>Connect bank</Button>
+      <ProviderPicker
+        open={open}
+        onOpenChange={setOpen}
+        onConnected={onConnected}
+        // No in-page manual creation here — Accounts owns the manual story.
+        onManual={() => navigate({ to: '/accounts' })}
+      />
+    </>
   )
 }
 
@@ -402,11 +362,13 @@ function UpdateModeLinkButton({
     setError(null)
     setBusy(true)
     try {
-      const { data: tokenOut } = await createLinkToken({
-        body: { connection_id: connection.id },
+      const { data: session } = await createConnectSession({
+        // The connection's own provider mints the repair session (M13) —
+        // same endpoint as creation, connection_id makes it update-mode.
+        body: { provider: connection.provider, connection_id: connection.id },
         throwOnError: true,
       })
-      const result = await connect(tokenOut.link_token, {
+      const result = await connect(session.token, {
         connectionId: connection.id,
       })
       if (result === null) return // dismissed — not an error
