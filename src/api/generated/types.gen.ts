@@ -688,9 +688,15 @@ export type MePatchIn = {
     /**
      * ISO 4217 alpha code, same shape rule as signup — unrestricted in v0
      * (reports re-express at current rates), so any three uppercase letters
-     * pass and anything else is a 400.
+     * pass and anything else is a 400. Not clearable: null means leave
+     * unchanged (the categories-name convention).
      */
-    primary_currency: string;
+    primary_currency?: string | null;
+    /**
+     * F7 enabler (issue #83). Same bounds as every user-facing name field;
+     * not clearable — null means leave unchanged, and empty is a 400.
+     */
+    display_name?: string | null;
 };
 
 /**
@@ -846,6 +852,22 @@ export type PageTransactionOut = {
 export type PageTransferOut = {
     items: Array<TransferOut>;
     next_cursor: string | null;
+};
+
+/**
+ * PasswordChangeIn
+ */
+export type PasswordChangeIn = {
+    /**
+     * Breach corpus checking (HIBP) is the real gate and lands in CP4;
+     * a length floor is the NIST-baseline backstop, not the defense.
+     */
+    current_password: string;
+    /**
+     * Breach corpus checking (HIBP) is the real gate and lands in CP4;
+     * a length floor is the NIST-baseline backstop, not the defense.
+     */
+    new_password: string;
 };
 
 /**
@@ -1288,7 +1310,8 @@ export type SignupRequest = {
      */
     password: string;
     /**
-     * Defaults to the email's local part.
+     * Defaults to the email's local part. Same bounds as PATCH /me — signup
+     * must not mint a display name the profile editor could never produce.
      */
     display_name?: string | null;
     /**
@@ -1964,6 +1987,37 @@ export type ConfirmPasswordResetResponses = {
 };
 
 export type ConfirmPasswordResetResponse = ConfirmPasswordResetResponses[keyof ConfirmPasswordResetResponses];
+
+export type ChangePasswordData = {
+    body: PasswordChangeIn;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/password/change';
+};
+
+export type ChangePasswordErrors = {
+    /**
+     * Validation Exception
+     */
+    400: {
+        status_code: number;
+        detail: string;
+        extra?: null | {
+            [key: string]: unknown;
+        } | Array<unknown>;
+    };
+};
+
+export type ChangePasswordError = ChangePasswordErrors[keyof ChangePasswordErrors];
+
+export type ChangePasswordResponses = {
+    /**
+     * Request fulfilled, nothing follows
+     */
+    204: null;
+};
+
+export type ChangePasswordResponse = ChangePasswordResponses[keyof ChangePasswordResponses];
 
 export type ListAccountsData = {
     body?: never;
