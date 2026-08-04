@@ -1,0 +1,81 @@
+<!doctype html>
+<!-- A fake of the MX Connect widget document, served by Playwright route
+     interception under the widget URL's own origin - the MX sibling of
+     plaid-link.js, at the same network boundary. It postMessages the REAL
+     captured event sequence from the backend CP0 spike (pinch-backend
+     docs/research/mx-platform-api.md): envelope {mx, type, metadata},
+     numeric connection_status, memberConnected only after a "connecting"
+     hold (the sandbox's ~14s aggregation, compressed).
+
+     Knobs arrive templated into the config placeholder by armMxFake
+     (which replaces every occurrence - keep the token out of prose):
+       mode - 'success' | 'cancel' | 'error'
+       memberGuid - the real API-seeded sandbox member to succeed with -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>MX Connect (e2e fixture)</title>
+  </head>
+  <body style="display:grid;place-items:center;height:100vh;margin:0;font-family:system-ui">
+    <p>MX Connect — e2e fixture</p>
+    <script>
+      const config = __MX_FAKE_CONFIG__
+      const send = (type, metadata) =>
+        window.parent.postMessage(
+          Object.assign({ mx: true, type }, metadata ? { metadata } : {}),
+          '*',
+        )
+      const guids = {
+        session_guid: 'SES-e2e-fake',
+        user_guid: config.userGuid || 'USR-e2e-fake',
+      }
+      const steps = [
+        () => send('mx/load', {}),
+        () => send('mx/connect/stepChange', { current: 'search' }),
+        () => send('mx/connect/loaded', { initial_step: 'search' }),
+      ]
+      if (config.mode === 'error') {
+        steps.push(() =>
+          send('mx/connect/createMemberError', {
+            institution_code: 'mxbank',
+          }),
+        )
+      } else if (config.mode === 'success') {
+        steps.push(
+          () =>
+            send('mx/connect/selectedInstitution', {
+              code: 'mxbank',
+              name: 'MX Bank',
+            }),
+          () => send('mx/connect/stepChange', { previous: 'search', current: 'enterCreds' }),
+          () => send('mx/connect/enterCredentials', { institution: { code: 'mxbank' } }),
+          () => send('mx/connect/stepChange', { previous: 'enterCreds', current: 'connecting' }),
+          () =>
+            send('mx/connect/memberStatusUpdate', {
+              member_guid: config.memberGuid,
+              connection_status: 0, // numeric - CREATED
+            }),
+          () =>
+            send('mx/connect/memberStatusUpdate', {
+              member_guid: config.memberGuid,
+              connection_status: 6, // numeric - CONNECTED
+            }),
+          () =>
+            send(
+              'mx/connect/memberConnected',
+              Object.assign({ member_guid: config.memberGuid }, guids),
+            ),
+          () => send('mx/connect/stepChange', { previous: 'connecting', current: 'connected' }),
+        )
+      }
+      // 'cancel' posts only the load events and waits for Pinch's Cancel.
+      // A beat between events; a longer hold on the connecting step so the
+      // sheet's working state is real and assertable before success.
+      let delay = 0
+      steps.forEach((step, index) => {
+        delay += index >= 7 ? 700 : 100
+        setTimeout(step, delay)
+      })
+    </script>
+  </body>
+</html>

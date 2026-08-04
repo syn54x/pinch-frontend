@@ -4,12 +4,13 @@ import { seedSandboxConnection } from './helpers/plaid'
 import { loginViaUi } from './helpers/ui'
 
 // The provider picker (F8 CP0, wireframe 7a): everything factual is
-// catalog-driven — the cards, the capability chips, the greyed
-// unconfigured provider — against the real backend's catalog endpoint.
-// The pinned backend configures Plaid (sandbox keys) and not MX, so both
-// sides of the configured coin are asserted for real.
+// catalog-driven — the cards and the capability chips — against the real
+// backend's catalog endpoint. Since F8 CP1 the e2e backend configures
+// BOTH providers (Plaid + MX integration creds), so the greyed
+// unconfigured rendering no longer has a live e2e surface; the catalog
+// only carries providers that exist, and both exist here.
 
-test('the picker renders catalog-driven cards: chips, and the unconfigured provider greyed', async ({
+test('the picker renders catalog-driven cards with per-provider chips', async ({
   page,
 }) => {
   const email = uniqueEmail('picker')
@@ -35,14 +36,16 @@ test('the picker renders catalog-driven cards: chips, and the unconfigured provi
     plaid.getByRole('button', { name: 'Continue with Plaid' }),
   ).toBeEnabled()
 
-  // MX: in the catalog but unconfigured on this instance — greyed, said
-  // plainly, and its Continue is dead either way until F8 CP1.
+  // MX: configured (F8 CP1), transactions + balances from the catalog —
+  // and the missing holdings atom said out loud as a limit, muted.
   const mx = page.getByTestId('provider-card-mx')
-  await expect(mx).toContainText('unavailable')
-  await expect(mx).toContainText('Not configured on this Pinch instance.')
+  await expect(mx).not.toContainText('unavailable')
+  await expect(mx).toContainText('transactions')
+  await expect(mx).toContainText('balances')
+  await expect(mx).toContainText('no holdings yet')
   await expect(
     mx.getByRole('button', { name: 'Continue with MX' }),
-  ).toBeDisabled()
+  ).toBeEnabled()
 
   // A fresh ledger has no "already connected" row to warn with.
   await expect(page.getByTestId('already-connected')).toHaveCount(0)
@@ -50,9 +53,7 @@ test('the picker renders catalog-driven cards: chips, and the unconfigured provi
   // Escape closes like every app dialog, focus returning to the trigger.
   await page.keyboard.press('Escape')
   await expect(picker).toHaveCount(0)
-  await expect(
-    page.getByRole('button', { name: 'Connect bank' }),
-  ).toBeFocused()
+  await expect(page.getByRole('button', { name: 'Connect bank' })).toBeFocused()
 
   // The footer's manual escape leads out of the picker to Accounts.
   await page.getByRole('button', { name: 'Connect bank' }).click()

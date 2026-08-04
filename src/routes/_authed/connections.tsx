@@ -30,7 +30,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { WarnChip } from '@/components/ui/warn-chip'
-import { PlaidExitError, usePlaidConnect } from '@/lib/plaid'
+import { ConnectExitError } from '@/lib/connect-errors'
+import { usePlaidConnect } from '@/lib/plaid'
 import { relativeTime } from '@/lib/time'
 
 type ConnectionsSearch = {
@@ -381,7 +382,9 @@ function UpdateModeLinkButton({
       onTriggered(connection)
     } catch (caught) {
       setError(
-        caught instanceof PlaidExitError ? caught.message : errorDetail(caught),
+        caught instanceof ConnectExitError
+          ? caught.message
+          : errorDetail(caught),
       )
     } finally {
       setBusy(false)

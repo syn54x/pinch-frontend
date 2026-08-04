@@ -39,6 +39,21 @@ export function orderedCatalog<T extends { provider: ConnectionProvider }>(
   )
 }
 
+/** Returned-empty promotion (wireframe 7d): after a widget came back
+ * without connecting, the next configured method the user has NOT tried
+ * is promoted ("Try MX"). Null when nothing was tried yet — cards stay
+ * neutral — or when every way in was already walked. */
+export function promotedProvider(
+  entries: ProviderCatalogEntry[],
+  tried: ConnectionProvider[],
+): ConnectionProvider | null {
+  if (tried.length === 0) return null
+  const next = orderedCatalog(entries).find(
+    (entry) => entry.configured && !tried.includes(entry.provider),
+  )
+  return next?.provider ?? null
+}
+
 export type CapabilityChip = {
   label: string
   /** A stated provider limit ("no holdings yet") — rendered quiet, never

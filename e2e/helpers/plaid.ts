@@ -1,6 +1,6 @@
-import { readFile } from 'node:fs/promises'
 import { request } from '@playwright/test'
 import { authedContext } from './api'
+import { backendDotenv, dotenvValue } from './env'
 
 // Plaid sandbox helpers: mint public tokens without the Link widget (the
 // backend's own tests use the same shortcut) and seed real sandbox
@@ -10,15 +10,6 @@ const PLAID_SANDBOX = 'https://sandbox.plaid.com'
 
 // First Platypus Bank — Plaid's canonical sandbox institution.
 const SANDBOX_INSTITUTION = 'ins_109508'
-
-/** Strip optional quotes and trailing comments from a dotenv value. */
-function dotenvValue(env: string, key: string): string | undefined {
-  const raw = env.match(new RegExp(`^${key}=(.*)$`, 'm'))?.[1]?.trim()
-  if (!raw) return undefined
-  const unquoted = raw.match(/^"([^"]*)"|^'([^']*)'/)
-  if (unquoted) return unquoted[1] ?? unquoted[2]
-  return raw.split(/\s+#/)[0].trim() || undefined
-}
 
 let cachedCreds: { clientId: string; secret: string } | null = null
 
@@ -32,10 +23,7 @@ async function plaidCreds(): Promise<{ clientId: string; secret: string }> {
     cachedCreds = { clientId: envClientId, secret: envSecret }
     return cachedCreds
   }
-  const backendDir =
-    process.env.E2E_BACKEND_DIR ??
-    new URL('../../../pinch-backend', import.meta.url).pathname
-  const dotenv = await readFile(`${backendDir}/.env`, 'utf8').catch(() => '')
+  const dotenv = await backendDotenv()
   const clientId = dotenvValue(dotenv, 'PINCH_PLAID_CLIENT_ID')
   const secret = dotenvValue(dotenv, 'PINCH_PLAID_SECRET')
   if (!clientId || !secret) {

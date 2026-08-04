@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePlaidLink } from 'react-plaid-link'
+import { ConnectExitError } from './connect-errors'
 
 /** Link reported a failure (as opposed to the user just closing it). */
-export class PlaidExitError extends Error {}
+export class PlaidExitError extends ConnectExitError {}
 
 // --- OAuth redirect persistence -----------------------------------------
 // OAuth institutions leave the page entirely; the link token must survive

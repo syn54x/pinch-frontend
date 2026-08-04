@@ -9,8 +9,10 @@ import {
 } from '@/api/generated/@tanstack/react-query.gen'
 import type {
   ConnectionOut,
+  ConnectionProvider,
   ProviderCatalogEntry,
 } from '@/api/generated/types.gen'
+import { useMxConnect } from '@/components/connect/mx-connect-sheet'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,23 +22,33 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import { PlaidExitError, usePlaidConnect } from '@/lib/plaid'
-import { capabilityChips, orderedCatalog, PROVIDER_COPY } from '@/lib/providers'
+import { ConnectExitError } from '@/lib/connect-errors'
+import { usePlaidConnect } from '@/lib/plaid'
+import {
+  capabilityChips,
+  orderedCatalog,
+  PROVIDER_COPY,
+  promotedProvider,
+} from '@/lib/providers'
 import { cn } from '@/lib/utils'
 
 // The provider picker (wireframe 7a, F8 CP0): "how Pinch reaches your
 // bank" — a connection method, not a vendor pick. Everything factual is
 // server-driven from the catalog endpoint (which providers exist, whether
 // this instance configured them, what each delivers); only display copy is
-// local (src/lib/providers). Plaid's Continue hands off to Plaid's own
-// overlay exactly as before, through the provider-neutral contract:
-// connect-session → widget → {provider, token} completion. MX's Continue
-// stays disabled until its widget path lands (F8 CP1).
+// local (src/lib/providers). Each Continue walks the provider-neutral
+// contract — connect-session → widget → {provider, token} completion —
+// through that provider's own boundary module: Plaid's overlay owns the
+// viewport, MX renders iframed in a Pinch-owned sheet (7c, F8 CP1).
 //
 // The dialog closes before the widget opens: Plaid Link owns the viewport,
 // and a modal Radix dialog underneath would fight its focus (the F7
-// modal-focus lesson). A widget error reopens the picker with the notice
-// inline; a plain dismissal stays silent, exactly like the old buttons.
+// modal-focus lesson); the MX sheet is itself a Radix dialog and gets the
+// same clear stage. A widget error reopens the picker with the notice
+// inline. Coming back without connecting (7d) reopens it too: the tried
+// method is marked — Pinch claims no knowledge of why; cancel and
+// can't-find-my-bank are the same event to us — and the next configured
+// method is promoted.
 
 export function ProviderPicker({
   open,
@@ -53,9 +65,14 @@ export function ProviderPicker({
   onManual: () => void
 }) {
   const queryClient = useQueryClient()
-  const connect = usePlaidConnect()
+  const plaid = usePlaidConnect()
+  const mx = useMxConnect()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Returned-empty bookkeeping (7d): methods that came back without
+  // connecting this attempt. Cleared when the user closes the picker —
+  // the marks narrate one connect attempt, not a permanent verdict.
+  const [tried, setTried] = useState<ConnectionProvider[]>([])
 
   // Radix's default focus restore is unreliable for a controlled,
   // trigger-less dialog (the fix-drawer lesson) — capture whatever was
@@ -78,30 +95,54 @@ export function ProviderPicker({
   const connections = useQuery({ ...listConnectionsOptions(), enabled: open })
   const existing = connections.data?.items ?? []
 
+  const promoted = promotedProvider(catalog.data ?? [], tried)
+
+  /** The provider's own widget, behind the shared three-outcome contract. */
+  function launchWidget(
+    entry: ProviderCatalogEntry,
+    sessionToken: string,
+  ): Promise<string | null> {
+    return entry.provider === 'mx'
+      ? mx.connect(sessionToken)
+      : plaid(sessionToken)
+  }
+
   async function handleContinue(entry: ProviderCatalogEntry) {
     setError(null)
     setBusy(true)
-    // Widget time: Plaid Link owns the viewport, the dialog steps aside.
+    // Widget time: the provider's widget owns the stage, the dialog steps
+    // aside (the prop directly — user closes go through handleOpenChange).
     onOpenChange(false)
     try {
       const { data: session } = await createConnectSession({
         body: { provider: entry.provider },
         throwOnError: true,
       })
-      const publicToken = await connect(session.token)
-      if (publicToken === null) return // dismissed — not an error
+      const token = await launchWidget(entry, session.token)
+      if (token === null) {
+        // Came back without connecting (7d): a fork, not a failure — mark
+        // the method tried and return to the picker to promote the next.
+        setTried((prior) =>
+          prior.includes(entry.provider) ? prior : [...prior, entry.provider],
+        )
+        onOpenChange(true)
+        return
+      }
       const { data: connection } = await createConnection({
-        body: { provider: entry.provider, token: publicToken },
+        body: { provider: entry.provider, token },
         throwOnError: true,
       })
       queryClient.invalidateQueries({ queryKey: listConnectionsQueryKey() })
+      setTried([])
       onConnected(connection)
     } catch (caught) {
       // The catalog already greys unconfigured providers, so a refusal here
       // is a race — and the backend's detail names the provider (M13), so
       // no PINCH_* env prose is needed on top.
       setError(
-        caught instanceof PlaidExitError ? caught.message : errorDetail(caught),
+        caught instanceof ConnectExitError
+          ? caught.message
+          : errorDetail(caught),
       )
       onOpenChange(true)
     } finally {
@@ -109,98 +150,119 @@ export function ProviderPicker({
     }
   }
 
+  // User-driven closes (Escape, ✕, overlay) end the attempt: the tried
+  // marks and any notice reset so the next open starts clean. Programmatic
+  // closes in handleContinue call the prop directly and skip this.
+  function handleOpenChange(next: boolean) {
+    if (!next) {
+      setTried([])
+      setError(null)
+    }
+    onOpenChange(next)
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        data-testid="provider-picker"
-        onCloseAutoFocus={(event) => {
-          event.preventDefault()
-          opener.current?.focus()
-        }}
-      >
-        <div className="grid gap-1.5">
-          <DialogTitle>Connect a bank</DialogTitle>
-          <DialogDescription>
-            Choose how Pinch reaches your bank. You can try another way if yours
-            isn’t listed.
-          </DialogDescription>
-        </div>
-        {existing.length > 0 && (
-          // The pre-flight duplicate warning (7a): institution selection
-          // happens inside the provider's widget, so this row is the one
-          // chance to say "already connected" before credentials.
-          <div
-            data-testid="already-connected"
-            className="flex flex-wrap items-center gap-1.5"
-          >
-            <span className="label-caps text-muted-foreground">
-              already connected
-            </span>
-            {existing.map((connection) => (
-              <span
-                key={connection.id}
-                data-testid="connected-chip"
-                className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs"
-              >
-                {connection.institution_name ?? 'Connected bank'}
-                <span className="text-[10px] text-muted-foreground uppercase">
-                  {PROVIDER_COPY[connection.provider].label}
-                </span>
-              </span>
-            ))}
-          </div>
-        )}
-        <div className="grid gap-2.5">
-          {catalog.isPending ? (
-            <>
-              <Skeleton className="h-24 w-full rounded-lg" />
-              <Skeleton className="h-24 w-full rounded-lg" />
-            </>
-          ) : catalog.isError ? (
-            <p role="alert" className="text-destructive text-sm">
-              {errorDetail(catalog.error)}
-            </p>
-          ) : (
-            orderedCatalog(catalog.data ?? []).map((entry) => (
-              <ProviderCard
-                key={entry.provider}
-                entry={entry}
-                busy={busy}
-                onContinue={() => handleContinue(entry)}
-              />
-            ))
-          )}
-        </div>
-        {error && (
-          <p role="alert" className="text-destructive text-sm">
-            {error}
-          </p>
-        )}
-        <button
-          type="button"
-          onClick={onManual}
-          className="text-center text-muted-foreground text-xs underline underline-offset-2 hover:text-foreground"
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent
+          data-testid="provider-picker"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            opener.current?.focus()
+          }}
         >
-          Add the account manually instead
-        </button>
-      </DialogContent>
-    </Dialog>
+          <div className="grid gap-1.5">
+            <DialogTitle>Connect a bank</DialogTitle>
+            <DialogDescription>
+              {tried.length > 0
+                ? 'Nothing was connected — pick another way in.'
+                : 'Choose how Pinch reaches your bank. You can try another way if yours isn’t listed.'}
+            </DialogDescription>
+          </div>
+          {existing.length > 0 && (
+            // The pre-flight duplicate warning (7a): institution selection
+            // happens inside the provider's widget, so this row is the one
+            // chance to say "already connected" before credentials.
+            <div
+              data-testid="already-connected"
+              className="flex flex-wrap items-center gap-1.5"
+            >
+              <span className="label-caps text-muted-foreground">
+                already connected
+              </span>
+              {existing.map((connection) => (
+                <span
+                  key={connection.id}
+                  data-testid="connected-chip"
+                  className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs"
+                >
+                  {connection.institution_name ?? 'Connected bank'}
+                  <span className="text-[10px] text-muted-foreground uppercase">
+                    {PROVIDER_COPY[connection.provider].label}
+                  </span>
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="grid gap-2.5">
+            {catalog.isPending ? (
+              <>
+                <Skeleton className="h-24 w-full rounded-lg" />
+                <Skeleton className="h-24 w-full rounded-lg" />
+              </>
+            ) : catalog.isError ? (
+              <p role="alert" className="text-destructive text-sm">
+                {errorDetail(catalog.error)}
+              </p>
+            ) : (
+              orderedCatalog(catalog.data ?? []).map((entry) => (
+                <ProviderCard
+                  key={entry.provider}
+                  entry={entry}
+                  busy={busy}
+                  tried={tried.includes(entry.provider)}
+                  promoted={entry.provider === promoted}
+                  onContinue={() => handleContinue(entry)}
+                />
+              ))
+            )}
+          </div>
+          {error && (
+            <p role="alert" className="text-destructive text-sm">
+              {error}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={onManual}
+            className="text-center text-muted-foreground text-xs underline underline-offset-2 hover:text-foreground"
+          >
+            Add the account manually instead
+          </button>
+        </DialogContent>
+      </Dialog>
+      {mx.sheet}
+    </>
   )
 }
 
 function ProviderCard({
   entry,
   busy,
+  tried,
+  promoted,
   onContinue,
 }: {
   entry: ProviderCatalogEntry
   busy: boolean
+  /** Came back without connecting this attempt (7d). */
+  tried: boolean
+  /** The next way in after another method came back empty (7d). */
+  promoted: boolean
   onContinue: () => void
 }) {
   const copy = PROVIDER_COPY[entry.provider]
-  // Plaid is the only wired widget this CP; MX renders honestly from the
-  // catalog but its Continue waits for the MX Connect sheet (F8 CP1).
-  const connectable = entry.configured && entry.provider === 'plaid'
+  const connectable = entry.configured
 
   return (
     <div
@@ -209,18 +271,24 @@ function ProviderCard({
     >
       <div className="flex items-center gap-2">
         <span className="font-semibold text-sm">{copy.label}</span>
-        {entry.configured ? (
-          copy.recommended && <Badge variant="secondary">recommended</Badge>
-        ) : (
+        {!entry.configured ? (
           <Badge variant="outline">unavailable</Badge>
+        ) : tried ? (
+          <Badge variant="outline">tried</Badge>
+        ) : (
+          copy.recommended && <Badge variant="secondary">recommended</Badge>
         )}
       </div>
       <p className="mt-1 text-muted-foreground text-xs">
-        {entry.configured
-          ? copy.blurb
-          : 'Not configured on this Pinch instance.'}
+        {!entry.configured
+          ? 'Not configured on this Pinch instance.'
+          : tried
+            ? // The honest version (7d): cancel and can't-find-my-bank are
+              // the same event to us, so the copy claims nothing more.
+              `Came back without connecting. ${copy.label} doesn’t tell us why.`
+            : copy.blurb}
       </p>
-      {entry.configured && (
+      {entry.configured && !tried && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {capabilityChips(entry.capabilities).map((chip) => (
             <span
@@ -239,12 +307,21 @@ function ProviderCard({
       )}
       <Button
         size="sm"
+        variant={tried ? 'outline' : 'default'}
         className="mt-3 w-full"
         disabled={busy || !connectable}
-        aria-label={`Continue with ${copy.label}`}
+        // The promoted label ("Try MX") is its own accessible name — an
+        // aria-label overriding it would break label-in-name.
+        aria-label={
+          tried
+            ? `Try ${copy.label} again`
+            : promoted
+              ? undefined
+              : `Continue with ${copy.label}`
+        }
         onClick={onContinue}
       >
-        Continue
+        {tried ? 'Try again' : promoted ? `Try ${copy.label}` : 'Continue'}
       </Button>
     </div>
   )
