@@ -33,7 +33,9 @@ import { Route as AuthedCategoriesRulesRouteImport } from './routes/_authed/cate
 import { Route as AuthedCategoriesTagsRouteImport } from './routes/_authed/categories.tags'
 import { Route as AuthedPennyConversationIdRouteImport } from './routes/_authed/penny_.$conversationId'
 import { Route as AuthedSettingsIndexRouteImport } from './routes/_authed/settings.index'
+import { Route as AuthedSettingsDeveloperRouteImport } from './routes/_authed/settings.developer'
 import { Route as AuthedSettingsPreferencesRouteImport } from './routes/_authed/settings.preferences'
+import { Route as AuthedSettingsSecurityRouteImport } from './routes/_authed/settings.security'
 import { Route as AuthedAccountsDebtAddRouteImport } from './routes/_authed/accounts_.debt.add'
 import { Route as AuthedAccountsDebtAccountIdRouteImport } from './routes/_authed/accounts_.debt_.$accountId'
 import { Route as AuthedAccountsInvestmentsAccountIdRouteImport } from './routes/_authed/accounts_.investments_.$accountId'
@@ -163,12 +165,22 @@ const AuthedSettingsIndexRoute = AuthedSettingsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthedSettingsRoute,
 } as any)
+const AuthedSettingsDeveloperRoute = AuthedSettingsDeveloperRouteImport.update({
+  id: '/developer',
+  path: '/developer',
+  getParentRoute: () => AuthedSettingsRoute,
+} as any)
 const AuthedSettingsPreferencesRoute =
   AuthedSettingsPreferencesRouteImport.update({
     id: '/preferences',
     path: '/preferences',
     getParentRoute: () => AuthedSettingsRoute,
   } as any)
+const AuthedSettingsSecurityRoute = AuthedSettingsSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => AuthedSettingsRoute,
+} as any)
 const AuthedAccountsDebtAddRoute = AuthedAccountsDebtAddRouteImport.update({
   id: '/add',
   path: '/add',
@@ -233,7 +245,9 @@ export interface FileRoutesByFullPath {
   '/categories/rules': typeof AuthedCategoriesRulesRouteWithChildren
   '/categories/tags': typeof AuthedCategoriesTagsRoute
   '/penny/$conversationId': typeof AuthedPennyConversationIdRoute
+  '/settings/developer': typeof AuthedSettingsDeveloperRoute
   '/settings/preferences': typeof AuthedSettingsPreferencesRoute
+  '/settings/security': typeof AuthedSettingsSecurityRoute
   '/categories/': typeof AuthedCategoriesIndexRoute
   '/settings/': typeof AuthedSettingsIndexRoute
   '/accounts/debt/add': typeof AuthedAccountsDebtAddRoute
@@ -263,7 +277,9 @@ export interface FileRoutesByTo {
   '/categories/learning': typeof AuthedCategoriesLearningRoute
   '/categories/tags': typeof AuthedCategoriesTagsRoute
   '/penny/$conversationId': typeof AuthedPennyConversationIdRoute
+  '/settings/developer': typeof AuthedSettingsDeveloperRoute
   '/settings/preferences': typeof AuthedSettingsPreferencesRoute
+  '/settings/security': typeof AuthedSettingsSecurityRoute
   '/categories': typeof AuthedCategoriesIndexRoute
   '/settings': typeof AuthedSettingsIndexRoute
   '/accounts/debt/add': typeof AuthedAccountsDebtAddRoute
@@ -298,7 +314,9 @@ export interface FileRoutesById {
   '/_authed/categories/rules': typeof AuthedCategoriesRulesRouteWithChildren
   '/_authed/categories/tags': typeof AuthedCategoriesTagsRoute
   '/_authed/penny_/$conversationId': typeof AuthedPennyConversationIdRoute
+  '/_authed/settings/developer': typeof AuthedSettingsDeveloperRoute
   '/_authed/settings/preferences': typeof AuthedSettingsPreferencesRoute
+  '/_authed/settings/security': typeof AuthedSettingsSecurityRoute
   '/_authed/categories/': typeof AuthedCategoriesIndexRoute
   '/_authed/settings/': typeof AuthedSettingsIndexRoute
   '/_authed/accounts_/debt/add': typeof AuthedAccountsDebtAddRoute
@@ -333,7 +351,9 @@ export interface FileRouteTypes {
     | '/categories/rules'
     | '/categories/tags'
     | '/penny/$conversationId'
+    | '/settings/developer'
     | '/settings/preferences'
+    | '/settings/security'
     | '/categories/'
     | '/settings/'
     | '/accounts/debt/add'
@@ -363,7 +383,9 @@ export interface FileRouteTypes {
     | '/categories/learning'
     | '/categories/tags'
     | '/penny/$conversationId'
+    | '/settings/developer'
     | '/settings/preferences'
+    | '/settings/security'
     | '/categories'
     | '/settings'
     | '/accounts/debt/add'
@@ -397,7 +419,9 @@ export interface FileRouteTypes {
     | '/_authed/categories/rules'
     | '/_authed/categories/tags'
     | '/_authed/penny_/$conversationId'
+    | '/_authed/settings/developer'
     | '/_authed/settings/preferences'
+    | '/_authed/settings/security'
     | '/_authed/categories/'
     | '/_authed/settings/'
     | '/_authed/accounts_/debt/add'
@@ -589,11 +613,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSettingsIndexRouteImport
       parentRoute: typeof AuthedSettingsRoute
     }
+    '/_authed/settings/developer': {
+      id: '/_authed/settings/developer'
+      path: '/developer'
+      fullPath: '/settings/developer'
+      preLoaderRoute: typeof AuthedSettingsDeveloperRouteImport
+      parentRoute: typeof AuthedSettingsRoute
+    }
     '/_authed/settings/preferences': {
       id: '/_authed/settings/preferences'
       path: '/preferences'
       fullPath: '/settings/preferences'
       preLoaderRoute: typeof AuthedSettingsPreferencesRouteImport
+      parentRoute: typeof AuthedSettingsRoute
+    }
+    '/_authed/settings/security': {
+      id: '/_authed/settings/security'
+      path: '/security'
+      fullPath: '/settings/security'
+      preLoaderRoute: typeof AuthedSettingsSecurityRouteImport
       parentRoute: typeof AuthedSettingsRoute
     }
     '/_authed/accounts_/debt/add': {
@@ -683,12 +721,16 @@ const AuthedCategoriesRouteWithChildren =
   AuthedCategoriesRoute._addFileChildren(AuthedCategoriesRouteChildren)
 
 interface AuthedSettingsRouteChildren {
+  AuthedSettingsDeveloperRoute: typeof AuthedSettingsDeveloperRoute
   AuthedSettingsPreferencesRoute: typeof AuthedSettingsPreferencesRoute
+  AuthedSettingsSecurityRoute: typeof AuthedSettingsSecurityRoute
   AuthedSettingsIndexRoute: typeof AuthedSettingsIndexRoute
 }
 
 const AuthedSettingsRouteChildren: AuthedSettingsRouteChildren = {
+  AuthedSettingsDeveloperRoute: AuthedSettingsDeveloperRoute,
   AuthedSettingsPreferencesRoute: AuthedSettingsPreferencesRoute,
+  AuthedSettingsSecurityRoute: AuthedSettingsSecurityRoute,
   AuthedSettingsIndexRoute: AuthedSettingsIndexRoute,
 }
 

@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { type FormEvent, useId, useState } from 'react'
-import { errorDetail } from '@/api/client'
 import {
   meOptions,
   meQueryKey,
   updateMeMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
+import { MutationError } from '@/components/auth-form'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -78,11 +78,7 @@ function ProfilePane() {
             Save
           </Button>
         </div>
-        {save.isError && (
-          <p role="alert" className="mt-2 text-destructive text-sm">
-            {errorDetail(save.error)}
-          </p>
-        )}
+        <MutationError mutation={save} />
       </form>
     </Card>
   )

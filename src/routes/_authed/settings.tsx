@@ -1,11 +1,11 @@
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 
-// F7 CP1 (#70, wireframe s23): the Settings surface — account configuration
-// you visit twice a year, opened from the Profile menu, never from the Setup
-// nav (CONTEXT.md: Settings vs Setup). Tabs are links (the Categories & Rules
-// pattern), so every pane is deep-linkable. Security and Developer API join
-// in CP2; the wireframe's Ledger pane is cut (no backend exists).
+// F7 CP1+CP2 (#70/#71, wireframe s23): the Settings surface — account
+// configuration you visit twice a year, opened from the Profile menu, never
+// from the Setup nav (CONTEXT.md: Settings). Tabs are links (the Categories
+// & Rules pattern), so every pane is deep-linkable. The wireframe's Ledger
+// pane is cut (no backend exists).
 export const Route = createFileRoute('/_authed/settings')({
   staticData: { title: 'Settings' },
   component: SettingsShell,
@@ -14,6 +14,8 @@ export const Route = createFileRoute('/_authed/settings')({
 const TABS = [
   { to: '/settings', label: 'Profile', exact: true },
   { to: '/settings/preferences', label: 'Preferences' },
+  { to: '/settings/security', label: 'Security' },
+  { to: '/settings/developer', label: 'Developer API' },
 ] as const
 
 function SettingsShell() {

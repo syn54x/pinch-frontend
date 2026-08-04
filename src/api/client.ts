@@ -83,9 +83,14 @@ export function errorDetail(error: unknown): string {
 }
 
 // Auth endpoints whose 401s mean something other than "the session died":
-// login's is "wrong credentials" (rendered inline by the form) and me's is
-// the route guard's probe (redirected via the router, no full page load).
-const SELF_HANDLED_401S = ['/api/v1/auth/login', '/api/v1/auth/me']
+// login's is "wrong credentials" (rendered inline by the form), me's is
+// the route guard's probe (redirected via the router, no full page load),
+// and password-change's is "wrong current password" (inline, F7 CP2).
+const SELF_HANDLED_401S = [
+  '/api/v1/auth/login',
+  '/api/v1/auth/me',
+  '/api/v1/auth/password/change',
+]
 
 // Session expiry, handled once: any other 401 means the cookie went stale
 // out from under the app — send the user to login, keeping their place.

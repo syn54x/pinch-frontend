@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useId } from 'react'
-import { errorDetail } from '@/api/client'
 import {
   meOptions,
   meQueryKey,
   updateMeMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
+import { MutationError } from '@/components/auth-form'
 import { Card } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { SegmentedControl } from '@/components/ui/segmented-control'
@@ -63,11 +63,7 @@ function PreferencesPane() {
         <p className="mt-1.5 text-muted-foreground text-xs">
           Reports and totals speak this currency.
         </p>
-        {save.isError && (
-          <p role="alert" className="mt-2 text-destructive text-sm">
-            {errorDetail(save.error)}
-          </p>
-        )}
+        <MutationError mutation={save} />
       </div>
       <div className="mt-5">
         <span className="label-caps">Theme</span>
