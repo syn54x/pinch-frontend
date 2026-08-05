@@ -13,6 +13,7 @@ import {
   refreshConnectionMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
 import type { ConnectionOut } from '@/api/generated/types.gen'
+import { useMxConnect } from '@/components/connect/mx-connect-sheet'
 import { ProviderPicker } from '@/components/connect/provider-picker'
 import {
   AlertDialog,
@@ -32,6 +33,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { WarnChip } from '@/components/ui/warn-chip'
 import { ConnectExitError } from '@/lib/connect-errors'
 import { usePlaidConnect } from '@/lib/plaid'
+import { PROVIDER_COPY } from '@/lib/providers'
 import { relativeTime } from '@/lib/time'
 
 type ConnectionsSearch = {
@@ -247,7 +249,16 @@ function ConnectionCard({
         <div className="grid gap-1">
           <div className="flex items-center gap-3">
             <span className="font-medium">
-              {connection.institution_name ?? 'Plaid connection'}
+              {connection.institution_name ?? 'Connected bank'}
+            </span>
+            {/* Provider as quiet metadata (wireframe 1m): the list groups
+                by institution, never by provider — the badge just states
+                how Pinch reaches this bank. */}
+            <span
+              data-testid="provider-badge"
+              className="text-[10px] text-muted-foreground uppercase tracking-wide"
+            >
+              {PROVIDER_COPY[connection.provider].label}
             </span>
             <Badge variant={STATUS_VARIANT[connection.status]}>
               {connection.status}
@@ -350,30 +361,38 @@ function UpdateModeLinkButton({
   onTriggered: (connection: ConnectionOut) => void
 }) {
   const queryClient = useQueryClient()
-  const connect = usePlaidConnect()
+  const plaid = usePlaidConnect()
+  const mx = useMxConnect()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // One flow, two doors (M7 repair, M10 enable-investments): update-mode
-  // Link on the same Item — never re-create (a fresh connect on top of an
-  // existing connection duplicates accounts). Every update-mode token also
-  // carries the investments consent, so repairing a login and enabling
-  // investments are the same walk with different labels.
+  // on the same provider-side login — never re-create (a fresh connect on
+  // top of an existing connection duplicates accounts). The button routes
+  // by the connection's provider (wireframe 1m: same button, per-provider
+  // widget behind it): Plaid opens update-mode Link, MX opens its
+  // reconnect-mode widget in the same Pinch-owned sheet the connect flow
+  // uses. Neither repair calls completion — the follow-up sync proves the
+  // fix. Every update-mode Plaid token also carries the investments
+  // consent, so repairing a login and enabling investments are the same
+  // walk with different labels.
   async function handleLaunch() {
     setError(null)
     setBusy(true)
     try {
       const { data: session } = await createConnectSession({
         // The connection's own provider mints the repair session (M13) —
-        // same endpoint as creation, connection_id makes it update-mode.
+        // same endpoint as creation, connection_id makes it update-mode
+        // (Plaid) / reconnect-mode (MX).
         body: { provider: connection.provider, connection_id: connection.id },
         throwOnError: true,
       })
-      const result = await connect(session.token, {
-        connectionId: connection.id,
-      })
+      const result =
+        connection.provider === 'mx'
+          ? await mx.connect(session.token)
+          : await plaid(session.token, { connectionId: connection.id })
       if (result === null) return // dismissed — not an error
-      // Update mode needs no exchange; the follow-up sync proves the fix.
+      // Repair needs no completion call; the follow-up sync proves the fix.
       await refreshConnection({
         path: { connection_id: connection.id },
         throwOnError: true,
@@ -407,6 +426,7 @@ function UpdateModeLinkButton({
       >
         {label}
       </Button>
+      {mx.sheet}
     </span>
   )
 }

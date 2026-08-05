@@ -6,6 +6,8 @@
 // Knobs (set via addInitScript before page load):
 //   window.__E2E_PLAID_MODE — 'success' (default) | 'cancel' | 'error'
 //   window.__E2E_PLAID_PUBLIC_TOKEN — the sandbox token to succeed with
+//   window.__E2E_PLAID_INSTITUTION — onSuccess metadata.institution
+//     ({ institution_id, name }) — the dupe guard's pre-exchange basis
 window.Plaid = {
   create({ onSuccess, onExit }) {
     return {
@@ -15,7 +17,10 @@ window.Plaid = {
           if (mode === 'success') {
             onSuccess(
               window.__E2E_PLAID_PUBLIC_TOKEN ?? 'e2e-fake-public-token',
-              { accounts: [] },
+              {
+                accounts: [],
+                institution: window.__E2E_PLAID_INSTITUTION ?? null,
+              },
             )
           } else if (mode === 'cancel') {
             onExit(null, {})

@@ -54,6 +54,18 @@ export function promotedProvider(
   return next?.provider ?? null
 }
 
+/** The capability gap's driver (wireframe 7f, F8 CP2): true when the
+ * catalog's entry for this provider exists and lacks the holdings atom —
+ * a stated provider limit, never inferred. An absent entry proves
+ * nothing, so it claims nothing. */
+export function providerLacksHoldings(
+  entries: ProviderCatalogEntry[],
+  provider: ConnectionProvider,
+): boolean {
+  const entry = entries.find((candidate) => candidate.provider === provider)
+  return entry !== undefined && !entry.capabilities.includes('holdings')
+}
+
 export type CapabilityChip = {
   label: string
   /** A stated provider limit ("no holdings yet") — rendered quiet, never

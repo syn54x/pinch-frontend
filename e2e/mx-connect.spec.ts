@@ -61,15 +61,26 @@ test('connect MX Bank: sheet → working wait → real member → accounts with 
   await expect(row).toHaveCount(1, { timeout: 30_000 })
   await expect(sheet).toHaveCount(0)
   await expect(row).toContainText('MX Bank')
+  // Provider as quiet metadata on the row (1m, F8 CP2).
+  await expect(row.getByTestId('provider-badge')).toHaveText('MX')
   // MX Bank's scripted member carries 6 accounts (CP0 spike).
   await expect(row).toContainText('6 accounts')
 
+  // The first sync completes for real (M13 CP3 in the pin): the sync
+  // window the page opened on completion resolves into "Synced".
+  await expect(row.getByText(/Synced /)).toBeVisible({ timeout: 90_000 })
+
   // Balances arrived in the same breath (M13 CP2's connect-time balance
-  // entries) — no sync wait: MX transaction sync is CP3, not this pin.
+  // entries).
   await page.getByRole('link', { name: 'Accounts' }).click()
   await expect(
     page.getByTestId('account-card').getByText(/\$\d/).first(),
   ).toBeVisible()
+
+  // And the sync moved transactions (CP3): MX Bank's scripted history
+  // shows up in the register like any other provider's.
+  await page.getByRole('link', { name: 'Register' }).click()
+  await expect(page.getByTestId('txn-row').first()).toBeVisible()
 })
 
 test('cancelling the MX sheet returns to the picker: tried mark + promoted next', async ({

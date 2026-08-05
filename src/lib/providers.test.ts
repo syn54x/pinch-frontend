@@ -5,6 +5,7 @@ import {
   orderedCatalog,
   PROVIDER_COPY,
   promotedProvider,
+  providerLacksHoldings,
 } from './providers'
 
 describe('capabilityChips', () => {
@@ -79,5 +80,32 @@ describe('promotedProvider', () => {
       { provider: 'mx', configured: false, capabilities: [] },
     ]
     expect(promotedProvider(oneConfigured, ['plaid'])).toBeNull()
+  })
+})
+
+describe('providerLacksHoldings', () => {
+  const catalog: ProviderCatalogEntry[] = [
+    {
+      provider: 'plaid',
+      configured: true,
+      capabilities: ['transactions', 'balances', 'holdings', 'activity'],
+    },
+    {
+      provider: 'mx',
+      configured: true,
+      capabilities: ['transactions', 'balances'],
+    },
+  ]
+
+  it('is true for a provider whose catalog entry has no holdings atom', () => {
+    expect(providerLacksHoldings(catalog, 'mx')).toBe(true)
+  })
+
+  it('is false for a provider that delivers holdings', () => {
+    expect(providerLacksHoldings(catalog, 'plaid')).toBe(false)
+  })
+
+  it('claims no gap it cannot prove — provider missing from the catalog', () => {
+    expect(providerLacksHoldings([], 'mx')).toBe(false)
   })
 })

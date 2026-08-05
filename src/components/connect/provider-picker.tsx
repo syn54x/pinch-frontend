@@ -1,8 +1,14 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
 import { errorDetail } from '@/api/client'
-import { createConnection, createConnectSession } from '@/api/generated'
 import {
+  createConnection,
+  createConnectSession,
+  deleteAccount,
+  deleteConnection,
+} from '@/api/generated'
+import {
+  listAccountsQueryKey,
   listConnectionsOptions,
   listConnectionsQueryKey,
   listProvidersOptions,
@@ -12,6 +18,7 @@ import type {
   ConnectionProvider,
   ProviderCatalogEntry,
 } from '@/api/generated/types.gen'
+import { DuplicateGuardDialog } from '@/components/connect/duplicate-guard'
 import { useMxConnect } from '@/components/connect/mx-connect-sheet'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -23,6 +30,7 @@ import {
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ConnectExitError } from '@/lib/connect-errors'
+import { type DuplicateMatch, findDuplicateConnection } from '@/lib/connections'
 import { usePlaidConnect } from '@/lib/plaid'
 import {
   capabilityChips,
@@ -97,14 +105,49 @@ export function ProviderPicker({
 
   const promoted = promotedProvider(catalog.data ?? [], tried)
 
-  /** The provider's own widget, behind the shared three-outcome contract. */
-  function launchWidget(
+  // The duplicate guard's confirmation (7e): a promise the modal settles.
+  const [guard, setGuard] = useState<{
+    match: DuplicateMatch
+    provider: ConnectionProvider
+    resolve: (choice: 'keep' | 'add') => void
+  } | null>(null)
+
+  function confirmDuplicate(
+    match: DuplicateMatch,
+    provider: ConnectionProvider,
+  ): Promise<'keep' | 'add'> {
+    return new Promise((resolve) => {
+      setGuard({
+        match,
+        provider,
+        resolve: (choice) => {
+          setGuard(null)
+          resolve(choice)
+        },
+      })
+    })
+  }
+
+  /** The provider's own widget, behind the shared three-outcome contract.
+   * Institution metadata rides only where the provider states it before
+   * completion (Plaid's Link onSuccess); MX learns it at completion. */
+  async function launchWidget(
     entry: ProviderCatalogEntry,
     sessionToken: string,
-  ): Promise<string | null> {
-    return entry.provider === 'mx'
-      ? mx.connect(sessionToken)
-      : plaid(sessionToken)
+  ): Promise<{
+    token: string
+    institution: { id: string; name: string } | null
+  } | null> {
+    if (entry.provider === 'mx') {
+      const memberGuid = await mx.connect(sessionToken)
+      return memberGuid === null
+        ? null
+        : { token: memberGuid, institution: null }
+    }
+    const success = await plaid(sessionToken)
+    return success === null
+      ? null
+      : { token: success.publicToken, institution: success.institution }
   }
 
   async function handleContinue(entry: ProviderCatalogEntry) {
@@ -118,8 +161,8 @@ export function ProviderPicker({
         body: { provider: entry.provider },
         throwOnError: true,
       })
-      const token = await launchWidget(entry, session.token)
-      if (token === null) {
+      const outcome = await launchWidget(entry, session.token)
+      if (outcome === null) {
         // Came back without connecting (7d): a fork, not a failure — mark
         // the method tried and return to the picker to promote the next.
         setTried((prior) =>
@@ -128,10 +171,71 @@ export function ProviderPicker({
         onOpenChange(true)
         return
       }
+
+      // The duplicate guard (7e), per-provider timing: institution
+      // identity is only knowable post-widget, and each provider states
+      // it at a different moment.
+      if (entry.provider !== 'mx' && outcome.institution !== null) {
+        // Plaid: Link's onSuccess metadata names the institution BEFORE
+        // the exchange — guard here, and "keep" simply never completes
+        // (the unexchanged public token expires harmlessly). Metadata
+        // omitted means the guard can miss — soft by design.
+        const match = findDuplicateConnection(existing, {
+          provider: entry.provider,
+          providerInstitutionId: outcome.institution.id,
+          institutionName: outcome.institution.name,
+        })
+        if (match !== null) {
+          const choice = await confirmDuplicate(match, entry.provider)
+          if (choice === 'keep') return
+        }
+      }
+
       const { data: connection } = await createConnection({
-        body: { provider: entry.provider, token },
+        body: { provider: entry.provider, token: outcome.token },
         throwOnError: true,
       })
+
+      if (entry.provider === 'mx') {
+        // MX: memberConnected carries only guids, so the institution is
+        // only known once completion created the connection — complete
+        // first, then guard. "Keep the existing connection" undoes the
+        // walk: disconnect deletes the MX member (the 7e annotation's
+        // cleanup) and leaves the accounts disconnected, then the
+        // hard-delete clears that debris — zero new artifacts.
+        const match = findDuplicateConnection(
+          existing,
+          {
+            provider: entry.provider,
+            providerInstitutionId: connection.provider_institution_id,
+            institutionName: connection.institution_name,
+          },
+          { excludeId: connection.id },
+        )
+        if (match !== null) {
+          const choice = await confirmDuplicate(match, entry.provider)
+          if (choice === 'keep') {
+            await deleteConnection({
+              path: { connection_id: connection.id },
+              throwOnError: true,
+            })
+            await Promise.all(
+              connection.accounts.map((account) =>
+                deleteAccount({
+                  path: { account_id: account.id },
+                  throwOnError: true,
+                }),
+              ),
+            )
+            queryClient.invalidateQueries({
+              queryKey: listConnectionsQueryKey(),
+            })
+            queryClient.invalidateQueries({ queryKey: listAccountsQueryKey() })
+            return
+          }
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: listConnectionsQueryKey() })
       setTried([])
       onConnected(connection)
@@ -242,6 +346,14 @@ export function ProviderPicker({
         </DialogContent>
       </Dialog>
       {mx.sheet}
+      {guard && (
+        <DuplicateGuardDialog
+          match={guard.match}
+          attemptProvider={guard.provider}
+          onKeep={() => guard.resolve('keep')}
+          onAdd={() => guard.resolve('add')}
+        />
+      )}
     </>
   )
 }

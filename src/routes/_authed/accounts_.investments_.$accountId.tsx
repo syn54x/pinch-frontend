@@ -6,6 +6,7 @@ import {
   listConnectionsOptions,
   listHoldingsOptions,
   listInvestmentActivitiesInfiniteOptions,
+  listProvidersOptions,
 } from '@/api/generated/@tanstack/react-query.gen'
 import type {
   HoldingOut,
@@ -16,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatMonthDay } from '@/lib/dates'
 import { formatMinorUnits } from '@/lib/money'
+import { PROVIDER_COPY, providerLacksHoldings } from '@/lib/providers'
 
 export const Route = createFileRoute(
   '/_authed/accounts_/investments_/$accountId',
@@ -58,17 +60,20 @@ function InvestmentsDetailPage() {
   })
   // Connections back the empty state's honesty: an empty holdings list
   // reads differently when the account's connection is still waiting on
-  // investments consent.
+  // investments consent — or belongs to a provider that doesn't send
+  // holdings at all (wireframe 7f). The catalog names that limit.
   const connectionsQuery = useQuery(listConnectionsOptions())
+  const providersQuery = useQuery(listProvidersOptions())
 
   const account = accountQuery.data
   const holdings = holdingsQuery.data
-  // The consent-waiting empty needs the connections answer before an empty
-  // holdings list can render — otherwise the genuine-empty flashes first.
+  // The consent-waiting and capability-gap empties need the connections
+  // and catalog answers before an empty holdings list can render —
+  // otherwise the genuine-empty flashes first.
   const emptyNeedsConnections =
     holdings !== undefined &&
     holdings.items.length === 0 &&
-    connectionsQuery.isPending
+    (connectionsQuery.isPending || providersQuery.isPending)
   if (
     account === undefined ||
     holdings === undefined ||
@@ -80,6 +85,15 @@ function InvestmentsDetailPage() {
   const connection = (connectionsQuery.data?.items ?? []).find((candidate) =>
     candidate.accounts.some((a) => a.id === accountId),
   )
+  // The capability gap (7f): the account's connection belongs to a
+  // provider whose catalog entry lacks the holdings atom — a stated
+  // limit, driven by the catalog + the connection's provider, never
+  // hardcoded per provider.
+  const gapProviderLabel =
+    connection !== undefined &&
+    providerLacksHoldings(providersQuery.data ?? [], connection.provider)
+      ? PROVIDER_COPY[connection.provider].label
+      : null
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
@@ -91,14 +105,36 @@ function InvestmentsDetailPage() {
         </Button>
       </div>
 
-      <h1 className="font-heading font-semibold text-xl">
-        {account.label}
-        {account.mask && (
-          <span className="ml-2 font-normal text-muted-foreground text-sm">
-            ···{account.mask}
-          </span>
+      <div>
+        <h1 className="font-heading font-semibold text-xl">
+          {account.label}
+          {account.mask && (
+            <span className="ml-2 font-normal text-muted-foreground text-sm">
+              ···{account.mask}
+            </span>
+          )}
+        </h1>
+        {account.balance !== null && (
+          <div className="mt-1">
+            <p className="amount font-semibold text-lg">
+              {formatMinorUnits(
+                account.balance.amount_minor,
+                account.balance.currency,
+              )}
+            </p>
+            {connection !== undefined && (
+              // Balance provenance (7f): who reported the number — quiet
+              // metadata, present for every provider-backed account.
+              <p
+                data-testid="balance-provenance"
+                className="text-muted-foreground text-xs"
+              >
+                balance reported by {PROVIDER_COPY[connection.provider].label}
+              </p>
+            )}
+          </div>
         )}
-      </h1>
+      </div>
 
       <section data-testid="holdings-section">
         <h2 className="label-caps">Positions</h2>
@@ -109,6 +145,7 @@ function InvestmentsDetailPage() {
               consentRequired={
                 connection?.investments_consent_required === true
               }
+              gapProviderLabel={gapProviderLabel}
             />
           ) : (
             <>
@@ -173,10 +210,35 @@ function HoldingRow({ holding }: { holding: HoldingOut }) {
 function HoldingsEmpty({
   manual,
   consentRequired,
+  gapProviderLabel,
 }: {
   manual: boolean
   consentRequired: boolean
+  /** Set when the account's provider doesn't deliver holdings (7f) —
+   * the label names the provider in the stated-limit copy. */
+  gapProviderLabel: string | null
 }) {
+  if (gapProviderLabel !== null) {
+    // The capability gap (7f): explanation only — no phantom actions.
+    // Relink and manual holdings are future features (backend PRD cuts),
+    // so the empty state stays honest instead of offering buttons that
+    // would split the ledger.
+    return (
+      <div
+        data-testid="capability-gap-empty"
+        className="px-4 py-8 text-center text-sm"
+      >
+        <p className="font-medium">
+          {gapProviderLabel} doesn’t provide holdings for this connection
+        </p>
+        <p className="mt-1 text-muted-foreground">
+          Balances and transactions keep syncing, and the balance counts in Net
+          Worth. Nothing here is missing from your account — the provider just
+          doesn’t send it.
+        </p>
+      </div>
+    )
+  }
   if (consentRequired) {
     // Consent granted nothing yet — the pull can't run until the
     // connection's Enable-investments walk happens. Honest, with the path.

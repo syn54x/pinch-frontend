@@ -112,25 +112,45 @@ export async function resumeOAuthLink(
   })
 }
 
+/** What a successful Link walk hands back: the public token, plus the
+ * institution Link named in its onSuccess metadata — the one moment
+ * Plaid states institution identity BEFORE the exchange, which is
+ * exactly where the duplicate guard (7e) must fire: an unexchanged
+ * public token expires harmlessly, an exchanged one already created the
+ * connection. Null institution when Link omitted it (some flows do). */
+export type PlaidConnectSuccess = {
+  publicToken: string
+  institution: { id: string; name: string } | null
+}
+
 /** One imperative connect() over react-plaid-link's config-at-render hook:
- * resolves with the public token on success, null when the user dismisses
- * the widget, rejects with PlaidExitError when Link reports an error.
- * Exists purely as code organization — the UI (and nothing else) speaks
- * Plaid's shapes through this boundary. */
+ * resolves with the public token + institution metadata on success, null
+ * when the user dismisses the widget, rejects with PlaidExitError when
+ * Link reports an error. Exists purely as code organization — the UI
+ * (and nothing else) speaks Plaid's shapes through this boundary. */
 export function usePlaidConnect(): (
   linkToken: string,
   options?: { connectionId?: string },
-) => Promise<string | null> {
+) => Promise<PlaidConnectSuccess | null> {
   const [token, setToken] = useState<string | null>(null)
   const pending = useRef<{
-    resolve: (value: string | null) => void
+    resolve: (value: PlaidConnectSuccess | null) => void
     reject: (error: Error) => void
   } | null>(null)
 
   const { open, ready } = usePlaidLink({
     token,
-    onSuccess: (publicToken) => {
-      pending.current?.resolve(publicToken)
+    onSuccess: (publicToken, metadata) => {
+      pending.current?.resolve({
+        publicToken,
+        institution:
+          metadata.institution === null || metadata.institution === undefined
+            ? null
+            : {
+                id: metadata.institution.institution_id,
+                name: metadata.institution.name,
+              },
+      })
       pending.current = null
       setToken(null)
     },
@@ -166,7 +186,7 @@ export function usePlaidConnect(): (
 
   return useCallback(
     (linkToken: string, options?: { connectionId?: string }) =>
-      new Promise<string | null>((resolve, reject) => {
+      new Promise<PlaidConnectSuccess | null>((resolve, reject) => {
         if (pending.current) {
           // Never clobber an in-flight attempt — its promise would hang.
           reject(new PlaidExitError('A connect attempt is already in progress'))

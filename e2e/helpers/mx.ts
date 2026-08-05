@@ -39,7 +39,7 @@ async function mxCreds(): Promise<{ clientId: string; apiKey: string }> {
 }
 
 async function mxRequest(
-  method: 'get' | 'post' | 'delete',
+  method: 'get' | 'post' | 'put' | 'delete',
   path: string,
   data?: unknown,
 ): Promise<Record<string, unknown>> {
@@ -72,6 +72,18 @@ export async function listMxUserGuids(): Promise<string[]> {
   const data = await mxRequest('get', '/users?records_per_page=1000')
   const users = (data.users ?? []) as Array<{ guid: string }>
   return users.map((user) => user.guid)
+}
+
+/** The member guids under one enrollment user — how the dupe-guard spec
+ * proves "keep the existing" really deleted the MX-side member (the
+ * backend's disconnect cleanup), not just the Pinch row. */
+export async function listMxMemberGuids(userGuid: string): Promise<string[]> {
+  const data = await mxRequest(
+    'get',
+    `/users/${userGuid}/members?records_per_page=100`,
+  )
+  const members = (data.members ?? []) as Array<{ guid: string }>
+  return members.map((member) => member.guid)
 }
 
 /** Teardown sweep: delete every user the run created (enrollment users
@@ -139,6 +151,29 @@ export async function seedMxMember(
   }
   const userGuid = created[0]
 
+  const memberData = await mxRequest('post', `/users/${userGuid}/members`, {
+    member: {
+      institution_code: 'mxbank',
+      credentials: await mxBankCredentialValues(
+        options.bankPassword ?? 'e2e-any-password',
+      ),
+    },
+  })
+  const memberGuid = (memberData.member as { guid: string }).guid
+
+  await waitForMxMemberStatus(
+    userGuid,
+    memberGuid,
+    options.untilStatus ?? 'CONNECTED',
+  )
+  return { userGuid, memberGuid }
+}
+
+/** MX Bank's credential fields, filled: any non-password field takes the
+ * scripted username, the password field takes the scripted knob. */
+async function mxBankCredentialValues(
+  bankPassword: string,
+): Promise<Array<{ guid: string; value: string }>> {
   const credentialData = await mxRequest(
     'get',
     '/institutions/mxbank/credentials',
@@ -150,24 +185,24 @@ export async function seedMxMember(
   }>
   if (credentials.length === 0)
     throw new Error('mxbank exposed no credential fields')
-  const memberData = await mxRequest('post', `/users/${userGuid}/members`, {
-    member: {
-      institution_code: 'mxbank',
-      credentials: credentials.map((credential) => ({
-        guid: credential.guid,
-        value: /password/i.test(credential.field_name ?? credential.label ?? '')
-          ? (options.bankPassword ?? 'e2e-any-password')
-          : 'mxuser',
-      })),
-    },
-  })
-  const memberGuid = (memberData.member as { guid: string }).guid
+  return credentials.map((credential) => ({
+    guid: credential.guid,
+    value: /password/i.test(credential.field_name ?? credential.label ?? '')
+      ? bankPassword
+      : 'mxuser',
+  }))
+}
 
-  // memberConnected semantics: a CONNECTED member is only usable once
-  // aggregation finishes — poll the lean status probe the way the widget
-  // would. Scripted repair states settle on their status alone.
-  const target = options.untilStatus ?? 'CONNECTED'
-  const deadline = Date.now() + 90_000
+/** Poll the lean status probe the way the widget would. A CONNECTED
+ * member is only usable once aggregation finishes; scripted repair
+ * states (CHALLENGED/DENIED) settle on their status alone. */
+export async function waitForMxMemberStatus(
+  userGuid: string,
+  memberGuid: string,
+  target: 'CONNECTED' | 'CHALLENGED' | 'DENIED',
+  timeoutMs = 90_000,
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
     const statusData = await mxRequest(
       'get',
@@ -181,9 +216,34 @@ export async function seedMxMember(
       member.connection_status === target &&
       (target !== 'CONNECTED' || member.has_processed_accounts)
     ) {
-      return { userGuid, memberGuid }
+      return
     }
     await new Promise((resolve) => setTimeout(resolve, 2_000))
   }
   throw new Error(`MX sandbox member did not reach ${target} in time`)
+}
+
+/** Rewrite the member's scripted password — the repair spec's two knobs:
+ * a bad password breaks the login for real (DENIED after the next
+ * aggregation), a good one stands in for the user fixing it inside the
+ * reconnect widget (the e2e fake can't type into MX Bank). Updating
+ * credentials queues an MX-side aggregation; the explicit nudge covers
+ * sandbox lag and tolerates an already-running one. */
+export async function setMxMemberPassword(
+  userGuid: string,
+  memberGuid: string,
+  bankPassword: string,
+): Promise<void> {
+  await mxRequest('put', `/users/${userGuid}/members/${memberGuid}`, {
+    member: { credentials: await mxBankCredentialValues(bankPassword) },
+  })
+  try {
+    await mxRequest(
+      'post',
+      `/users/${userGuid}/members/${memberGuid}/aggregate`,
+    )
+  } catch {
+    // An aggregation the credential update already started answers 409 —
+    // the wait-for-status below (caller-side) is the real gate.
+  }
 }
