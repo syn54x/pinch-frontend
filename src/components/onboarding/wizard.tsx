@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useId, useState } from 'react'
-import { errorDetail, statusOf } from '@/api/client'
-import { createConnection, createLinkToken } from '@/api/generated'
+import { errorDetail } from '@/api/client'
 import {
   countUnreviewedTransactionsQueryKey,
   createAccountMutation,
@@ -9,26 +8,25 @@ import {
   ledgerStatsQueryKey,
   listAccountsQueryKey,
   listConnectionsOptions,
-  listConnectionsQueryKey,
   listTransactionsQueryKey,
   meOptions,
   meQueryKey,
   updateMeMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
 import type { AccountKind } from '@/api/generated/types.gen'
+import { ProviderPicker } from '@/components/connect/provider-picker'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { currencyLabel, currencyOptions } from '@/lib/currencies'
 import { onboardingStatsLine } from '@/lib/onboarding'
-import { PlaidExitError, usePlaidConnect } from '@/lib/plaid'
 import { cn } from '@/lib/utils'
 
 // Onboarding (CONTEXT.md, wireframe #5): the inferred first-run wizard —
 // an empty ledger (no accounts, no connections) lands here instead of the
 // queue. Three cards: primary currency (pre-filled from /me, saved through
-// the F3 enabler), connect-or-manual (the F2 Plaid flow, reused verb for
-// verb), and honest sync progress (connection status only — no
+// the F3 enabler), connect-or-manual (the shared provider picker since F8
+// CP0), and honest sync progress (connection status only — no
 // classification counts, no recurring counts; that theater returns with
 // real numbers in M8). Every step skippable: the wizard never holds the
 // user hostage, and a skipped-through run lands on the Inbox empty state.
@@ -230,49 +228,11 @@ function ConnectStep({
   onManual: () => void
   onSkip: () => void
 }) {
-  const queryClient = useQueryClient()
-  const connect = usePlaidConnect()
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
-  // The F2 connect flow, verb for verb (routes/connections.tsx): link
-  // token → Plaid Link → exchange. A 403 on link-token is the keyless
-  // stance, said plainly.
-  async function handleConnect() {
-    setError(null)
-    setBusy(true)
-    try {
-      let tokenOut: { link_token: string }
-      try {
-        ;({ data: tokenOut } = await createLinkToken({
-          body: null,
-          throwOnError: true,
-        }))
-      } catch (caught) {
-        setError(
-          statusOf(caught) === 403
-            ? `${errorDetail(caught)} — bank connections aren’t enabled on this instance. Add an account manually instead.`
-            : errorDetail(caught),
-        )
-        return
-      }
-      const publicToken = await connect(tokenOut.link_token)
-      if (publicToken === null) return // dismissed — not an error
-      const { data: connection } = await createConnection({
-        body: { public_token: publicToken },
-        throwOnError: true,
-      })
-      queryClient.invalidateQueries({ queryKey: listConnectionsQueryKey() })
-      onConnected(connection.id)
-    } catch (caught) {
-      setError(
-        caught instanceof PlaidExitError ? caught.message : errorDetail(caught),
-      )
-    } finally {
-      setBusy(false)
-    }
-  }
-
+  // First-run and settings share one flow (F8 CP0): the card opens the
+  // same provider picker the connections page uses; its footer's manual
+  // escape lands on this wizard's own manual step.
   return (
     <>
       <h2 className="mt-6 font-semibold text-lg">Connect your first account</h2>
@@ -281,8 +241,7 @@ function ConnectStep({
       </p>
       <button
         type="button"
-        disabled={busy}
-        onClick={handleConnect}
+        onClick={() => setPickerOpen(true)}
         className="mt-4 flex w-full items-center gap-3 rounded-lg border p-3 text-left hover:bg-accent focus-visible:outline-2 disabled:opacity-60"
       >
         <span aria-hidden className="size-8 shrink-0 rounded-full bg-muted" />
@@ -291,13 +250,22 @@ function ConnectStep({
             Connect a bank
           </span>
           <span className="block text-muted-foreground text-xs">
-            via Plaid · 12,000+ institutions
+            choose how Pinch reaches your bank
           </span>
         </span>
         <span aria-hidden className="text-muted-foreground">
           →
         </span>
       </button>
+      <ProviderPicker
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        onConnected={(connection) => onConnected(connection.id)}
+        onManual={() => {
+          setPickerOpen(false)
+          onManual()
+        }}
+      />
       <button
         type="button"
         onClick={onManual}
@@ -316,11 +284,6 @@ function ConnectStep({
           →
         </span>
       </button>
-      {error && (
-        <p role="alert" className="mt-3 text-destructive text-sm">
-          {error}
-        </p>
-      )}
       <div className="flex-1" />
       <p className="mt-5 text-center text-muted-foreground text-xs">
         You can add more later · <SkipLink onSkip={onSkip} />

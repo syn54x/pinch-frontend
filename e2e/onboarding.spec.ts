@@ -2,7 +2,7 @@ import { expect, type Page, test } from '@playwright/test'
 import { API, PASSWORD, seedUser, uniqueEmail } from './helpers/api'
 import { mintSandboxPublicToken } from './helpers/plaid'
 import { armPlaidFake } from './helpers/plaid-fake'
-import { loginViaUi, setTheme } from './helpers/ui'
+import { continueWithPlaid, loginViaUi, setTheme } from './helpers/ui'
 
 // F3 CP4 (#20, wireframe #5): the inferred first-run wizard. The trigger is
 // stateless (an empty ledger IS the state), the connect step is the F2 flow
@@ -49,10 +49,13 @@ test('signup → wizard → currency saves → connect → honest progress → a
   await expect(wizard(page)).toBeVisible()
   await setTheme(page, 'System')
 
-  // Connect a bank — the F2 flow behind the wizard's card.
+  // Connect a bank — the wizard's card opens the same provider picker the
+  // connections page uses (F8 CP0); Plaid's Continue reaches the F2 flow.
   await wizard(page)
     .getByRole('button', { name: /Connect a bank/ })
     .click()
+  await expect(page.getByTestId('provider-picker')).toBeVisible()
+  await continueWithPlaid(page)
 
   // Real progress now (F5 CP6): the connection's status voice, and — riding the
   // same bounded poll — the classification counts F3's #20 cut come back real.

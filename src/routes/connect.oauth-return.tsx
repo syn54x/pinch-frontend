@@ -52,7 +52,9 @@ function OAuthReturnPage() {
           watchId = state.connectionId
         } else {
           const { data: connection } = await createConnection({
-            body: { public_token: publicToken },
+            // OAuth-return is Plaid machinery by construction (MX has no
+            // OAuth leg, ADR 0009) — the provider is a fact, not a choice.
+            body: { provider: 'plaid', token: publicToken },
             throwOnError: true,
           })
           watchId = connection.id

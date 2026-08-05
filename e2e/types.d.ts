@@ -3,6 +3,7 @@ declare global {
   interface Window {
     __E2E_PLAID_MODE?: 'success' | 'cancel' | 'error'
     __E2E_PLAID_PUBLIC_TOKEN?: string
+    __E2E_PLAID_INSTITUTION?: { institution_id: string; name: string }
   }
 }
 

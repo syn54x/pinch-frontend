@@ -176,8 +176,8 @@ export function TermsForm({
       )}
 
       <p className="text-[11.5px] text-muted-foreground">
-        Every field is entered by hand and stored as manual — a future Plaid
-        sync fills what it can and tags it, still overridable.
+        Every field is entered by hand and stored as manual — a future bank sync
+        fills what it can and tags it, still overridable.
       </p>
 
       <div className="mt-2 flex gap-2">

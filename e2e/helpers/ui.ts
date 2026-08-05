@@ -34,3 +34,15 @@ export async function toggleTheme(page: Page): Promise<void> {
     .evaluate((el) => el.classList.contains('dark'))
   await setTheme(page, dark ? 'Light' : 'Dark')
 }
+
+/** The provider picker (F8 CP0) sits between every connect button and the
+ * widget: continue with Plaid from an already-open picker dialog. */
+export async function continueWithPlaid(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Continue with Plaid' }).click()
+}
+
+/** Connections-page connect: open the picker, take the Plaid card. */
+export async function connectViaPicker(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Connect bank' }).click()
+  await continueWithPlaid(page)
+}

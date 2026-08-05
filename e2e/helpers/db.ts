@@ -114,6 +114,52 @@ export async function stageInvestments(email: string): Promise<void> {
   )
 }
 
+/** Stage an existing connection row for the dupe guard's specs (7e):
+ * the guard compares a fresh widget walk against connections that are
+ * already here, and fabricating "already here" through a real provider
+ * walk would either need Plaid credentials or trip MX's one-member-per-
+ * institution sandbox limit. The row is inert (never synced, no
+ * credentials) — the specs only read it through the list. */
+export async function stageConnection(
+  email: string,
+  options: {
+    provider: 'plaid' | 'mx'
+    institutionName: string
+    providerInstitutionId?: string
+  },
+): Promise<void> {
+  const institutionId =
+    options.providerInstitutionId === undefined
+      ? 'NULL'
+      : literal(options.providerInstitutionId)
+  await psql(
+    `INSERT INTO connection (id, ledger_id, provider, provider_item_id,
+       provider_institution_id, institution_name, status,
+       investments_consent_required, created_at, updated_at)
+     SELECT gen_random_uuid(), l.ledger_id, ${literal(options.provider)},
+       'e2e-staged-' || gen_random_uuid(), ${institutionId},
+       ${literal(options.institutionName)}, 'active', false, now(), now()
+     FROM (${LEDGER_OF(email)}) AS l`,
+  )
+}
+
+/** Flip an account's kind — how the capability-gap spec (7f) makes an
+ * MX-connected account render the investments surface without depending
+ * on MX Bank's fixture data carrying an investment account. */
+export async function forceAccountKind(
+  email: string,
+  kind: 'depository' | 'credit' | 'investment' | 'loan' | 'asset',
+): Promise<void> {
+  await psql(
+    `UPDATE account SET kind = ${literal(kind)}
+     WHERE id IN (
+       SELECT a.id FROM account a
+       WHERE a.ledger_id IN (${LEDGER_OF(email)})
+       ORDER BY a.created_at LIMIT 1
+     )`,
+  )
+}
+
 /** Stage a connection state the API would only reach via provider errors —
  * scoped to the given user's ledger so tests can never bleed into each
  * other. The frontend can't tell the difference: status drives the UI,
