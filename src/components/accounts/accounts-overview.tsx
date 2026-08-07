@@ -112,7 +112,7 @@ function NetWorthPanel({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span data-testid="nw-hero" className="amount font-semibold text-3xl">
+        <span data-testid="nw-hero" className="amount-big text-3xl">
           {formatMinorUnits(data.net_worth_minor, currency)}
         </span>
         {series.length > 0 &&
@@ -174,7 +174,7 @@ function AssetsDebtsPanel({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span data-testid="nw-hero" className="amount font-semibold text-3xl">
+        <span data-testid="nw-hero" className="amount-big text-3xl">
           {formatMinorUnits(data.net_worth_minor, currency)}
         </span>
         {series.length > 0 && (

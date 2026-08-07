@@ -1,4 +1,6 @@
-<!-- Tokens extracted from docs/wireframes (Claude Design export) on 2026-07-21.
+<!-- Tokens extracted from docs/wireframes (Claude Design export) on 2026-07-21;
+     type system + purple light theme re-extracted from the F10 canvas
+     (docs/pinch-app-wireframes) on 2026-08-06.
      Re-run /impeccable document once real components exist to fill §5. -->
 
 ---
@@ -17,28 +19,28 @@ A private ledger kept by something smarter than you have time to be. Pinch's sur
 This system explicitly rejects the budgeting-app register — no cheerfulness, no coaching, no clutter. It must never feel like YNAB, Lunch Money, or Mint. It is confident, precise, effortless: the tool states what it found and gets out of the way.
 
 **Key Characteristics:**
-- Restrained light chrome: a graphite ink accent (no hue) so every scrap of color in the interface belongs to data.
-- A committed dark theme: purple-navy canvas where the accent *is* Penny's purple — in the dark, the app wears the assistant's color. The light/dark asymmetry is deliberate (see The Two Registers Rule).
+- Restrained light chrome: violet-tinted paper and panels around the brand's purple accent — quiet surfaces, one committed accent, every other scrap of color belonging to data (F10 superseded the earlier graphite light chrome).
+- A committed dark theme: purple-navy canvas where the accent *is* Penny's purple — in the dark, the app wears the assistant's color at full saturation.
 - A deliberate muted categorical palette that lives only in data — charts, category marks, trends.
 - Light and dark themes from day one, with system-default as the third option.
 - Numbers as first-class typography: mono/tabular figures for every amount.
 - Motion as feedback, never choreography.
 
-**Source of truth:** the settled wireframes at `docs/wireframes/project/Pinch Wireframes.dc.html` — 24 screens in user-journey order, each in light and dark. Tokens in `src/index.css` are extracted from them (AA-normalized where the raw values fell short).
+**Source of truth:** the settled wireframes at `docs/pinch-app-wireframes/project/App Wireframes.dc.html` — screens in user-journey order, each in light and dark. Tokens in `src/index.css` are extracted from them (AA-normalized where the raw values fell short).
 
 ## 2. Colors
 
-Two registers of the same discipline. Light: restrained graphite chrome around expressive data. Dark: a committed Penny-purple theme — purple-tinted surfaces, purple alpha borders, and the accent unified with Penny's color. Both keep every other scrap of color reserved for data.
+Two registers of one purple discipline (F10 amended the earlier graphite-light scheme). Light: violet-tinted paper around the brand's purple accent. Dark: a committed Penny-purple theme — purple-tinted surfaces, purple alpha borders, and the accent unified with Penny's color. Both keep every other scrap of color reserved for data.
 
 ### Primary / Accent
-- **Light — Graphite** (`oklch(0.27 0.012 250)` / `#22272c`): primary actions, current selection, active state, focus. The original rationale holds in light mode: near-black ink, a whisper of cool tint (hue 250) shared with the neutral scale, no hue to clash with positive/negative amounts. AA-verified (15:1).
-- **Dark — Penny purple** (`oklch(0.67 0.175 295)` / `#a179f2`, with near-black-purple ink `oklch(0.19 0.034 295)`): in dark mode the accent and Penny's identity color are one token value. The wireframes supersede the earlier "graphite in both directions" decision — the dark theme is the brand's committed color moment, expressed as canvas + accent, with glow permitted on the primary button and Penny surfaces (see Elevation). AA-verified (5.8:1 on the accent, 5.1:1 as text on card).
+- **Light — Brand purple** (`oklch(0.505 0.209 291)` / `#6b3fd0`): primary actions, current selection, active state, focus, progress fills. The wireframes' light accent — the brand carried into light chrome. AA-verified (6.5:1 as text on white and under white text).
+- **Dark — Penny purple** (`oklch(0.67 0.175 295)` / `#a179f2`, with near-black-purple ink `oklch(0.19 0.034 295)`): in dark mode the accent and Penny's identity color are one token value. The dark theme is the brand's full color moment, expressed as canvas + accent, with glow permitted on the primary button and Penny surfaces (see Elevation). AA-verified (5.8:1 on the accent, 5.1:1 as text on card).
 
 ### Penny
-- **`--penny`** (light `oklch(0.555 0.156 295)` / `#7a5cc4`; dark = the accent): the assistant's identity color — her avatar dot, her pill in the sidebar/top bar, her chat affordances. In light mode purple appears *only* on Penny; in dark mode the whole accent system adopts it.
+- **`--penny`** (light `oklch(0.555 0.156 295)` / `#7a5cc4`; dark = the accent): the assistant's identity color — her avatar dot, her pill in the sidebar/top bar, her chat affordances. A lighter, softer purple than the light accent; in dark mode the whole accent system adopts it.
 
 ### Neutral
-- **Light surfaces** (background `oklch(0.99 0.002 250)`, card white, sidebar `oklch(0.97 0.003 250)`): near-zero-chroma cool neutrals, hue 250. Borders are alpha ink (`oklch(0 0 0 / 9%)`) so they composite naturally on any surface.
+- **Light surfaces** (background `oklch(0.987 0.007 295)` / `#fbfaff`, card white, sidebar `oklch(0.965 0.012 296)` / `#f4f2fb`, muted `#ece8f8`, selected `#e6dffa`): violet-tinted cool neutrals, hue ~295 shared with the accent. Borders are violet alpha (`oklch(0.414 0.113 294 / 14%)`) so they composite naturally on any surface.
 - **Dark surfaces** (background `oklch(0.19 0.047 290)`, sidebar `0.215`, card `0.25`, popover `0.28`): purple-tinted (chroma ~0.05, hue 290) with tonal-lightening depth. Borders are purple alpha (`oklch(0.72 0.108 295 / 15%)`).
 
 ### Semantic
@@ -52,26 +54,27 @@ Two registers of the same discipline. Light: restrained graphite chrome around e
 - **`--progress`**: bar fills (onboarding steps, debt pace, budgets) — dark ink in light mode, muted lavender in dark.
 
 ### Named Rules
-**The Chrome/Data Rule (amended).** Interface chrome is the accent plus its neutral scale, nothing else — graphite + cool neutrals in light, Penny purple + purple-tinted neutrals in dark. All other color belongs to data: a category, a series, a trend, a semantic state, a provenance badge. A colored decoration that encodes nothing is forbidden.
+**The Chrome/Data Rule (amended).** Interface chrome is the accent plus its neutral scale, nothing else — brand purple + violet-tinted neutrals in light, Penny purple + purple-tinted neutrals in dark. All other color belongs to data: a category, a series, a trend, a semantic state, a provenance badge. A colored decoration that encodes nothing is forbidden.
 
-**The Two Registers Rule.** Light and dark are not tints of each other. Light is the working ledger — disciplined, hueless, paper-quiet. Dark is the brand's color moment — Penny's purple as canvas and accent. Don't flatten the asymmetry: no purple accent in light chrome (purple in light belongs to Penny alone), no graphite-only dark.
+**The Two Registers Rule (amended by F10).** Light and dark are not tints of each other, but they now share the brand's hue. Light is the working ledger — violet-whisper paper, one saturated purple accent, everything else quiet. Dark is the brand's full color moment — Penny's purple as canvas and accent, with the glow privileges Elevation grants. Don't flatten the asymmetry: light surfaces stay near-white (chroma ≤ 0.04), dark never falls back to graphite.
 
-**The Cool Canvas Rule.** No cream/sand/parchment, ever. Light neutrals carry only the faintest cool tint (chroma ≤ 0.006); dark surfaces are cool purple, never warm.
+**The Cool Canvas Rule.** No cream/sand/parchment, ever. Light neutrals carry only a faint cool violet tint (chroma ≤ 0.04, hue ~295); dark surfaces are cool purple, never warm.
 
 **The Three Themes Rule.** Light, dark, and system-default ship together from day one. No token exists without both light and dark values.
 
 ## 3. Typography
 
-**UI Font:** Geist Variable (with system-ui fallback)
-**Figures/Data Font:** Geist Mono Variable (with monospace fallback) — resolved: the mono carries amounts *and* the label voice.
+**Heading Font:** Space Grotesk Variable (`--font-heading`) — headings, the brand name, hero amounts. Tracking −0.02em.
+**UI Font:** Instrument Sans Variable (`--font-sans`, with system-ui fallback) — the body voice.
+**Figures/Data Font:** JetBrains Mono Variable (`--font-mono`, with monospace fallback) — the mono carries amounts *and* the label voice.
 
-**Character:** A single precise technical sans carries the interface; monospaced tabular figures give every dollar amount the alignment and authority of a ledger column. No display font, no serif — hierarchy comes from weight and size, not family changes.
+**Character:** Three faces, three roles (the F10 wireframes' type system, superseding the single-Geist stack): a characterful grotesk for the few words that lead a surface, a quiet sans for everything read, and monospaced tabular figures giving every dollar amount the alignment and authority of a ledger column. Hierarchy comes from role, weight, and size.
 
 ### Hierarchy (from the wireframes)
-- **Hero amount** — 30px / 600 / mono, tracking −0.02em (`amount` utility + size). The one big number a surface leads with.
-- **H1** — 20px / 600, tracking −0.01em. Page titles.
-- **H2** — 14–15px / 600. Card and section titles.
-- **Body** — 12.5–13px / 400–500. Dense product body; prose capped at 65–75ch, tables may run dense.
+- **Hero amount** — 24–30px / 600 / heading face, tabular, tracking −0.02em (`amount-big` utility + size). The one big number a surface leads with. Smaller amounts stay mono (`amount`).
+- **H1** — 20px / 600 / heading face. Page titles.
+- **H2** — 14–15px / 600 / heading face. Card and section titles (carried by a base rule on h1–h3; `label-caps` overrides where a dense card header speaks the label voice instead).
+- **Body** — 12.5–13px / 400–500 sans. Dense product body; prose capped at 65–75ch, tables may run dense.
 - **Sub** — 11.5px / 400, muted. Secondary lines under rows and titles.
 - **Label** — 10px / 600 / mono, uppercase, tracking 0.08em, muted (`label-caps` utility). Sidebar sections, column headers, field labels. This mono-caps whisper is the system's most distinctive voice element — use it for *structure*, never for headings or emphasis.
 
@@ -113,7 +116,7 @@ Implemented code is still mostly stock shadcn/ui primitives, but the wireframes 
 
 ### Do:
 - **Do** keep chrome restrained: the accent plus its neutral scale, with categorical/provenance color only in data (The Chrome/Data Rule).
-- **Do** honor the light/dark asymmetry — graphite light, Penny-purple dark (The Two Registers Rule).
+- **Do** honor the light/dark asymmetry — violet-whisper light, full Penny-purple dark (The Two Registers Rule).
 - **Do** ship every color token with both light and dark values, and honor the system theme preference.
 - **Do** set all amounts in tabular figures, right-aligned in columns (The Tabular Rule).
 - **Do** use the `label-caps` mono voice for structure and the sans for headings (The Label Voice Rule).
@@ -125,7 +128,7 @@ Implemented code is still mostly stock shadcn/ui primitives, but the wireframes 
 - **Don't** fall into generic SaaS dashboard grammar — hero metric cards everywhere, identical card grids.
 - **Don't** go spreadsheet-austere; premium is restraint, not absence.
 - **Don't** warm the neutrals — no cream, sand, or parchment backgrounds (The Cool Canvas Rule).
-- **Don't** put purple in light-mode chrome — in light, purple belongs to Penny alone.
+- **Don't** saturate light-mode surfaces — the accent is light mode's only strong purple; canvas and panels stay a violet whisper.
 - **Don't** glow anything in dark mode beyond the primary button and Penny surfaces.
 - **Don't** use categorical or accent color as decoration on inactive states.
 - **Don't** choreograph — no orchestrated page-load sequences; product loads into a task.
