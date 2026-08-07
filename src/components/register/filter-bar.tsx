@@ -6,6 +6,7 @@ import {
   listTagsOptions,
 } from '@/api/generated/@tanstack/react-query.gen'
 import { Input } from '@/components/ui/input'
+import { ExportButton } from './export-button'
 import { FilterChip } from './filter-chip'
 import {
   dateChipLabel,
@@ -17,8 +18,8 @@ import {
 
 // Wireframe #8's find row: search flex-1, then the four filter chips —
 // account × category × date range × tag. Every control writes URL search
-// state; the parent owns navigation. (The wireframe's Export / + Add live
-// in later CPs — nothing disabled ships.)
+// state; the parent owns navigation. Export (F10 CP7 #93) sits at the row's
+// end per the wireframe; + Add is #91's.
 export function FilterBar({
   search,
   onPatch,
@@ -124,6 +125,7 @@ export function FilterBar({
           Clear filters
         </button>
       )}
+      <ExportButton search={search} />
     </div>
   )
 }
