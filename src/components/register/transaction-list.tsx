@@ -23,6 +23,7 @@ export function TransactionList({
   onSelect,
   manualAccountIds,
   isFiltered,
+  emptyState,
   isLoading,
   isRefreshing,
   hasNextPage,
@@ -41,6 +42,9 @@ export function TransactionList({
   manualAccountIds: ReadonlySet<string>
   /** Distinguishes "ledger is empty" from "nothing matches these filters". */
   isFiltered: boolean
+  /** Replaces the unfiltered empty state — a view whose emptiness means
+   * something other than "no transactions yet" (the Uncategorized tab). */
+  emptyState?: ReactNode
   isLoading: boolean
   /** A filter change is in flight over previous results. */
   isRefreshing: boolean
@@ -71,7 +75,7 @@ export function TransactionList({
         ) : empty && isFiltered ? (
           <NoMatches onClearFilters={onClearFilters} />
         ) : empty ? (
-          <EmptyLedger />
+          (emptyState ?? <EmptyLedger />)
         ) : (
           <>
             {groups.map((group, index) => (
@@ -125,7 +129,8 @@ function TransactionRow({
 
   // Overlay-button row: the whole row selects (one focus stop, honest
   // semantics), while the unreviewed mark stays an independent link to the
-  // Inbox — review verbs live there, never here.
+  // To-review tab — the queue-level verbs live there; the row itself
+  // reviews in place through the Inspector (mode follows the transaction).
   return (
     <div
       data-testid="txn-row"
@@ -163,9 +168,10 @@ function TransactionRow({
         )}
         {unreviewed && (
           <Link
-            to="/inbox"
+            to="/register"
+            search={(prev) => ({ ...prev, view: 'review' as const })}
             data-testid="row-unreviewed-link"
-            title="Awaiting review — open the Inbox"
+            title="Awaiting review — open To-review"
             className="pointer-events-auto relative inline-flex shrink-0 items-center rounded-full border px-1.5 py-px font-mono text-[10px] text-muted-foreground hover:text-foreground focus-visible:outline-2"
           >
             unreviewed

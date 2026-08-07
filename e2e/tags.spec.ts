@@ -76,6 +76,9 @@ test('tags carry totals, open to their rows, rename everywhere, export, and dele
   await expect(
     page.getByTestId('tag-row').filter({ hasText: 'warehouse-run' }),
   ).toHaveCount(0)
-  await page.getByRole('link', { name: 'Register', exact: true }).click()
+  await page
+    .getByRole('navigation', { name: 'Primary' })
+    .getByRole('link', { name: 'Register' })
+    .click()
   await expect(page.getByText('COSTCO #482')).toBeVisible()
 })

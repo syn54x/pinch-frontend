@@ -62,16 +62,17 @@ test('authoring a rule with apply-to-unreviewed refreshes the backlog with rule 
   await expect(row).toContainText('created by you')
 
   // The vacated backlog re-proposes under the rule (the worker sweeps);
-  // the Inbox rows wear the rule's category and provenance.
-  await page.getByRole('link', { name: 'Inbox' }).click()
-  const inboxRow = page
-    .getByTestId('inbox-row')
+  // the To-review rows wear the rule's category and provenance.
+  await page.getByRole('link', { name: 'Register' }).click()
+  await page.getByTestId('view-review').click()
+  const queueRow = page
+    .getByTestId('queue-row')
     .filter({ hasText: 'COSTCO #482' })
-  await expect(inboxRow.getByTestId('category-pill')).toContainText(
+  await expect(queueRow.getByTestId('category-pill')).toContainText(
     'Warehouse Runs',
     { timeout: 15_000 },
   )
-  await expect(inboxRow.getByTestId('provenance-badge')).toHaveAttribute(
+  await expect(queueRow.getByTestId('provenance-badge')).toHaveAttribute(
     'data-provenance',
     'rule',
   )
@@ -156,9 +157,10 @@ test('a suggested rule is accepted through the builder and another dismisses for
   await expect(accepted).toContainText('promoted from history')
 
   // The accepted rule's tier refreshed the backlog under rule provenance.
-  await page.getByRole('link', { name: 'Inbox' }).click()
+  await page.getByRole('link', { name: 'Register' }).click()
+  await page.getByTestId('view-review').click()
   const backlogRow = page
-    .getByTestId('inbox-row')
+    .getByTestId('queue-row')
     .filter({ hasText: 'BLUE BOTTLE' })
     .first()
   await expect(backlogRow.getByTestId('provenance-badge')).toHaveAttribute(

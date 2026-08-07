@@ -1,29 +1,31 @@
-// The Inbox's selection/keyboard model as pure state (F3 CP2, wireframe #7):
-// row focus and day-grouped traversal. The DOM layer only dispatches and
-// renders — every transition is testable here without a browser.
+// The review queue's selection/keyboard model as pure state (F3 CP2,
+// wireframe s7): row focus and day-grouped traversal. The DOM layer only
+// dispatches and renders — every transition is testable here without a
+// browser.
 //
 // Rows arrive in the server's visual order (newest-first; day groups derive
 // from `date`), and traversal is flat: J/K walk rows straight across group
 // boundaries. The open correction panel is NOT here — it moved into
-// useReviewController (F5 CP1), so any reviewer host (Inbox pane, Dashboard
-// drawer) owns its own panel while this queue model stays host-agnostic.
+// useReviewController (F5 CP1), so any reviewer host (the Register's
+// To-review tab, the Dashboard drawer) owns its own panel while this queue
+// model stays host-agnostic.
 
-export interface InboxRow {
+export interface QueueRow {
   id: string
   /** ISO date (YYYY-MM-DD) — the day-group key. */
   date: string
 }
 
-export interface InboxState {
-  rows: InboxRow[]
+export interface QueueState {
+  rows: QueueRow[]
   /** The focused row id — a virtual focus the DOM mirrors (the listbox's
    * aria-activedescendant), never a second source of truth. */
   focusId: string | null
 }
 
-export type InboxAction =
+export type QueueAction =
   /** Server truth changed (initial load, refetch, a reviewed row leaving). */
-  | { type: 'sync'; rows: InboxRow[] }
+  | { type: 'sync'; rows: QueueRow[] }
   /** Pointer focus. */
   | { type: 'focus'; id: string }
   /** J — next row, straight across day-group boundaries. */
@@ -34,7 +36,7 @@ export type InboxAction =
    * refetch), and a removed focus advances to its nearest survivor. */
   | { type: 'remove'; ids: string[] }
 
-export const initialInboxState: InboxState = {
+export const initialQueueState: QueueState = {
   rows: [],
   focusId: null,
 }
@@ -43,8 +45,8 @@ export const initialInboxState: InboxState = {
  * the old position (accept advances downward), else the nearest above,
  * else nothing. With no prior focus, the first row takes it. */
 function resolveFocus(
-  oldRows: InboxRow[],
-  nextRows: InboxRow[],
+  oldRows: QueueRow[],
+  nextRows: QueueRow[],
   focusId: string | null,
 ): string | null {
   if (nextRows.length === 0) return null
@@ -62,17 +64,17 @@ function resolveFocus(
   return nextRows[0].id
 }
 
-function withRows(state: InboxState, nextRows: InboxRow[]): InboxState {
+function withRows(state: QueueState, nextRows: QueueRow[]): QueueState {
   return {
     rows: nextRows,
     focusId: resolveFocus(state.rows, nextRows, state.focusId),
   }
 }
 
-export function inboxReducer(
-  state: InboxState,
-  action: InboxAction,
-): InboxState {
+export function queueReducer(
+  state: QueueState,
+  action: QueueAction,
+): QueueState {
   switch (action.type) {
     case 'sync':
       return withRows(state, action.rows)

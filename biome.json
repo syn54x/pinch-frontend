@@ -10,6 +10,7 @@
       "!openapi.json",
       "!public",
       "!docs/wireframes",
+      "!docs/pinch-app-wireframes",
       "!src/index.css",
       "!test-results",
       "!playwright-report",

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 
 // The wireframe's filter chip (.chip / .chip.on): a bordered pill that opens
 // a single-select menu; a chip holding a value goes accent. Built on radix
-// Popover for focus/dismiss behavior. Register-local by ruling (the Inbox
+// Popover for focus/dismiss behavior. Register-local by ruling (the review kit
 // agent builds its own chips; dedup happens on the integration branch).
 
 export type ChipOption = {

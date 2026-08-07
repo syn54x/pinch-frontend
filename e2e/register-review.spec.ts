@@ -10,7 +10,8 @@ import {
 } from './helpers/seed'
 import { loginViaUi, setTheme } from './helpers/ui'
 
-// F3 CP2 (#18, wireframe #7): the Inbox's core review loop. Seeding is the
+// F3 CP2 (#18, wireframe s7), re-addressed by F10 CP1 (#87): the core
+// review loop, now the Register's To-review tab. Seeding is the
 // honest seam: a fake-bank (Plaid sandbox) connect → sync runs the real
 // pipeline, so provenance is genuine — `rule` from a pre-created rule
 // matching the sandbox's Uber transactions, `none` from the sweep's
@@ -22,20 +23,20 @@ import { loginViaUi, setTheme } from './helpers/ui'
 const CATEGORY = 'E2E Transport'
 
 function rows(page: Page) {
-  return page.getByTestId('inbox-row')
+  return page.getByTestId('queue-row')
 }
 
 function badge(page: Page) {
-  return page.getByTestId('inbox-count')
+  return page.getByTestId('review-count')
 }
 
 function focusedRow(page: Page) {
-  return page.locator('[data-testid="inbox-row"][aria-selected="true"]')
+  return page.locator('[data-testid="queue-row"][aria-selected="true"]')
 }
 
 /** Category + rule BEFORE the connection so the first sync's pipeline
  * classifies with the rule; then one `ai` proposal staged on top. */
-async function seedInbox(email: string): Promise<void> {
+async function seedQueue(email: string): Promise<void> {
   await seedUser(email, PASSWORD)
   const categoryId = await createCategory(email, PASSWORD, CATEGORY)
   await createPayeeRule(email, PASSWORD, { contains: 'uber', categoryId })
@@ -44,25 +45,26 @@ async function seedInbox(email: string): Promise<void> {
   await stageAiProposal(email, CATEGORY)
 }
 
-async function openInbox(page: Page, email: string): Promise<void> {
+async function openQueue(page: Page, email: string): Promise<void> {
   await loginViaUi(page, email, PASSWORD)
-  await page.getByRole('link', { name: 'Inbox' }).click()
-  await expect(page).toHaveURL(/\/inbox$/)
+  await page.getByRole('link', { name: 'Register' }).click()
+  await page.getByTestId('view-review').click()
+  await expect(page).toHaveURL(/\/register\?view=review$/)
   await expect(rows(page).first()).toBeVisible({ timeout: 15_000 })
 }
 
-test('keyboard-only pass: J/K/A/C clear the inbox, count live throughout', async ({
+test('keyboard-only pass: J/K/A/C clear the queue, count live throughout', async ({
   page,
 }) => {
   test.setTimeout(240_000)
-  const email = uniqueEmail('inbox-kbd')
-  await seedInbox(email)
-  await openInbox(page, email)
+  const email = uniqueEmail('queue-kbd')
+  await seedQueue(email)
+  await openQueue(page, email)
 
   // Day groups with the wireframe's label voice; the legend shows every
   // shipped verb (CP3 added S/T) and nothing cut (no E — #15).
-  await expect(page.getByTestId('inbox-day').first()).toBeVisible()
-  const legend = page.getByTestId('inbox-legend')
+  await expect(page.getByTestId('queue-day').first()).toBeVisible()
+  const legend = page.getByTestId('queue-legend')
   await expect(legend).toContainText('move')
   await expect(legend).toContainText('accept')
   await expect(legend).toContainText('category')
@@ -70,13 +72,15 @@ test('keyboard-only pass: J/K/A/C clear the inbox, count live throughout', async
   await expect(legend).toContainText('transfer')
   await expect(legend).not.toContainText('explain')
 
-  // The nav badge and the header count agree with reviewed=false reality.
+  // The nav badge, the tab label, and the header count agree with
+  // reviewed=false reality — one number, told once.
   const total = await rows(page).count()
   expect(total).toBeGreaterThan(2)
   await expect(badge(page)).toHaveText(String(total))
-  await expect(page.getByTestId('inbox-to-review')).toHaveText(
-    `${total} to review`,
+  await expect(page.getByTestId('view-review')).toHaveText(
+    `To review · ${total}`,
   )
+  await expect(page.getByTestId('queue-count')).toHaveText(`${total} to review`)
 
   // Real pipeline provenance (rule from the pre-created rule, — from the
   // sweep) plus the one staged ai; uncategorized is a legitimate state,
@@ -121,7 +125,7 @@ test('keyboard-only pass: J/K/A/C clear the inbox, count live throughout', async
   ).toBeVisible()
   await page.keyboard.press('Enter')
   await expect(picker).toHaveCount(0)
-  const inspector = page.getByTestId('inbox-inspector')
+  const inspector = page.getByTestId('reviewer-panel')
   await expect(inspector).toContainText('corrected')
   await expect(
     inspector.getByRole('button', { name: 'Accept correction · A' }),
@@ -152,8 +156,8 @@ test('keyboard-only pass: J/K/A/C clear the inbox, count live throughout', async
     await expect(rows(page)).toHaveCount(remaining - 1)
   }
 
-  // Inbox zero: the designed empty state, and the badge retires.
-  await expect(page.getByTestId('inbox-empty')).toBeVisible()
+  // Queue zero: the designed empty state, and the badge retires.
+  await expect(page.getByTestId('queue-empty')).toBeVisible()
   await expect(page.getByText('Nothing to review')).toBeVisible()
   await expect(badge(page)).toHaveCount(0)
   expect(reviewCalls).toHaveLength(total)
@@ -163,9 +167,9 @@ test('accept day and accept all are single batch calls; refocus refreshes the co
   page,
 }) => {
   test.setTimeout(240_000)
-  const email = uniqueEmail('inbox-batch')
-  await seedInbox(email)
-  await openInbox(page, email)
+  const email = uniqueEmail('queue-batch')
+  await seedQueue(email)
+  await openQueue(page, email)
 
   const total = await rows(page).count()
   const batchCalls: string[] = []
@@ -183,8 +187,8 @@ test('accept day and accept all are single batch calls; refocus refreshes the co
   })
 
   // Accept a whole day: its rows leave in one batch review.
-  const firstDay = page.getByTestId('inbox-day').first()
-  const dayRows = await firstDay.getByTestId('inbox-row').count()
+  const firstDay = page.getByTestId('queue-day').first()
+  const dayRows = await firstDay.getByTestId('queue-row').count()
   await firstDay.getByRole('button', { name: 'Accept day' }).click()
   await expect(rows(page)).toHaveCount(total - dayRows)
   expect(batchCalls).toHaveLength(1)
@@ -209,7 +213,7 @@ test('accept day and accept all are single batch calls; refocus refreshes the co
   // Accept all: one batch call to the earned empty state.
   batchCalls.length = 0
   await page.getByRole('button', { name: /Accept all/ }).click()
-  await expect(page.getByTestId('inbox-empty')).toBeVisible()
+  await expect(page.getByTestId('queue-empty')).toBeVisible()
   expect(batchCalls).toHaveLength(1)
   await expect(badge(page)).toHaveCount(0)
 })
@@ -218,9 +222,9 @@ test('provenance and category badges hold AA contrast in both themes', async ({
   page,
 }) => {
   test.setTimeout(240_000)
-  const email = uniqueEmail('inbox-aa')
-  await seedInbox(email)
-  await openInbox(page, email)
+  const email = uniqueEmail('queue-aa')
+  await seedQueue(email)
+  await openQueue(page, email)
 
   const list = page.getByRole('listbox', { name: 'Proposals awaiting review' })
   const assertContrast = async () => {

@@ -321,7 +321,7 @@ export function RuleBuilder({ editing }: { editing: RuleOut | null }) {
             badge="default"
             caption={`Re-proposes ${counts?.unreviewed_count ?? 0} item${
               (counts?.unreviewed_count ?? 0) === 1 ? '' : 's'
-            } waiting in your inbox — they'll carry this rule's suggestion for your review`}
+            } waiting in To-review — they'll carry this rule's suggestion for your review`}
           />
           <TierOption
             checked={tier === 'full'}
@@ -338,7 +338,7 @@ export function RuleBuilder({ editing }: { editing: RuleOut | null }) {
             >
               This overwrites {counts?.reviewed_count} decision
               {counts?.reviewed_count === 1 ? '' : 's'} you made. They keep
-              their reviewed status — nothing returns to your inbox. Logged as
+              their reviewed status — nothing returns to your queue. Logged as
               one entry in Learning.
             </p>
           )}

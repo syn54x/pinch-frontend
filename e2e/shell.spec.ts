@@ -35,7 +35,7 @@ test('logged out, / funnels through login and still lands on the Dashboard', asy
   await expect(page).toHaveURL(/\/dashboard$/)
 })
 
-test('the nav is exactly Dashboard, Inbox, Register, Recurring, Accounts, Setup → Connections + Categories & Rules — and Penny is reachable from every screen', async ({
+test('the nav is exactly Dashboard, Register, Recurring, Accounts, Setup → Connections + Categories & Rules — and Penny is reachable from every screen', async ({
   page,
 }) => {
   const email = uniqueEmail('shell-lean')
@@ -47,7 +47,8 @@ test('the nav is exactly Dashboard, Inbox, Register, Recurring, Accounts, Setup 
   // no stubs. Penny is deliberately NOT a nav item: she has her own pill.
   await expect(primaryNav(page).getByRole('link')).toHaveText([
     'Dashboard',
-    'Inbox',
+    // The Inbox left with F10 CP1 (#87, ADR 0002): review is the
+    // Register's To-review view, and the count pill rides Register.
     'Register',
     // Net Worth left with F10 CP2 (#88): absorbed into Accounts.
     'Recurring',
@@ -116,8 +117,9 @@ test('navigation moves between surfaces and marks the active item', async ({
   page,
 }) => {
   const email = uniqueEmail('shell-nav')
-  // One account, so the Inbox shows its empty state — an EMPTY ledger now
-  // mounts Onboarding instead (CP4), which is that surface's own spec.
+  // One account, so the Register shows its empty state — an EMPTY ledger
+  // now mounts Onboarding instead (rehomed here by F10 CP1), which is that
+  // surface's own spec.
   await seedUser(email, PASSWORD, [
     { kind: 'depository', label: 'Checking', currency: 'USD' },
   ])
@@ -127,20 +129,22 @@ test('navigation moves between surfaces and marks the active item', async ({
     primaryNav(page).getByRole('link', { name: 'Accounts' }),
   ).toHaveAttribute('aria-current', 'page')
 
-  // Inbox mounts with its designed empty state, not a blank.
-  await primaryNav(page).getByRole('link', { name: 'Inbox' }).click()
-  await expect(page).toHaveURL(/\/inbox$/)
-  await expect(
-    primaryNav(page).getByRole('link', { name: 'Inbox' }),
-  ).toHaveAttribute('aria-current', 'page')
-  await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible()
-  await expect(page.getByText('Nothing to review')).toBeVisible()
-
-  // Register mounts with its designed empty state: the ledger's column
-  // header (now permanent list chrome, CP1) over an honest "nothing yet".
+  // Register mounts with its designed empty state: the view tabs, the
+  // ledger's column header (permanent list chrome, CP1) over an honest
+  // "nothing yet".
   await primaryNav(page).getByRole('link', { name: 'Register' }).click()
   await expect(page).toHaveURL(/\/register$/)
+  await expect(
+    primaryNav(page).getByRole('link', { name: 'Register' }),
+  ).toHaveAttribute('aria-current', 'page')
   await expect(page.getByRole('heading', { name: 'Register' })).toBeVisible()
+  // The three views ride the tab row (F10 CP1); All is current by default.
+  await expect(page.getByTestId('view-all')).toHaveAttribute(
+    'aria-current',
+    'page',
+  )
+  await expect(page.getByTestId('view-review')).toBeVisible()
+  await expect(page.getByTestId('view-uncategorized')).toBeVisible()
   await expect(page.getByText('Payee', { exact: true })).toBeVisible()
   await expect(page.getByText('Amount', { exact: true })).toBeVisible()
   await expect(
@@ -160,10 +164,6 @@ test('the nav is keyboard traversable with visible focus', async ({ page }) => {
 
   // Tab walks the nav in order; each stop is the real focused element.
   await primaryNav(page).getByRole('link', { name: 'Dashboard' }).focus()
-  await page.keyboard.press('Tab')
-  await expect(
-    primaryNav(page).getByRole('link', { name: 'Inbox' }),
-  ).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(
     primaryNav(page).getByRole('link', { name: 'Register' }),
@@ -202,6 +202,6 @@ test('the shell holds in dark mode', async ({ page }) => {
   await setTheme(page, 'Dark')
   await expect(page.locator('html')).toHaveClass(/dark/)
   await expect(
-    primaryNav(page).getByRole('link', { name: 'Inbox' }),
+    primaryNav(page).getByRole('link', { name: 'Register' }),
   ).toBeVisible()
 })

@@ -167,11 +167,11 @@ test('CP4: approving a write invalidates ledger-scoped queries wholesale, denyin
 
   // Blanket invalidation (PRD #45 decision 9): the approved write is
   // create_category, which changes no unreviewed-count VALUE — the proof
-  // is that the shell's always-mounted InboxCount query gets invalidated
+  // is that the shell's always-mounted ReviewCount query gets invalidated
   // and genuinely refetches anyway, because invalidation is wholesale
   // across ledger-scoped families, not a per-tool map that would only
   // know to touch categories.
-  const invalidatedInboxCount = page.waitForResponse((response) =>
+  const invalidatedReviewCount = page.waitForResponse((response) =>
     response.url().includes('/api/v1/transactions/unreviewed-count'),
   )
   await page.getByTestId('approve-create_category').click()
@@ -183,7 +183,7 @@ test('CP4: approving a write invalidates ledger-scoped queries wholesale, denyin
   ]) {
     await page.getByTestId(`deny-${tool}`).click()
   }
-  await expect(invalidatedInboxCount).resolves.toBeTruthy()
+  await expect(invalidatedReviewCount).resolves.toBeTruthy()
 
   // Deny changes nothing on the ledger: no category from any denied tool's
   // garbage input exists.

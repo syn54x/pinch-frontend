@@ -13,7 +13,7 @@ import { categoryColorVar, categoryEmoji } from './model'
 // categories list cache (the wire CategoryRef is id+name only); the
 // name-derived fallback in model.ts remains the unset-identity rendering.
 //
-// Register-local by ruling: the Inbox builds its own; dedup happens on the
+// Register-local by ruling: the review kit builds its own; dedup happens on the
 // integration branch.
 export function CatPill({
   category,

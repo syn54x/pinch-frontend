@@ -36,7 +36,7 @@ import {
   transferCandidates,
 } from './reviewer-model'
 
-/** A review changes the transaction lists (Inbox and Register) and the count.
+/** A review changes the transaction lists (the queue and the Register) and the count.
  * Base keys match every variant (partial key matching), so all re-ask. */
 export function invalidateReviewData(queryClient: QueryClient) {
   queryClient.invalidateQueries({ queryKey: listTransactionsQueryKey() })
@@ -63,8 +63,8 @@ interface UseReviewControllerArgs {
   onReturnFocus?: () => void
 }
 
-// The reviewer's orchestration, lifted out of the Inbox page so any host (the
-// Inbox pane, the Dashboard Fix drawer) can mount the same reviewer: it owns
+// The reviewer's orchestration, lifted out of the queue surface so any host (the
+// Register's To-review tab, the Dashboard Fix drawer) can mount the same reviewer: it owns
 // correction staging, the category/split panel, the split draft, the
 // transfer-counterpart lookup, and the accept mutation + invalidations. The
 // host owns the queue, focus, and list bookkeeping and feeds `txn` + `onReviewed`.

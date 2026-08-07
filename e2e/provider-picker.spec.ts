@@ -89,7 +89,7 @@ test('the onboarding wizard opens the same picker from its connect card', async 
   await seedUser(email, PASSWORD)
   await loginViaUi(page, email, PASSWORD)
 
-  await page.getByRole('link', { name: 'Inbox' }).click()
+  await page.getByRole('link', { name: 'Register' }).click()
   const wizard = page.getByTestId('onboarding-wizard')
   await expect(wizard).toBeVisible()
   await wizard.getByRole('button', { name: 'Continue' }).click()

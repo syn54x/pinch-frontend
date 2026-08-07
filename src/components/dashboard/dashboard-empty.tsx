@@ -4,10 +4,10 @@ import { cn } from '@/lib/utils'
 
 // The Dashboard's empty ledger (wireframe s6e, PRD empty-state law): no
 // accounts yet, so no wall of zeros — one job, connect an account. The
-// onboarding wizard (its currency → connect → sync flow) lives on the Inbox,
-// so both CTAs route there; the dashboard stays honest about having nothing to
-// show. Penny's read and the activity card explain what fills in once data
-// flows, without faking any number.
+// onboarding wizard (its currency → connect → sync flow) lives on the
+// Register since F10 CP1, so both CTAs route there; the dashboard stays
+// honest about having nothing to show. Penny's read and the activity card
+// explain what fills in once data flows, without faking any number.
 export function DashboardEmpty({ name }: { name: string }) {
   return (
     <div
@@ -33,14 +33,14 @@ export function DashboardEmpty({ name }: { name: string }) {
         </p>
         <div className="mt-1 flex gap-2">
           <Link
-            to="/inbox"
+            to="/register"
             className={cn(buttonVariants({ size: 'sm' }))}
             data-testid="dashboard-empty-connect"
           >
             Connect an account
           </Link>
           <Link
-            to="/inbox"
+            to="/register"
             className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
           >
             Add manually

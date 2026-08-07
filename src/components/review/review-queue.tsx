@@ -1,45 +1,29 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { Inbox as InboxIcon } from 'lucide-react'
-import {
-  Fragment,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-} from 'react'
+import { Link } from '@tanstack/react-router'
+import { Inbox as QueueIcon } from 'lucide-react'
+import { Fragment, useEffect, useMemo, useReducer, useRef } from 'react'
 import { errorDetail } from '@/api/client'
 import {
   countUnreviewedTransactionsOptions,
   listAccountsOptions,
-  listConnectionsOptions,
   listTransactionsOptions,
   reviewBatchMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
 import type { TransactionOut } from '@/api/generated/types.gen'
-import { dayLabel } from '@/components/inbox/day-label'
-import { KeyboardLegend } from '@/components/inbox/keyboard-legend'
-import { PairCallout } from '@/components/inbox/pair-callout'
-import { ProposalRow, proposalRowDomId } from '@/components/inbox/proposal-row'
-import { payeeOf } from '@/components/inbox/reviewer-model'
+import { TransactionInspector } from '@/components/inspector/transaction-inspector'
+import { dayLabel } from '@/components/review/day-label'
+import { KeyboardLegend } from '@/components/review/keyboard-legend'
+import { PairCallout } from '@/components/review/pair-callout'
+import { ProposalRow, proposalRowDomId } from '@/components/review/proposal-row'
+import { payeeOf } from '@/components/review/reviewer-model'
 import {
   invalidateReviewData,
   useReviewController,
-} from '@/components/inbox/use-review-controller'
-import { TransactionInspector } from '@/components/inspector/transaction-inspector'
-import {
-  OnboardingWizard,
-  onboardingSkippedThisLoad,
-} from '@/components/onboarding/wizard'
+} from '@/components/review/use-review-controller'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { dayGroups, inboxReducer, initialInboxState } from '@/lib/inbox-reducer'
-
-export const Route = createFileRoute('/_authed/inbox')({
-  staticData: { title: 'Inbox' },
-  component: InboxPage,
-})
+import { useEmptyLedger } from '@/components/use-empty-ledger'
+import { dayGroups, initialQueueState, queueReducer } from '@/lib/queue-reducer'
 
 // One page of queue at a time (the API cap). Reviews shrink the queue and
 // every review invalidates the list, so deeper pages surface as the visible
@@ -49,41 +33,32 @@ const QUEUE_PAGE = 100
 const queueOptions = () =>
   listTransactionsOptions({ query: { reviewed: false, limit: QUEUE_PAGE } })
 
-// F3 CP2 (#18, wireframe #7): the Inbox's core loop. Proposals grouped by day;
-// accept one (A / the reviewer), a day, or all; correct category and tags
-// before accepting through the same one-shot review call. Selection and
-// keyboard nav live in the pure inbox reducer; the per-item review orchestration
-// lives in useReviewController (F5 CP1) so the Dashboard Fix drawer can mount the
-// same TransactionInspector. This page is the shell: the queue, the batch verbs, and
-// the keyboard. Liveness is invalidation + refocus, never polling.
-function InboxPage() {
+// The review queue (F3 CP2, wireframe s7) — since F10 CP1 the Register's
+// To-review tab, migrated whole from the retired Inbox route (ADR 0002).
+// Proposals grouped by day; accept one (A / the reviewer), a day, or all;
+// correct category and tags before accepting through the same one-shot
+// review call. Selection and keyboard nav live in the pure queue reducer;
+// the per-item review orchestration lives in useReviewController (F5 CP1)
+// so the Dashboard Fix drawer can mount the same TransactionInspector. This
+// component is the shell: the queue, the batch verbs, and the keyboard.
+// Liveness is invalidation + refocus, never polling. The queue keyboard kit
+// (J/K, A, ⇧A, accept-day) mounts here and nowhere else — it is exclusive
+// to the To-review tab.
+export function ReviewQueue() {
   const queryClient = useQueryClient()
-  const [state, dispatch] = useReducer(inboxReducer, initialInboxState)
+  const [state, dispatch] = useReducer(queueReducer, initialQueueState)
   const listboxRef = useRef<HTMLDivElement>(null)
 
   const queue = useQuery(queueOptions())
-  // The same cache entry as the nav badge — one number, told once.
+  // The same cache entry as the nav badge and the tab label — one number,
+  // told once.
   const count = useQuery(countUnreviewedTransactionsOptions())
   // Account labels name the pair callout's other leg (wireframe: "pairs
-  // with Ally Savings …"). Loaded once; a ledger has few accounts.
-  const accounts = useQuery(listAccountsOptions({}))
-  // Onboarding's stateless trigger (#20): no accounts AND no connections —
-  // the ledger's emptiness is the state, nothing is stored.
-  const connections = useQuery(listConnectionsOptions())
-  const emptyLedger =
-    accounts.data !== undefined &&
-    connections.data !== undefined &&
-    accounts.data.items.length === 0 &&
-    connections.data.items.length === 0
-  // 'engaged' keeps the wizard mounted once the user starts it — a fresh
-  // connection un-infers the trigger mid-flow, but step 3 must still show.
-  // 'done' (plus the module-scope skip flag) lasts exactly one page load.
-  const [wizard, setWizard] = useState<'inferred' | 'engaged' | 'done'>(
-    'inferred',
-  )
-  const showOnboarding =
-    wizard === 'engaged' ||
-    (wizard === 'inferred' && emptyLedger && !onboardingSkippedThisLoad())
+  // with Ally Savings …"). Same options as the Register's other views —
+  // one cached accounts query serves all three.
+  const accounts = useQuery(listAccountsOptions({ query: { limit: 100 } }))
+  // An empty ledger's zero state routes back to connecting.
+  const emptyLedger = useEmptyLedger()
 
   // Server truth → reducer rows (order + date only; rendering re-joins).
   const items = queue.data?.items
@@ -227,34 +202,23 @@ function InboxPage() {
     }
   }, [focusId])
 
-  if (showOnboarding) {
-    return (
-      <OnboardingWizard
-        onEngage={() => setWizard('engaged')}
-        onDone={() => setWizard('done')}
-      />
-    )
-  }
-
   if (queue.isPending) {
     return (
-      <div className="flex h-full flex-col gap-3" data-testid="inbox-loading">
-        <div className="flex items-center justify-end">
-          <Skeleton className="h-7 w-36" />
-        </div>
-        <div className="flex-1 space-y-3 overflow-hidden rounded-lg border p-4">
-          {['s1', 's2', 's3', 's4', 's5', 's6'].map((key) => (
-            <Skeleton key={key} className="h-10 w-full" />
-          ))}
-        </div>
+      <div
+        className="flex min-h-0 flex-1 flex-col gap-3 p-4"
+        data-testid="queue-loading"
+      >
+        {['s1', 's2', 's3', 's4', 's5', 's6'].map((key) => (
+          <Skeleton key={key} className="h-10 w-full" />
+        ))}
       </div>
     )
   }
 
   if (queue.isError) {
     return (
-      <div className="flex h-full flex-col items-center justify-center text-center">
-        <p className="font-medium">Couldn’t load the Inbox</p>
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center text-center">
+        <p className="font-medium">Couldn’t load the review queue</p>
         <p className="mt-1 max-w-sm text-muted-foreground text-sm">
           {errorDetail(queue.error)}
         </p>
@@ -269,7 +233,7 @@ function InboxPage() {
     )
   }
 
-  if (visible.length === 0) return <InboxZero showConnect={emptyLedger} />
+  if (visible.length === 0) return <QueueZero showConnect={emptyLedger} />
 
   const groups = dayGroups(visible)
   const reviewError =
@@ -283,15 +247,15 @@ function InboxPage() {
         : null
 
   return (
-    <div className="flex h-full flex-col gap-3">
-      <div className="flex items-center justify-end gap-3.5">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex items-center justify-end gap-3.5 border-b px-3 py-2">
         {reviewError !== null && (
           <p role="alert" className="text-destructive text-sm">
             {errorDetail(reviewError.error)}
           </p>
         )}
         <span
-          data-testid="inbox-to-review"
+          data-testid="queue-count"
           className="text-[11.5px] text-muted-foreground"
         >
           {count.data !== undefined
@@ -306,7 +270,7 @@ function InboxPage() {
           Accept all · ⇧A
         </Button>
       </div>
-      <div className="flex min-h-0 flex-1 overflow-hidden rounded-lg border">
+      <div className="flex min-h-0 flex-1">
         <div className="flex min-w-0 flex-[1.35] flex-col border-r">
           <div
             ref={listboxRef}
@@ -321,7 +285,7 @@ function InboxPage() {
             {groups.map((group, index) => (
               <section
                 key={group.date}
-                data-testid="inbox-day"
+                data-testid="queue-day"
                 aria-label={dayLabel(group.date)}
                 className={index > 0 ? 'border-t' : undefined}
               >
@@ -338,7 +302,7 @@ function InboxPage() {
                 </div>
                 {group.rows.map((txn) => {
                   // A det row says the pair out loud right under itself
-                  // (wireframe #7's Venmo → Ally). The callout needs the
+                  // (wireframe s7's Venmo → Ally). The callout needs the
                   // other leg's row — mirrored pairs share this queue.
                   const rowCounterpartId =
                     txn.proposal?.proposed_transfer === true
@@ -377,17 +341,18 @@ function InboxPage() {
   )
 }
 
-// The designed zero state (CP0, refined for CP2): inbox zero is the loop's
-// earned resting point, not an error and not a blank. A skipped-through
-// onboarding lands here too — with the route back to connecting (#20).
-function InboxZero({ showConnect = false }: { showConnect?: boolean }) {
+// The designed zero state (F3 CP0, refined for CP2): queue zero is the
+// loop's earned resting point, not an error and not a blank. A
+// skipped-through onboarding lands here too — with the route back to
+// connecting (#20).
+function QueueZero({ showConnect = false }: { showConnect?: boolean }) {
   return (
     <div
-      data-testid="inbox-empty"
-      className="flex h-full flex-col items-center justify-center text-center"
+      data-testid="queue-empty"
+      className="flex min-h-0 flex-1 flex-col items-center justify-center text-center"
     >
       <div className="flex size-10 items-center justify-center rounded-lg bg-muted">
-        <InboxIcon className="size-5 text-muted-foreground" aria-hidden />
+        <QueueIcon className="size-5 text-muted-foreground" aria-hidden />
       </div>
       <p className="mt-4 font-medium">Nothing to review</p>
       <p className="mt-1 max-w-sm text-muted-foreground text-sm">

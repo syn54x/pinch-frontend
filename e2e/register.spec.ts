@@ -1,6 +1,7 @@
 import { expect, type Page, test } from '@playwright/test'
 import { PASSWORD, seedUser, uniqueEmail } from './helpers/api'
 import { dayHeading, daysAgo, RegisterSeeder } from './helpers/register'
+import { reviewOneViaApi } from './helpers/seed'
 import { loginViaUi, setTheme } from './helpers/ui'
 
 // F3 CP1 — the Register (wireframe #8): browse → filter → search → inspect
@@ -249,6 +250,112 @@ test('text search reaches payee, display name, and notes', async ({ page }) => {
   await expect(rows(page)).toHaveCount(3)
 })
 
+test('the view rides the URL: /inbox redirects to To-review, tabs switch views, filters stay inert on the queue', async ({
+  page,
+}) => {
+  const email = uniqueEmail('reg-views')
+  await seedUser(email, PASSWORD)
+  const seed = await RegisterSeeder.login(email, PASSWORD)
+  const checking = await seed.createAccount('Chase Checking')
+  // One reviewed row that matches the text filter, one unreviewed row that
+  // doesn't — the pair that tells "inert" from "applied".
+  await seed.createTxn(checking, {
+    date: daysAgo(0),
+    amountMinor: -1200,
+    description: 'Blue Bottle',
+    category: 'Coffee',
+  })
+  await seed.createTxn(checking, {
+    date: daysAgo(0),
+    amountMinor: -3400,
+    description: 'Mystery Charge',
+  })
+  await seed.dispose()
+
+  await loginViaUi(page, email, PASSWORD)
+  await expect(page).toHaveURL(/\/accounts$/)
+
+  // The retired address redirects onto the queue's new one (ADR 0002).
+  await page.goto('/inbox')
+  await expect(page).toHaveURL(/\/register\?view=review$/)
+  await expect(page.getByTestId('view-review')).toHaveAttribute(
+    'aria-current',
+    'page',
+  )
+  await expect(page.getByTestId('queue-row')).toHaveCount(1)
+
+  // To-review is the pure queue: a filter param in the URL is preserved
+  // but inert — the filter bar is hidden and the unmatched row still shows.
+  await page.goto('/register?view=review&q=blue')
+  await expect(
+    page.getByTestId('queue-row').filter({ hasText: 'Mystery Charge' }),
+  ).toBeVisible()
+  await expect(page.getByLabel('Search transactions')).toHaveCount(0)
+
+  // Switching to All re-arms the same param: the filter bar returns with
+  // the query in it, and only the matching row survives.
+  await page.getByTestId('view-all').click()
+  await expect(page).toHaveURL(/\/register\?q=blue$/)
+  await expect(page.getByLabel('Search transactions')).toHaveValue('blue')
+  await expect(rows(page)).toHaveCount(1)
+  await expect(rowFor(page, 'Blue Bottle')).toBeVisible()
+})
+
+test('the Uncategorized tab shows reviewed-but-uncategorized rows through the shared filter bar', async ({
+  page,
+}) => {
+  const email = uniqueEmail('reg-uncat')
+  await seedUser(email, PASSWORD)
+  const seed = await RegisterSeeder.login(email, PASSWORD)
+  const checking = await seed.createAccount('Chase Checking')
+  // Reviewed-but-uncategorized: born bare (unreviewed), then reviewed via
+  // the API with no correction — decided, still category-less.
+  await seed.createTxn(checking, {
+    date: daysAgo(1),
+    amountMinor: -2100,
+    description: 'Vending Machine',
+  })
+  await reviewOneViaApi(email, PASSWORD)
+  // A categorized reviewed row and a fresh unreviewed row — both must NOT
+  // appear on the Uncategorized tab.
+  await seed.createTxn(checking, {
+    date: daysAgo(0),
+    amountMinor: -1200,
+    description: 'Blue Bottle',
+    category: 'Coffee',
+  })
+  await seed.createTxn(checking, {
+    date: daysAgo(0),
+    amountMinor: -3400,
+    description: 'Mystery Charge',
+  })
+  await seed.dispose()
+
+  await loginViaUi(page, email, PASSWORD)
+  await expect(page).toHaveURL(/\/accounts$/)
+  await page.getByRole('link', { name: 'Register' }).click()
+  await page.getByTestId('view-uncategorized').click()
+  await expect(page).toHaveURL(/\/register\?view=uncategorized$/)
+
+  // Exactly the reviewed-but-uncategorized row, behind the shared bar —
+  // minus the Category chip, whose slot the tab itself owns here.
+  await expect(page.getByLabel('Search transactions')).toBeVisible()
+  await expect(page.getByTestId('chip-account')).toBeVisible()
+  await expect(page.getByTestId('chip-category')).toHaveCount(0)
+  await expect(rows(page)).toHaveCount(1)
+  await expect(rowFor(page, 'Vending Machine')).toBeVisible()
+
+  // The bar's filters compose here: a text search that misses empties the
+  // view into the no-matches state, not the ledger-empty state.
+  await page.getByLabel('Search transactions').fill('zebra')
+  await expect(page.getByTestId('register-no-matches')).toBeVisible()
+  await page
+    .getByTestId('register-no-matches')
+    .getByRole('button', { name: 'Clear filters' })
+    .click()
+  await expect(rowFor(page, 'Vending Machine')).toBeVisible()
+})
+
 test('the Inspector shows everything and edits every field in place', async ({
   page,
 }) => {
@@ -405,7 +512,7 @@ test('transfers and splits are visibly marked; an unreviewed row reviews in plac
   // An unreviewed row opens the SAME pane in its reviewing variant — mode
   // follows the transaction, not the door (#86): staged corrections and an
   // Accept footer, right here in the Register.
-  await expect(page.getByTestId('inbox-count')).toHaveText('1')
+  await expect(page.getByTestId('review-count')).toHaveText('1')
   const mystery = rowFor(page, 'Mystery Charge')
   await expect(mystery.getByTestId('row-unreviewed-link')).toBeVisible()
   // Left-padding click, same reason as the transfer row above.
@@ -428,7 +535,7 @@ test('transfers and splits are visibly marked; an unreviewed row reviews in plac
   // Accept clears it: the count badge retires, and the pane flips to the
   // browsing variant in place — edit-in-place fields, no accept verbs.
   await pane.getByRole('button', { name: 'Accept correction · A' }).click()
-  await expect(page.getByTestId('inbox-count')).toHaveCount(0)
+  await expect(page.getByTestId('review-count')).toHaveCount(0)
   await expect(pane.getByTestId('catpill')).toHaveText('🛒Groceries')
   await expect(pane.getByLabel('Notes')).toBeVisible()
   await expect(pane.getByRole('button', { name: /Accept/ })).toHaveCount(0)
