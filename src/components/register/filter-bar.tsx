@@ -8,6 +8,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { ExportButton } from './export-button'
 import { FilterChip } from './filter-chip'
+import { ImportCsv } from './import-wizard'
 import { ManualAdd } from './manual-add'
 import {
   dateChipLabel,
@@ -20,7 +21,8 @@ import {
 // Wireframe #8's find row: search flex-1, then the four filter chips —
 // account × category × date range × tag. Every control writes URL search
 // state; the parent owns navigation. The toolbar tail holds Export (F10 CP7
-// #93) then + Add (F10 CP5 #91), per the wireframe.
+// #93), then Import CSV (F10 CP6 #92, immediately before + Add per the
+// manual-add overlay wireframe s10/2b), then + Add (F10 CP5 #91).
 export function FilterBar({
   search,
   onPatch,
@@ -131,6 +133,7 @@ export function FilterBar({
         </button>
       )}
       <ExportButton search={search} />
+      <ImportCsv />
       <ManualAdd />
     </div>
   )

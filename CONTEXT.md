@@ -23,6 +23,18 @@ _Avoid_: ledger (the screen sense — a Ledger is the tenancy unit),
 transactions page, inbox (retired — the Inbox route died with F10 CP1; its
 review kit lives in the To-review view)
 
+**CSV import wizard**:
+Entered from the Register toolbar (between Export and + Add): upload
+(manual accounts only) → confirm or correct the suggested column mapping,
+skipped when a saved import profile matches (its mapping is shown, not
+hidden) → row preview with the duplicate flag, excluded by default with a
+per-row override → commit, with auto-file exposed as a toggle defaulted on.
+Import, import profile, auto-file, and duplicate flag are canonical domain
+terms (`pinch-backend/CONTEXT.md`); this wizard is the surface that drives
+them. Completion reports how many rows still lack a category and links to
+the Register's Uncategorized view.
+_Avoid_: CSV upload, file import (Import is the domain noun)
+
 **App shell**:
 The persistent chrome every authed surface mounts inside: the sidebar and
 the top bar (screen title, global search, Ask Penny). Theme and logout live
