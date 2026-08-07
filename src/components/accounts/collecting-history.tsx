@@ -4,13 +4,19 @@ import { Area } from '@/components/charts/area'
 import { AreaChart } from '@/components/charts/area-chart'
 import { formatMonthDay } from '@/lib/dates'
 import { formatMinorUnits } from '@/lib/money'
-import { historyFraction, type NetWorthRange } from '@/lib/net-worth'
+import {
+  historyFraction,
+  type NetWorthRange,
+  observedSeries,
+} from '@/lib/net-worth'
 
 // The collecting-history state (F10 CP2, wireframe 3b): under ~two months of
-// span, the chart refuses to dress six weeks up as a year. History draws at
-// its real share of the range's window, right-aligned against "now"; the rest
-// of the axis says plainly that nothing existed before the first sync. Real
-// balances from day one — only the *stretch* is withheld.
+// observed span, the chart refuses to dress six weeks up as a year. Observed
+// history (the server zero-pads fixed ranges to their window — the padding is
+// trimmed, not charted) draws at its real share of the range's window,
+// right-aligned against "now"; the rest of the axis says plainly that nothing
+// existed before the first sync. Real balances from day one — only the
+// *stretch* is withheld.
 export function CollectingHistory({
   series,
   currency,
@@ -20,12 +26,13 @@ export function CollectingHistory({
   currency: string
   range: NetWorthRange
 }) {
-  const first = series[0]
-  const last = series[series.length - 1]
+  const observed = observedSeries(series)
+  const first = observed[0]
+  const last = observed[observed.length - 1]
   const fraction = historyFraction(series, range)
   const emptyPercent = `${(1 - fraction) * 100}%`
 
-  const history = series.map((p) => ({
+  const history = observed.map((p) => ({
     date: new Date(p.date),
     value: p.net_worth_minor,
   }))
@@ -44,7 +51,7 @@ export function CollectingHistory({
         summary={summary}
         table={{
           columns: ['Date', 'Net worth'],
-          rows: series.map((p) => [
+          rows: observed.map((p) => [
             p.date,
             formatMinorUnits(p.net_worth_minor, currency),
           ]),
@@ -70,7 +77,7 @@ export function CollectingHistory({
             className="absolute inset-y-0 right-0"
             style={{ width: `${fraction * 100}%` }}
           >
-            {series.length >= 2 && (
+            {observed.length >= 2 && (
               <AreaChart
                 data={history}
                 xDataKey="date"

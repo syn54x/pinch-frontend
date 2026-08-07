@@ -33,12 +33,29 @@ export function projectionReady(series: SeriesPoint[]): boolean {
   return spanDays(series) >= 14
 }
 
+/** The server pads fixed ranges to their full window — 0 before the first
+ * observation, forward-fill after (reports.py `_forward_fill`) — so the raw
+ * series always spans the window regardless of how young the ledger is. The
+ * observed slice starts at the first nonzero point, mirroring the server's
+ * own padding convention. An all-zero series is returned unchanged: nothing
+ * distinguishes padding from a ledger whose balances genuinely sum to zero,
+ * and honesty defaults to not inventing a "collecting" claim. */
+export function observedSeries(series: SeriesPoint[]): SeriesPoint[] {
+  const first = series.findIndex((p) => p.net_worth_minor !== 0)
+  if (first <= 0) return series
+  return series.slice(first)
+}
+
+/** Days of *observed* history — the span after trimming the padded zeros. */
+export function observedSpanDays(series: SeriesPoint[]): number {
+  return spanDays(observedSeries(series))
+}
+
 /** The collecting-history gate (F10 CP2, wireframe 3b): under ~two months of
- * span, the chart shows the honest early state — history compressed to its
- * real share of the range, never stretched to look like a year. The series is
- * already windowed by the range, so the threshold caps at 90% of the window:
- * a 1M chart whose month is fully covered is not "collecting", even though a
- * month is less than 60 days. */
+ * observed span, the chart shows the honest early state — history compressed
+ * to its real share of the range, never stretched to look like a year. The
+ * threshold caps at 90% of the window: a 1M chart whose month is fully
+ * covered is not "collecting", even though a month is less than 60 days. */
 export const COLLECTING_SPAN_DAYS = 60
 export function collectingThresholdDays(range: NetWorthRange): number {
   return Math.min(
@@ -50,7 +67,10 @@ export function collectingHistory(
   series: SeriesPoint[],
   range: NetWorthRange,
 ): boolean {
-  return series.length > 0 && spanDays(series) < collectingThresholdDays(range)
+  return (
+    series.length > 0 &&
+    observedSpanDays(series) < collectingThresholdDays(range)
+  )
 }
 
 /** Nominal width of a range's window in days, for sizing the collecting-state
@@ -68,20 +88,23 @@ export function rangeWindowDays(range: NetWorthRange): number {
   }
 }
 
-/** The share of the range's window the history actually covers — how wide the
- * collecting-state chart draws. Floored so a few days still render visibly. */
+/** The share of the range's window the observed history actually covers —
+ * how wide the collecting-state chart draws. Floored so a few days still
+ * render visibly. */
 export function historyFraction(
   series: SeriesPoint[],
   range: NetWorthRange,
 ): number {
-  const fraction = spanDays(series) / rangeWindowDays(range)
+  const fraction = observedSpanDays(series) / rangeWindowDays(range)
   return Math.min(1, Math.max(0.15, fraction))
 }
 
-/** "N days/weeks of history" — the collecting-state chip. Weeks from 14 days
- * up; never rounds up past what the data covers. */
+/** The collecting-state chip: "first day", then "N days", then "N weeks" of
+ * history. Bucket-resolution honest — weeks never round up past what the
+ * observed data covers. */
 export function historySpanLabel(series: SeriesPoint[]): string {
-  const days = spanDays(series)
+  const days = observedSpanDays(series)
+  if (days < 1) return 'first day of history'
   if (days < 14) return `${days} day${days === 1 ? '' : 's'} of history`
   const weeks = Math.floor(days / 7)
   return `${weeks} weeks of history`
