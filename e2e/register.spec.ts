@@ -282,6 +282,9 @@ test('the Inspector shows everything and edits every field in place', async ({
   await expect(pane.getByText(/posted/)).toBeVisible()
   await expect(pane.getByText('−$62.40')).toBeVisible()
   await expect(pane.getByTestId('catpill')).toHaveText('🛒Groceries')
+  // A reviewed transaction wears the browsing variant: edit-in-place, no
+  // accept ritual anywhere (#86).
+  await expect(pane.getByRole('button', { name: /Accept/ })).toHaveCount(0)
 
   // Category edits in place — and the row reflects it immediately.
   await pane.getByTestId('chip-set-category').click()
@@ -331,7 +334,7 @@ test('the Inspector shows everything and edits every field in place', async ({
   await expect(reloaded.getByTestId('tag-chip')).toHaveCount(0)
 })
 
-test('transfers and splits are visibly marked; unreviewed rows route to the Inbox', async ({
+test('transfers and splits are visibly marked; an unreviewed row reviews in place', async ({
   page,
 }) => {
   const email = uniqueEmail('reg-marks')
@@ -340,16 +343,20 @@ test('transfers and splits are visibly marked; unreviewed rows route to the Inbo
   const checking = await seed.createAccount('Chase Checking')
   const savings = await seed.createAccount('Ally Savings')
 
-  // A linked transfer: opposite legs on different accounts.
+  // A linked transfer: opposite legs on different accounts. Seeded WITH
+  // categories so both legs are reviewed at birth (linking vacates the
+  // category, not the decision) — the browsing variant owns them.
   const outflow = await seed.createTxn(checking, {
     date: daysAgo(0),
     amountMinor: -12000,
     description: 'Venmo → Alex',
+    category: 'Groceries',
   })
   const inflow = await seed.createTxn(savings, {
     date: daysAgo(0),
     amountMinor: 12000,
     description: 'Venmo from Chase',
+    category: 'Groceries',
   })
   await seed.createTransfer(outflow, inflow)
 
@@ -395,17 +402,35 @@ test('transfers and splits are visibly marked; unreviewed rows route to the Inbo
   await expect(inspector(page).getByText('shelving')).toBeVisible()
   await expect(inspector(page).getByText('−$180.00')).toBeVisible()
 
-  // Unreviewed rows offer a route to the Inbox — a link, never an accept
-  // button (review verbs live there).
+  // An unreviewed row opens the SAME pane in its reviewing variant — mode
+  // follows the transaction, not the door (#86): staged corrections and an
+  // Accept footer, right here in the Register.
+  await expect(page.getByTestId('inbox-count')).toHaveText('1')
   const mystery = rowFor(page, 'Mystery Charge')
+  await expect(mystery.getByTestId('row-unreviewed-link')).toBeVisible()
   // Left-padding click, same reason as the transfer row above.
   await mystery.getByRole('button').click({ position: { x: 8, y: 8 } })
+  const pane = inspector(page)
+  await expect(pane.getByRole('button', { name: 'Accept · A' })).toBeVisible()
+
+  // Stage a category correction from this door — same one-shot review kit.
+  await pane.getByRole('button', { name: 'Correct category · C' }).click()
+  const picker = page.getByTestId('category-picker')
+  await expect(picker).toBeVisible()
+  await picker.getByRole('combobox').fill('Groceries')
   await expect(
-    inspector(page).getByTestId('inspector-inbox-link'),
+    picker.getByRole('option', { name: 'Groceries', exact: true }),
   ).toBeVisible()
-  await expect(
-    inspector(page).getByRole('button', { name: /Accept/ }),
-  ).toHaveCount(0)
-  await mystery.getByTestId('row-unreviewed-link').click()
-  await expect(page).toHaveURL(/\/inbox$/)
+  await page.keyboard.press('Enter')
+  await expect(picker).toHaveCount(0)
+  await expect(pane).toContainText('corrected')
+
+  // Accept clears it: the count badge retires, and the pane flips to the
+  // browsing variant in place — edit-in-place fields, no accept verbs.
+  await pane.getByRole('button', { name: 'Accept correction · A' }).click()
+  await expect(page.getByTestId('inbox-count')).toHaveCount(0)
+  await expect(pane.getByTestId('catpill')).toHaveText('🛒Groceries')
+  await expect(pane.getByLabel('Notes')).toBeVisible()
+  await expect(pane.getByRole('button', { name: /Accept/ })).toHaveCount(0)
+  await expect(mystery.getByTestId('row-unreviewed-link')).toHaveCount(0)
 })
