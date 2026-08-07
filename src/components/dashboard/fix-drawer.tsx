@@ -1,13 +1,13 @@
 import type { RefObject } from 'react'
 import type { TransactionOut } from '@/api/generated/types.gen'
-import { ReviewerPanel } from '@/components/inbox/reviewer-panel'
 import type { useReviewController } from '@/components/inbox/use-review-controller'
+import { TransactionInspector } from '@/components/inspector/transaction-inspector'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 
 // The Dashboard's "Fix" drawer (wireframe s6b): the CP1 reviewer mounted in a
 // 392px Sheet over the full unreviewed queue. The host (ToReviewCard) owns the
 // queue, focus, and the review controller — this is the drawer chrome plus the
-// ReviewerPanel body. Save advances to the next flagged item (the controller's
+// one TransactionInspector body. Save advances to the next flagged item (the controller's
 // onReviewed removes the row and the reducer advances focus); the day pane
 // behind the scrim re-derives as focus crosses a day boundary; Esc/✕ closes and
 // radix restores focus to the origin row. "1 of 12" renumbers as external
@@ -19,7 +19,6 @@ export function FixDrawer({
   position,
   total,
   reviewer,
-  accepting,
   bodyRef,
   originId,
 }: {
@@ -29,7 +28,6 @@ export function FixDrawer({
   position: number
   total: number
   reviewer: ReturnType<typeof useReviewController>
-  accepting: boolean
   bodyRef: RefObject<HTMLDivElement | null>
   /** The row whose Fix opened the drawer — focus returns there on close. */
   originId: string | null
@@ -82,37 +80,7 @@ export function FixDrawer({
           className="min-h-0 flex-1 overflow-y-auto p-4 outline-none"
         >
           {focused !== null && (
-            <ReviewerPanel
-              txn={focused}
-              correction={reviewer.correction}
-              onCorrectionChange={reviewer.setCorrection}
-              panel={reviewer.panel}
-              onOpenCategory={reviewer.openCategory}
-              onCloseCategory={reviewer.closeCategory}
-              createName={reviewer.createName}
-              onOpenCreateCategory={reviewer.openCreateCategory}
-              onBackToPicker={reviewer.backToPicker}
-              rulePreview={reviewer.rulePreview}
-              onAccept={reviewer.accept}
-              accepting={accepting}
-              categories={reviewer.categories}
-              categoriesPending={reviewer.categoriesPending}
-              tagSuggestions={reviewer.tagSuggestions}
-              splitLines={reviewer.splitLines}
-              onSplitLinesChange={reviewer.setSplitLines}
-              onOpenSplit={reviewer.openSplit}
-              onMergeBack={reviewer.mergeBack}
-              onSaveSplit={reviewer.saveSplit}
-              onCancelSplit={reviewer.cancelSplit}
-              counterpart={reviewer.counterpart}
-              counterpartLabel={reviewer.counterpartLabel}
-              onConfirmTransfer={reviewer.consentTransfer}
-              canMarkTransfer={reviewer.canMarkTransfer}
-              transferChoices={reviewer.transferChoices}
-              onOpenTransfer={reviewer.openTransfer}
-              onMarkTransfer={reviewer.markTransfer}
-              onCloseTransfer={reviewer.closeTransfer}
-            />
+            <TransactionInspector txn={focused} reviewer={reviewer} />
           )}
         </div>
       </SheetContent>

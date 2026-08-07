@@ -35,8 +35,9 @@ export const Route = createFileRoute('/_authed/register')({
 
 // F3 CP1 — the Register (wireframe #8): a date-grouped, cursor-paginated
 // transaction list with composing filters and text search, beside the
-// Inspector where every field edits in place. A read surface: review verbs
-// live in the Inbox; unreviewed rows route there.
+// Inspector. The Inspector's mode follows the transaction (F10 CP0): a
+// reviewed row edits in place; an unreviewed row shows the reviewing variant
+// with its Accept footer, right here.
 function RegisterPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
@@ -80,7 +81,22 @@ function RegisterPage() {
     [accountItems],
   )
 
-  const items = list.data?.pages.flatMap((page) => page.items) ?? []
+  const pages = list.data?.pages
+  const items = useMemo(
+    () => pages?.flatMap((page) => page.items) ?? [],
+    [pages],
+  )
+  // The reviewing variant's queue: the loaded unreviewed rows, for pair
+  // resolution and manual-transfer candidates.
+  const queueById = useMemo(
+    () =>
+      new Map(
+        items
+          .filter((txn) => txn.reviewed_at === null)
+          .map((txn) => [txn.id, txn]),
+      ),
+    [items],
+  )
   const fetchNextPage = list.fetchNextPage
   const onFetchNextPage = useCallback(() => {
     fetchNextPage()
@@ -119,6 +135,7 @@ function RegisterPage() {
         <Inspector
           txnId={search.txn}
           seed={items.find((txn) => txn.id === search.txn)}
+          queueById={queueById}
         />
       </div>
     </div>

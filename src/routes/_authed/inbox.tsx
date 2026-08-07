@@ -23,11 +23,11 @@ import { KeyboardLegend } from '@/components/inbox/keyboard-legend'
 import { PairCallout } from '@/components/inbox/pair-callout'
 import { ProposalRow, proposalRowDomId } from '@/components/inbox/proposal-row'
 import { payeeOf } from '@/components/inbox/reviewer-model'
-import { ReviewerPanel } from '@/components/inbox/reviewer-panel'
 import {
   invalidateReviewData,
   useReviewController,
 } from '@/components/inbox/use-review-controller'
+import { TransactionInspector } from '@/components/inspector/transaction-inspector'
 import {
   OnboardingWizard,
   onboardingSkippedThisLoad,
@@ -54,7 +54,7 @@ const queueOptions = () =>
 // before accepting through the same one-shot review call. Selection and
 // keyboard nav live in the pure inbox reducer; the per-item review orchestration
 // lives in useReviewController (F5 CP1) so the Dashboard Fix drawer can mount the
-// same ReviewerPanel. This page is the shell: the queue, the batch verbs, and
+// same TransactionInspector. This page is the shell: the queue, the batch verbs, and
 // the keyboard. Liveness is invalidation + refocus, never polling.
 function InboxPage() {
   const queryClient = useQueryClient()
@@ -370,37 +370,7 @@ function InboxPage() {
           <KeyboardLegend />
         </div>
         {focused !== null && (
-          <ReviewerPanel
-            txn={focused}
-            correction={reviewer.correction}
-            onCorrectionChange={reviewer.setCorrection}
-            panel={reviewer.panel}
-            onOpenCategory={reviewer.openCategory}
-            onCloseCategory={reviewer.closeCategory}
-            createName={reviewer.createName}
-            onOpenCreateCategory={reviewer.openCreateCategory}
-            onBackToPicker={reviewer.backToPicker}
-            rulePreview={reviewer.rulePreview}
-            onAccept={reviewer.accept}
-            accepting={reviewing}
-            categories={reviewer.categories}
-            categoriesPending={reviewer.categoriesPending}
-            tagSuggestions={reviewer.tagSuggestions}
-            splitLines={reviewer.splitLines}
-            onSplitLinesChange={reviewer.setSplitLines}
-            onOpenSplit={reviewer.openSplit}
-            onMergeBack={reviewer.mergeBack}
-            onSaveSplit={reviewer.saveSplit}
-            onCancelSplit={reviewer.cancelSplit}
-            counterpart={reviewer.counterpart}
-            counterpartLabel={reviewer.counterpartLabel}
-            onConfirmTransfer={reviewer.consentTransfer}
-            canMarkTransfer={reviewer.canMarkTransfer}
-            transferChoices={reviewer.transferChoices}
-            onOpenTransfer={reviewer.openTransfer}
-            onMarkTransfer={reviewer.markTransfer}
-            onCloseTransfer={reviewer.closeTransfer}
-          />
+          <TransactionInspector txn={focused} reviewer={reviewer} />
         )}
       </div>
     </div>

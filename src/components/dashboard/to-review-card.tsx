@@ -32,8 +32,8 @@ import { FixDrawer } from './fix-drawer'
 // queue. Accept the easy ones inline (✓), Accept a whole day (A), or Fix the odd
 // one in the drawer that walks the full queue. This component is the reviewer
 // HOST — it owns the queue reducer, focus, the batch verbs, and the review
-// controller — mirroring the Inbox page so the same ReviewerPanel mounts in the
-// drawer. Accepting invalidates the review list, the unreviewed count, AND the
+// controller — mirroring the Inbox page so the same TransactionInspector
+// mounts in the drawer. Accepting invalidates the review list, the unreviewed count, AND the
 // ledger stats (the To-review tile above reads them). Liveness is invalidation
 // + refocus, never polling.
 const QUEUE_PAGE = 100
@@ -253,7 +253,6 @@ export function ToReviewCard() {
         position={position.position}
         total={position.total}
         reviewer={reviewer}
-        accepting={busy}
         bodyRef={drawerBodyRef}
         originId={originId}
       />

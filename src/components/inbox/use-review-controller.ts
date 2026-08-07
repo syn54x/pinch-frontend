@@ -355,6 +355,8 @@ export function useReviewController({
 
   return {
     // state the reviewer panel renders
+    /** Names an account for the identity line and the pair callout. */
+    accountLabel,
     correction,
     splitLines,
     panel,
