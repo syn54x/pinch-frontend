@@ -143,6 +143,22 @@ export async function stageConnection(
   )
 }
 
+/** Attach the user's accounts to their (staged) connection — flipping
+ * them from manual to connected (`manual` is derived: connection_id IS
+ * NULL) without a provider walk. How the Manual-badge spec stages "synced
+ * rows" hermetically: the API never re-parents an account onto a
+ * connection, and the real path needs Plaid credentials. */
+export async function attachAccountsToConnection(email: string): Promise<void> {
+  await psql(
+    `UPDATE account SET connection_id = (
+       SELECT c.id FROM connection c
+       WHERE c.ledger_id IN (${LEDGER_OF(email)})
+       ORDER BY c.created_at LIMIT 1
+     )
+     WHERE ledger_id IN (${LEDGER_OF(email)})`,
+  )
+}
+
 /** Flip an account's kind — how the capability-gap spec (7f) makes an
  * MX-connected account render the investments surface without depending
  * on MX Bank's fixture data carrying an investment account. */
