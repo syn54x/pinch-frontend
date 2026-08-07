@@ -78,9 +78,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-svh">
       <aside className="flex w-[212px] shrink-0 flex-col border-r bg-sidebar px-3 py-4">
-        <div className="flex items-center gap-2.5 px-2 pt-1 pb-3.5">
-          <div className="size-6 rounded-[7px] bg-primary" aria-hidden />
-          <span className="font-semibold text-sm">Pinch</span>
+        <div className="flex items-center gap-1 px-2 pt-1 pb-3.5">
+          {/* The 🫰 brand mark (wireframes' .logo — the emoji IS the logo). */}
+          <span
+            className="flex size-6 items-center justify-center text-[19px] leading-none"
+            aria-hidden
+          >
+            🫰
+          </span>
+          <span className="font-heading font-semibold text-sm tracking-[-0.02em]">
+            Pinch
+          </span>
         </div>
         <nav aria-label="Primary" className="flex flex-col gap-[3px]">
           <NavItem to="/dashboard" icon={Home}>

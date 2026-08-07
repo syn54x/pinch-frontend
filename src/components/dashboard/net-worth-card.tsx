@@ -39,10 +39,7 @@ export function NetWorthCard() {
         <Skeleton className="h-8 w-40" />
       ) : (
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span
-            data-testid="dashboard-nw-hero"
-            className="amount font-semibold text-3xl"
-          >
+          <span data-testid="dashboard-nw-hero" className="amount-big text-3xl">
             {formatMinorUnits(data.net_worth_minor, data.currency)}
           </span>
           <MonthToDate
