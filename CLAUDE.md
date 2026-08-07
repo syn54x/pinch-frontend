@@ -4,7 +4,7 @@
 
 ### Issue tracker
 
-Issues and PRDs live in GitHub Issues for `syn54x/pinch-frontend`, via the `gh` CLI. External PRs are not a triage surface. See `docs/agents/issue-tracker.md`.
+Issues and PRDs live in GitHub Issues for `pinch-finance/pinch-frontend`, via the `gh` CLI. External PRs are not a triage surface. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

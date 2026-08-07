@@ -51,7 +51,7 @@ jobs:
         run: echo "sha=$(tr -d '[:space:]' < e2e/backend.pin)" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
-          repository: syn54x/pinch-backend
+          repository: pinch-finance/pinch-backend
           ref: ${{ steps.pin.outputs.sha }}
           path: pinch-backend
       - uses: pnpm/action-setup@v4
