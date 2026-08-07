@@ -13,25 +13,27 @@ const SANDBOX_INSTITUTION = 'ins_109508'
 
 let cachedCreds: { clientId: string; secret: string } | null = null
 
-/** Sandbox credentials: process env in CI, the backend's .env locally.
- * All-or-nothing per source — never a mixed pair. */
+/** Sandbox credentials: the backend's .env.local locally, process env in
+ * CI — file first so an ambient shell's production exports can't hijack
+ * seeding (see helpers/env.ts). All-or-nothing per source — never a mixed
+ * pair. */
 async function plaidCreds(): Promise<{ clientId: string; secret: string }> {
   if (cachedCreds) return cachedCreds
-  const envClientId = process.env.PINCH_PLAID_CLIENT_ID
-  const envSecret = process.env.PINCH_PLAID_SECRET
-  if (envClientId && envSecret) {
-    cachedCreds = { clientId: envClientId, secret: envSecret }
+  const dotenv = await backendDotenv()
+  const fileClientId = dotenvValue(dotenv, 'PINCH_PLAID_CLIENT_ID')
+  const fileSecret = dotenvValue(dotenv, 'PINCH_PLAID_SECRET')
+  if (fileClientId && fileSecret) {
+    cachedCreds = { clientId: fileClientId, secret: fileSecret }
     return cachedCreds
   }
-  const dotenv = await backendDotenv()
-  const clientId = dotenvValue(dotenv, 'PINCH_PLAID_CLIENT_ID')
-  const secret = dotenvValue(dotenv, 'PINCH_PLAID_SECRET')
-  if (!clientId || !secret) {
+  const envClientId = process.env.PINCH_PLAID_CLIENT_ID
+  const envSecret = process.env.PINCH_PLAID_SECRET
+  if (!envClientId || !envSecret) {
     throw new Error(
-      'Plaid sandbox credentials not found (process env or backend .env)',
+      'Plaid sandbox credentials not found (backend .env.local or process env)',
     )
   }
-  cachedCreds = { clientId, secret }
+  cachedCreds = { clientId: envClientId, secret: envSecret }
   return cachedCreds
 }
 
