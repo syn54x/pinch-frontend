@@ -379,7 +379,10 @@ test('transfers and splits are visibly marked; unreviewed rows route to the Inbo
   const venmo = rowFor(page, 'Venmo → Alex')
   await expect(venmo.getByText('transfer', { exact: true })).toBeVisible()
   await expect(venmo.getByTestId('catpill')).toHaveCount(0)
-  await venmo.getByRole('button').click()
+  // Click the row's left padding: an unreviewed row's mark cluster
+  // (transfer + manual + the unreviewed link) can reach the row's center,
+  // and the link — deliberately clickable — would intercept a center click.
+  await venmo.getByRole('button').click({ position: { x: 8, y: 8 } })
   await expect(
     inspector(page).getByText('Transfer — excluded from spending'),
   ).toBeVisible()
@@ -395,7 +398,8 @@ test('transfers and splits are visibly marked; unreviewed rows route to the Inbo
   // Unreviewed rows offer a route to the Inbox — a link, never an accept
   // button (review verbs live there).
   const mystery = rowFor(page, 'Mystery Charge')
-  await mystery.getByRole('button').click()
+  // Left-padding click, same reason as the transfer row above.
+  await mystery.getByRole('button').click({ position: { x: 8, y: 8 } })
   await expect(
     inspector(page).getByTestId('inspector-inbox-link'),
   ).toBeVisible()
