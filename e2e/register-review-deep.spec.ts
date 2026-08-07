@@ -5,20 +5,22 @@ import { daysAgo, RegisterSeeder } from './helpers/register'
 import { createCategory } from './helpers/seed'
 import { loginViaUi, setTheme } from './helpers/ui'
 
-// F3 CP3 (#19, wireframe #7's Inspector column): the Inbox's deep verbs —
+// F3 CP3 (#19, wireframe s7's Inspector column), re-addressed by F10 CP1
+// (#87) onto the Register's To-review tab: the queue's deep verbs —
 // the split editor and transfer consent. Seeding is the honest seam again:
 // manual creation defers the same classify job as a sync, and its
 // post-classification pass IS the transfer detector (helpers/detection.ts),
 // so `det` provenance below is the real pipeline's, never staged.
 
 function rows(page: Page) {
-  return page.getByTestId('inbox-row')
+  return page.getByTestId('queue-row')
 }
 
-async function openInbox(page: Page, email: string): Promise<void> {
+async function openQueue(page: Page, email: string): Promise<void> {
   await loginViaUi(page, email, PASSWORD)
-  await page.getByRole('link', { name: 'Inbox' }).click()
-  await expect(page).toHaveURL(/\/inbox$/)
+  await page.getByRole('link', { name: 'Register' }).click()
+  await page.getByTestId('view-review').click()
+  await expect(page).toHaveURL(/\/register\?view=review$/)
   await expect(rows(page).first()).toBeVisible({ timeout: 15_000 })
 }
 
@@ -26,7 +28,7 @@ test('the Costco case: S drafts categoried lines, the guard blocks a mismatch, M
   page,
 }) => {
   test.setTimeout(120_000)
-  const email = uniqueEmail('inbox-split')
+  const email = uniqueEmail('queue-split')
   await seedUser(email, PASSWORD)
   await createCategory(email, PASSWORD, 'E2E Groceries')
   await createCategory(email, PASSWORD, 'E2E Household')
@@ -39,7 +41,7 @@ test('the Costco case: S drafts categoried lines, the guard blocks a mismatch, M
   })
   await seed.dispose()
 
-  await openInbox(page, email)
+  await openQueue(page, email)
   await expect(rows(page)).toHaveCount(1)
 
   // S opens the editor: the whole amount on an inherited first line plus
@@ -112,7 +114,7 @@ test('the Costco case: S drafts categoried lines, the guard blocks a mismatch, M
 
   // A accepts the staged split document.
   await page.keyboard.press('a')
-  await expect(page.getByTestId('inbox-empty')).toBeVisible()
+  await expect(page.getByTestId('queue-empty')).toBeVisible()
 
   // The Register: ONE anchor row wearing the split marking — categories
   // moved to the lines, the raw data stayed put, nothing double-counts.
@@ -128,7 +130,7 @@ test('the Venmo → Ally case: the pair speaks the canonical copy, one consent c
   page,
 }) => {
   test.setTimeout(120_000)
-  const email = uniqueEmail('inbox-pair')
+  const email = uniqueEmail('queue-pair')
   await seedUser(email, PASSWORD)
   const seed = await RegisterSeeder.login(email, PASSWORD)
   const checking = await seed.createAccount('Chase Checking')
@@ -146,7 +148,7 @@ test('the Venmo → Ally case: the pair speaks the canonical copy, one consent c
   await seed.dispose()
   await waitForDetectedPair(email, PASSWORD)
 
-  await openInbox(page, email)
+  await openQueue(page, email)
   await expect(rows(page)).toHaveCount(2)
 
   // Real detector provenance on the rows, and the callout under the
@@ -185,7 +187,7 @@ test('the Venmo → Ally case: the pair speaks the canonical copy, one consent c
 
   // T: ONE consent consumes both sides — one call, an empty queue.
   await page.keyboard.press('t')
-  await expect(page.getByTestId('inbox-empty')).toBeVisible()
+  await expect(page.getByTestId('queue-empty')).toBeVisible()
   expect(reviewCalls).toHaveLength(1)
 
   // The Register wears the exclusion on BOTH legs.
@@ -207,7 +209,7 @@ test('declining a pairing: a category instead withdraws the mirror, both sides r
   page,
 }) => {
   test.setTimeout(180_000)
-  const email = uniqueEmail('inbox-decline')
+  const email = uniqueEmail('queue-decline')
   await seedUser(email, PASSWORD)
   await createCategory(email, PASSWORD, 'E2E Reimbursement')
   const seed = await RegisterSeeder.login(email, PASSWORD)
@@ -225,7 +227,7 @@ test('declining a pairing: a category instead withdraws the mirror, both sides r
   })
   await waitForDetectedPair(email, PASSWORD)
 
-  await openInbox(page, email)
+  await openQueue(page, email)
   await rows(page).filter({ hasText: 'VENMO PAYMENT' }).click()
 
   // Decline = a different positive decision. The consent card routes to the
@@ -237,7 +239,7 @@ test('declining a pairing: a category instead withdraws the mirror, both sides r
   const picker = page.getByTestId('category-picker')
   await picker.getByRole('combobox').fill('E2E Reimbursement')
   await picker.getByRole('option', { name: 'E2E Reimbursement' }).click()
-  await expect(page.getByTestId('inbox-inspector')).toContainText(
+  await expect(page.getByTestId('reviewer-panel')).toContainText(
     'declines the pairing',
   )
   await page.keyboard.press('a')
@@ -287,7 +289,7 @@ test('manual transfer: T without a detected pairing opens the picker — link an
   page,
 }) => {
   test.setTimeout(120_000)
-  const email = uniqueEmail('inbox-manual-transfer')
+  const email = uniqueEmail('queue-manual-transfer')
   await seedUser(email, PASSWORD)
   const seed = await RegisterSeeder.login(email, PASSWORD)
   const checking = await seed.createAccount('Chase Checking')
@@ -315,7 +317,7 @@ test('manual transfer: T without a detected pairing opens the picker — link an
   })
   await seed.dispose()
 
-  await openInbox(page, email)
+  await openQueue(page, email)
   await expect(rows(page)).toHaveCount(3)
 
   // No consent card (nothing was detected) — but T is not a dead verb.
@@ -343,7 +345,7 @@ test('manual transfer: T without a detected pairing opens the picker — link an
     'No linkable leg',
   )
   await page.getByTestId('transfer-untracked').click()
-  await expect(page.getByTestId('inbox-empty')).toBeVisible()
+  await expect(page.getByTestId('queue-empty')).toBeVisible()
 
   // The Register wears the exclusion on all three rows.
   await page.getByRole('link', { name: 'Register' }).click()

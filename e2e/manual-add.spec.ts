@@ -11,9 +11,8 @@ import { loginViaUi } from './helpers/ui'
 // category the row is reviewed at birth and never queues; bare, it stays
 // unreviewed and the classify pipeline attaches Penny's proposal.
 //
-// "To-review" here is still the Inbox — the Register-absorbs-Inbox slice
-// renames the surface, not these behaviors; its specs re-address these
-// assertions when the tabs land.
+// "To-review" is the Register's own tab since F10 CP1 (#87) — the queue
+// assertions below land there.
 
 function rows(page: Page) {
   return page.getByTestId('txn-row')
@@ -78,7 +77,7 @@ test('categorized manual add skips review and wears the Manual badge', async ({
   // Reviewed at birth: no unreviewed mark, and the review count never
   // lights up (the badge renders only when the count is nonzero).
   await expect(row.getByTestId('row-unreviewed-link')).toHaveCount(0)
-  await expect(page.getByTestId('inbox-count')).toHaveCount(0)
+  await expect(page.getByTestId('review-count')).toHaveCount(0)
 })
 
 test('uncategorized manual add queues for review with a proposal attached', async ({
@@ -107,7 +106,7 @@ test('uncategorized manual add queues for review with a proposal attached', asyn
   const row = rowFor(page, 'Paycheck')
   await expect(row.getByText('+$150.00')).toBeVisible()
   await expect(row.getByTestId('row-unreviewed-link')).toBeVisible()
-  await expect(page.getByTestId('inbox-count')).toHaveText('1')
+  await expect(page.getByTestId('review-count')).toHaveText('1')
 
   // The classify pipeline (async worker) attaches Penny's proposal.
   await pollUnreviewed(
@@ -120,11 +119,11 @@ test('uncategorized manual add queues for review with a proposal attached', asyn
     'a proposal on the manual add',
   )
 
-  // And the row is waiting in the review queue.
-  await page.getByRole('link', { name: 'Inbox' }).click()
-  await expect(page).toHaveURL(/\/inbox$/)
+  // And the row is waiting in the To-review tab's queue.
+  await page.getByTestId('view-review').click()
+  await expect(page).toHaveURL(/\/register\?view=review$/)
   await expect(
-    page.getByTestId('inbox-row').filter({ hasText: 'Paycheck' }),
+    page.getByTestId('queue-row').filter({ hasText: 'Paycheck' }),
   ).toBeVisible()
 })
 
@@ -133,6 +132,13 @@ test('an empty account picker offers inline manual-account creation', async ({
 }) => {
   const email = uniqueEmail('manual-first')
   await seedUser(email, PASSWORD)
+  // A staged connection keeps the first-run wizard (which now lives on the
+  // Register, F10 CP1) out of the way: the ledger has a connection but no
+  // manual account — exactly the "+ Add with an empty picker" case.
+  await stageConnection(email, {
+    provider: 'plaid',
+    institutionName: 'E2E Bank',
+  })
 
   await openRegister(page, email)
   const dialog = await openAddDialog(page)

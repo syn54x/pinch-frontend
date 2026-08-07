@@ -4,16 +4,18 @@ import { mintSandboxPublicToken } from './helpers/plaid'
 import { armPlaidFake } from './helpers/plaid-fake'
 import { continueWithPlaid, loginViaUi, setTheme } from './helpers/ui'
 
-// F3 CP4 (#20, wireframe #5): the inferred first-run wizard. The trigger is
-// stateless (an empty ledger IS the state), the connect step is the F2 flow
-// with the same network-boundary Plaid fake, and the whole signup → wizard
-// → populated-Inbox journey below never touches the API by hand.
+// F3 CP4 (#20, wireframe #5), rehomed by F10 CP1 (#87): the inferred
+// first-run wizard lives on the Register now and hands off onto its
+// To-review tab. The trigger is stateless (an empty ledger IS the state),
+// the connect step is the F2 flow with the same network-boundary Plaid
+// fake, and the whole signup → wizard → populated-queue journey below
+// never touches the API by hand.
 
 function wizard(page: Page) {
   return page.getByTestId('onboarding-wizard')
 }
 
-test('signup → wizard → currency saves → connect → honest progress → a full Inbox of finished work', async ({
+test('signup → wizard → currency saves → connect → honest progress → a full To-review tab of finished work', async ({
   page,
 }) => {
   test.setTimeout(150_000)
@@ -27,8 +29,8 @@ test('signup → wizard → currency saves → connect → honest progress → a
   await page.getByRole('button', { name: 'Create account' }).click()
   await expect(page).toHaveURL(/\/accounts$/)
 
-  // The Inbox infers first-run and shows the wizard, not an empty queue.
-  await page.getByRole('link', { name: 'Inbox' }).click()
+  // The Register infers first-run and shows the wizard, not an empty ledger.
+  await page.getByRole('link', { name: 'Register' }).click()
   await expect(wizard(page)).toBeVisible()
   await expect(wizard(page)).toContainText('Welcome to Pinch')
 
@@ -72,13 +74,15 @@ test('signup → wizard → currency saves → connect → honest progress → a
     /Categorizing \d+\/\d+/,
   )
 
-  // Clicking it lands the user straight in a full Inbox of finished work.
+  // Clicking it lands the user straight on the To-review tab — a full
+  // queue of finished work.
   await cta.click()
-  await expect(page.getByTestId('inbox-row').first()).toBeVisible({
+  await expect(page).toHaveURL(/\/register\?view=review$/)
+  await expect(page.getByTestId('queue-row').first()).toBeVisible({
     timeout: 30_000,
   })
   await expect(wizard(page)).toHaveCount(0)
-  await expect(page.getByTestId('inbox-count')).not.toHaveText('0')
+  await expect(page.getByTestId('review-count')).not.toHaveText('0')
 })
 
 test('the manual path creates an account in place — and a ledger with an account never sees the wizard', async ({
@@ -88,7 +92,7 @@ test('the manual path creates an account in place — and a ledger with an accou
   await seedUser(email, PASSWORD)
   await loginViaUi(page, email, PASSWORD)
 
-  await page.getByRole('link', { name: 'Inbox' }).click()
+  await page.getByRole('link', { name: 'Register' }).click()
   await expect(wizard(page)).toBeVisible()
 
   // Skip the currency step — every step is skippable, but skipping the
@@ -100,39 +104,47 @@ test('the manual path creates an account in place — and a ledger with an accou
   await wizard(page).getByLabel('Account name').fill('Everyday Checking')
   await wizard(page).getByRole('button', { name: 'Create account' }).click()
 
-  // The wizard closes onto the Inbox empty state; the account exists.
-  await expect(page.getByTestId('inbox-empty')).toBeVisible()
+  // The wizard closes onto the To-review tab's empty state; the account
+  // exists.
+  await expect(page).toHaveURL(/\/register\?view=review$/)
+  await expect(page.getByTestId('queue-empty')).toBeVisible()
   await page.getByRole('link', { name: 'Accounts' }).click()
-  await expect(page.getByText('Everyday Checking')).toBeVisible()
+  // Scoped to the card: the (closed) global-search listbox can hold the
+  // same account name in its DOM once the accounts cache is warm.
+  await expect(
+    page.getByTestId('account-card').getByText('Everyday Checking'),
+  ).toBeVisible()
 
   // The trigger is the ledger, not a flag: with an account present, a
   // fresh page load never shows the wizard.
   await page.reload()
-  await page.getByRole('link', { name: 'Inbox' }).click()
-  await expect(page.getByTestId('inbox-empty')).toBeVisible()
+  await page.getByRole('link', { name: 'Register' }).click()
+  await expect(page.getByTestId('register-empty')).toBeVisible()
   await expect(wizard(page)).toHaveCount(0)
 })
 
-test('skip-everything lands on the Inbox empty state with a route back to connecting — and reappears next load', async ({
+test('skip-everything lands on the To-review empty state with a route back to connecting — and reappears next load', async ({
   page,
 }) => {
   const email = uniqueEmail('onboard-skip')
   await seedUser(email, PASSWORD)
   await loginViaUi(page, email, PASSWORD)
 
-  await page.getByRole('link', { name: 'Inbox' }).click()
+  await page.getByRole('link', { name: 'Register' }).click()
   await expect(wizard(page)).toBeVisible()
   await wizard(page).getByRole('button', { name: 'Skip for now' }).click()
 
-  // The empty state, with the way forward — never a dead end.
-  await expect(page.getByTestId('inbox-empty')).toBeVisible()
+  // The To-review empty state, with the way forward — never a dead end.
+  await expect(page).toHaveURL(/\/register\?view=review$/)
+  await expect(page.getByTestId('queue-empty')).toBeVisible()
   const connectLink = page.getByRole('link', { name: 'Connect a bank' })
   await expect(connectLink).toBeVisible()
 
   // The skip holds across in-app navigation…
+  await page.getByRole('link', { name: 'Dashboard' }).click()
   await page.getByRole('link', { name: 'Register' }).click()
-  await page.getByRole('link', { name: 'Inbox' }).click()
-  await expect(page.getByTestId('inbox-empty')).toBeVisible()
+  await page.getByTestId('view-review').click()
+  await expect(page.getByTestId('queue-empty')).toBeVisible()
   await expect(wizard(page)).toHaveCount(0)
 
   // …and the route back works.
@@ -141,6 +153,6 @@ test('skip-everything lands on the Inbox empty state with a route back to connec
 
   // Stateless: the ledger is still empty, so a fresh load infers again.
   await page.reload()
-  await page.getByRole('link', { name: 'Inbox' }).click()
+  await page.getByRole('link', { name: 'Register' }).click()
   await expect(wizard(page)).toBeVisible()
 })

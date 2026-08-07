@@ -123,6 +123,20 @@ test('populated dashboard: greeting, review CTA, tiles, net-worth card, day-page
   await expect(page).toHaveURL(/\/accounts$/)
 })
 
+test('the review CTA lands on the Register’s To-review tab (F10 CP1)', async ({
+  page,
+}) => {
+  const email = uniqueEmail('dash-cta')
+  await seedDashboard(email, [{ days: 0, description: 'Alpha Market' }])
+  await openDashboard(page, email)
+
+  await page.getByTestId('dashboard-review-cta').click()
+  await expect(page).toHaveURL(/\/register\?view=review$/)
+  await expect(
+    page.getByTestId('queue-row').filter({ hasText: 'Alpha Market' }),
+  ).toBeVisible()
+})
+
 test('inline ✓ and Accept-day clear the queue and decrement the To-review tile', async ({
   page,
 }) => {

@@ -2,7 +2,7 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { authedContext } from './api'
 
-// Inbox seeding (F3 CP2): everything the real stack can produce goes
+// Review-queue seeding (F3 CP2): everything the real stack can produce goes
 // through the real stack — categories and rules via the API *before* the
 // fake-bank sync, so the pipeline itself mints rule/none provenance on the
 // synced transactions. Only what the pipeline cannot produce (ai — v0
