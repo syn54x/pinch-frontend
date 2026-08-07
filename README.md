@@ -20,3 +20,7 @@ just openapi-sync   # refresh snapshot + regenerate the client
 ```
 
 E2e uses dedicated ports (backend :8100, frontend :5183) and never touches your dev servers. It needs the `local-pg` docker container running.
+
+Concurrent runs (e.g. from separate git worktrees) set `E2E_SLOT=N` (a non-negative integer, default 0): every port shifts by `10*N` and slot N>0 gets its own e2e databases (`pinch_e2e_sN` / `pinch_e2e_noai_sN`), so independent slots never collide on ports or destructively reset each other's data. Slot 0 is unchanged from the ports/names above — nothing to do for a single developer or CI. See `e2e/helpers/slot.ts` for the exact formulas. Two slots at Playwright's default 4 workers each can saturate a smaller machine and produce load-induced flakes; pass `--workers=2` per slot (e.g. `just e2e-fast --workers=2`) when running concurrently.
+
+Slots isolate ports and databases only, not third-party sandboxes: specs that drive the live MX/Plaid sandboxes (the `chromium-live` project, and `dupe-guard.spec.ts`'s MX side, which lives in the hermetic project but talks to real MX) share one sandbox account across slots and will race if two slots hit them in the same window. Run concurrent slots against the hermetic `e2e-fast` gate; run live-sandbox suites from one slot at a time.

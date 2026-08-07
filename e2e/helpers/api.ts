@@ -1,10 +1,11 @@
 import { type APIRequestContext, request } from '@playwright/test'
+import { BACKEND_URL } from './slot'
 
 // Backend-side seeding, straight through the real API. The backend's CSRF is
 // a double-submit cookie: a safe request issues the cookie, unsafe requests
 // echo it in x-csrftoken.
 
-export const API = 'http://localhost:8100'
+export const API = BACKEND_URL
 
 /** One suite-wide password: what it is never matters, only that it works. */
 export const PASSWORD = 'correct-horse-battery'
@@ -34,7 +35,8 @@ export async function seedUser(
   password: string,
   accounts: SeedAccount[] = [],
   /** Override for tests running against a secondary stack (e.g. the
-   * Penny-unavailable backend on 8101). */
+   * Penny-unavailable backend on 8101, shifted by E2E_SLOT like every
+   * other port — see slot.ts). */
   base: string = API,
 ): Promise<void> {
   const ctx = await request.newContext({ baseURL: base })
