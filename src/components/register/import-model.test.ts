@@ -6,6 +6,7 @@ import {
   completionMessage,
   countDuplicateRows,
   countIncludedRows,
+  deriveColumnPreview,
   type MappingDraft,
   mappingSummaryLines,
   newlyUncategorized,
@@ -81,6 +82,45 @@ describe('rolesFromMapping', () => {
       'payee',
       'amount',
     ])
+  })
+})
+
+describe('deriveColumnPreview', () => {
+  const csv = 'Date,Description,Amount\n2026-01-05,COFFEE SHOP,-4.50\n'
+
+  it('reads the header and first data row on the given delimiter', () => {
+    expect(deriveColumnPreview(csv, ',', true)).toEqual({
+      headerRow: ['Date', 'Description', 'Amount'],
+      sampleRow: ['2026-01-05', 'COFFEE SHOP', '-4.50'],
+      columnCount: 3,
+    })
+  })
+
+  it('treats the first record as data, not a header, when hasHeader is false', () => {
+    expect(deriveColumnPreview(csv, ',', false)).toEqual({
+      headerRow: null,
+      sampleRow: ['Date', 'Description', 'Amount'],
+      columnCount: 3,
+    })
+  })
+
+  it('reshapes the column count when the delimiter changes — the whole point of the control', () => {
+    // Comma-delimited text read as one semicolon-delimited column: a
+    // mis-sniffed shape, and exactly the case the delimiter select exists
+    // to correct.
+    expect(deriveColumnPreview(csv, ';', true)).toEqual({
+      headerRow: ['Date,Description,Amount'],
+      sampleRow: ['2026-01-05,COFFEE SHOP,-4.50'],
+      columnCount: 1,
+    })
+  })
+
+  it('floors columnCount at one for an empty file', () => {
+    expect(deriveColumnPreview('', ',', true)).toEqual({
+      headerRow: null,
+      sampleRow: null,
+      columnCount: 1,
+    })
   })
 })
 

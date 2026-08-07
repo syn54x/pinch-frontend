@@ -5,6 +5,7 @@ import type {
   ImportRowOut,
   MappingSpec,
 } from '../../api/generated/types.gen'
+import { parseCsvRecords } from '../../lib/csv'
 
 // Pure CSV-import-wizard logic (F10 CP6, #92): turning the mapping form's
 // per-column choices into the backend's MappingSpec, deriving the initial
@@ -57,6 +58,34 @@ export function rolesFromMapping(
   set(spec.debit_column, 'debit')
   set(spec.credit_column, 'credit')
   return roles
+}
+
+export type ColumnPreview = {
+  headerRow: string[] | null
+  sampleRow: string[] | null
+  columnCount: number
+}
+
+/** The mapping table's column shape, derived from the raw file text and
+ * the delimiter/header-row controls — NOT frozen at upload time. The
+ * delimiter select and header-row checkbox exist precisely to correct a
+ * bad sniff; if changing them didn't reshape the table, a mis-sniffed file
+ * (e.g. one column instead of three) would be an unrecoverable dead end,
+ * since a Date/Amount mapping needs columns that were never parsed out. */
+export function deriveColumnPreview(
+  text: string,
+  delimiter: string,
+  hasHeader: boolean,
+): ColumnPreview {
+  const records = parseCsvRecords(text, delimiter)
+  const headerRow = hasHeader ? (records[0] ?? null) : null
+  const sampleRow = (hasHeader ? records[1] : records[0]) ?? null
+  const columnCount = Math.max(
+    headerRow?.length ?? 0,
+    sampleRow?.length ?? 0,
+    1,
+  )
+  return { headerRow, sampleRow, columnCount }
 }
 
 export type MappingDraft = {

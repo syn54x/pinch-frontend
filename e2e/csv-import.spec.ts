@@ -153,3 +153,42 @@ test('duplicate rows are flagged and excluded by default, with a per-row overrid
     page.getByTestId('queue-row').filter({ hasText: 'BLUE BOTTLE COFFEE' }),
   ).toHaveCount(1)
 })
+
+test('correcting the delimiter reshapes the mapping table, not just its labels', async ({
+  page,
+}) => {
+  const email = uniqueEmail('csv-delimiter')
+  await seedUser(email, PASSWORD)
+  const seed = await RegisterSeeder.login(email, PASSWORD)
+  await seed.createAccount('Wallet')
+  await seed.dispose()
+
+  await openRegister(page, email)
+  await page.getByTestId('import-trigger').click()
+  const dialog = page.getByRole('dialog', { name: 'Import CSV' })
+  await dialog
+    .getByTestId('import-file-input')
+    .setInputFiles(
+      csvFile('Date,Description,Amount\n2026-01-05,COFFEE SHOP,-4.50\n'),
+    )
+  await dialog.getByTestId('import-upload-submit').click()
+  await expect(dialog.getByTestId('import-mapping-role-2')).toBeVisible()
+
+  // A wrong delimiter correction collapses the comma-delimited file into
+  // one column — the mis-sniff case the control exists to fix.
+  await dialog.getByLabel('Delimiter').selectOption({ label: 'Semicolon' })
+  await expect(dialog.getByTestId('import-mapping-role-1')).toHaveCount(0)
+  await expect(dialog.getByTestId('import-mapping-role-0')).toBeVisible()
+
+  // Correcting it back re-derives the real three-column shape — the table
+  // reshapes live, not just once at upload time.
+  await dialog.getByLabel('Delimiter').selectOption({ label: 'Comma' })
+  await expect(dialog.getByTestId('import-mapping-role-2')).toBeVisible()
+  await expect(dialog.getByTestId('import-mapping-role-0')).toHaveValue('skip')
+
+  // And the tab option is a real tab character, not the literal "\t" (a
+  // JSX string-attribute bug): selecting it must actually change the
+  // control's value away from comma.
+  await dialog.getByLabel('Delimiter').selectOption({ label: 'Tab' })
+  await expect(dialog.getByLabel('Delimiter')).not.toHaveValue(',')
+})
