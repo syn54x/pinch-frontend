@@ -33,6 +33,48 @@ export function projectionReady(series: SeriesPoint[]): boolean {
   return spanDays(series) >= 14
 }
 
+/** The collecting-history gate (F10 CP2, wireframe 3b): under ~two months of
+ * span, the chart shows the honest early state — history compressed to its
+ * real share of the range, never stretched to look like a year. */
+export const COLLECTING_SPAN_DAYS = 60
+export function collectingHistory(series: SeriesPoint[]): boolean {
+  return series.length > 0 && spanDays(series) < COLLECTING_SPAN_DAYS
+}
+
+/** Nominal width of a range's window in days, for sizing the collecting-state
+ * chart. `all` floors at a year: with under 60 days of history, "all" is
+ * exactly the six-weeks-dressed-as-a-year case the state exists to prevent. */
+export function rangeWindowDays(range: NetWorthRange): number {
+  switch (range) {
+    case '1m':
+      return 30
+    case '6m':
+      return 183
+    case '1y':
+    case 'all':
+      return 365
+  }
+}
+
+/** The share of the range's window the history actually covers — how wide the
+ * collecting-state chart draws. Floored so a few days still render visibly. */
+export function historyFraction(
+  series: SeriesPoint[],
+  range: NetWorthRange,
+): number {
+  const fraction = spanDays(series) / rangeWindowDays(range)
+  return Math.min(1, Math.max(0.15, fraction))
+}
+
+/** "N days/weeks of history" — the collecting-state chip. Weeks from 14 days
+ * up; never rounds up past what the data covers. */
+export function historySpanLabel(series: SeriesPoint[]): string {
+  const days = spanDays(series)
+  if (days < 14) return `${days} day${days === 1 ? '' : 's'} of history`
+  const weeks = Math.floor(days / 7)
+  return `${weeks} weeks of history`
+}
+
 /** Draw the dashed projection only when the server computed one AND the history
  * is long enough to trust it. */
 export function showProjection(

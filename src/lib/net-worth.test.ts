@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import type { Delta, Projection, SeriesPoint } from '@/api/generated/types.gen'
 import {
+  collectingHistory,
   deltaGlyph,
   deltaTone,
   formatDeltaPercent,
+  historyFraction,
+  historySpanLabel,
   momReady,
   projectionReady,
+  rangeWindowDays,
   showProjection,
   spanDays,
 } from './net-worth'
@@ -61,6 +65,55 @@ describe('showProjection', () => {
 
   it('withholds when the server sent no projection', () => {
     expect(showProjection(long, null)).toBe(false)
+  })
+})
+
+describe('collectingHistory (60-day gate, wireframe 3b)', () => {
+  it('is collecting under 60 days of span, including a single point', () => {
+    expect(collectingHistory(series(['2026-07-21']))).toBe(true)
+    expect(collectingHistory(series(['2026-06-01', '2026-07-25']))).toBe(true)
+  })
+
+  it('opens at 60 days', () => {
+    expect(collectingHistory(series(['2026-05-01', '2026-06-30']))).toBe(false)
+    expect(collectingHistory(series(['2026-01-01', '2026-07-01']))).toBe(false)
+  })
+
+  it('an empty history is not "collecting" — that is the empty state', () => {
+    expect(collectingHistory([])).toBe(false)
+  })
+})
+
+describe('historyFraction / rangeWindowDays', () => {
+  it('floors "all" at a year — six weeks never dresses up as the whole axis', () => {
+    expect(rangeWindowDays('all')).toBe(365)
+    expect(rangeWindowDays('1y')).toBe(365)
+    expect(rangeWindowDays('1m')).toBe(30)
+  })
+
+  it('is the span share of the window, clamped to [0.15, 1]', () => {
+    // 42 days of 365 ≈ 0.115 → floored to 0.15.
+    expect(historyFraction(series(['2026-06-01', '2026-07-13']), 'all')).toBe(
+      0.15,
+    )
+    // 15 of 30 days = half the month window.
+    expect(
+      historyFraction(series(['2026-07-01', '2026-07-16']), '1m'),
+    ).toBeCloseTo(0.5)
+    // More history than window: never overflows past 1.
+    expect(historyFraction(series(['2026-06-01', '2026-07-16']), '1m')).toBe(1)
+  })
+})
+
+describe('historySpanLabel', () => {
+  it('counts days under two weeks, whole weeks after', () => {
+    expect(historySpanLabel(series(['2026-07-21']))).toBe('0 days of history')
+    expect(historySpanLabel(series(['2026-07-18', '2026-07-21']))).toBe(
+      '3 days of history',
+    )
+    expect(historySpanLabel(series(['2026-06-09', '2026-07-21']))).toBe(
+      '6 weeks of history',
+    )
   })
 })
 
