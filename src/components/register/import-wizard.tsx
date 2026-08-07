@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { errorDetail } from '@/api/client'
 import {
   commitImportMutation,
@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { parseCsvRecords, sniffDelimiter } from '@/lib/csv'
+import { sniffDelimiter } from '@/lib/csv'
 import { formatMinorUnits } from '@/lib/money'
 import { walkPages } from '@/lib/paginate'
 import { cn } from '@/lib/utils'
@@ -43,6 +43,7 @@ import {
   completionMessage,
   countDuplicateRows,
   countIncludedRows,
+  deriveColumnPreview,
   type MappingDraft,
   mappingSummaryLines,
   newlyUncategorized,
@@ -70,9 +71,10 @@ type WizardStep =
   | {
       kind: 'mapping'
       batch: ImportOut
-      headerRow: string[] | null
-      sampleRow: string[] | null
-      columnCount: number
+      /** The raw file text — the mapping step derives its column table from
+       * this on every delimiter/header-row change, not a shape frozen at
+       * upload time (see `deriveColumnPreview`). */
+      text: string
     }
   | {
       kind: 'preview'
@@ -134,14 +136,12 @@ function ImportWizardDialog({
         {step.kind === 'mapping' && (
           <MappingStep
             batch={step.batch}
-            headerRow={step.headerRow}
-            sampleRow={step.sampleRow}
-            columnCount={step.columnCount}
-            onConfirmed={(batch) =>
+            text={step.text}
+            onConfirmed={(batch, headerRow) =>
               setStep({
                 kind: 'preview',
                 batch,
-                headerRow: step.headerRow,
+                headerRow,
                 matchedProfile: false,
               })
             }
@@ -232,31 +232,19 @@ function UploadStep({
       {
         onSuccess: (batch) => {
           if (batch.status === 'uploaded') {
-            const delimiter =
-              batch.suggested_mapping?.delimiter ?? sniffDelimiter(text)
-            const records = parseCsvRecords(text, delimiter)
-            const hasHeader = batch.suggested_mapping?.has_header ?? true
-            const headerRow = hasHeader ? (records[0] ?? null) : null
-            const sampleRow = (hasHeader ? records[1] : records[0]) ?? null
-            const columnCount = Math.max(
-              headerRow?.length ?? 0,
-              sampleRow?.length ?? 0,
-              1,
-            )
-            onUploaded({
-              kind: 'mapping',
-              batch,
-              headerRow,
-              sampleRow,
-              columnCount,
-            })
+            // The mapping step derives its own column table from `text` —
+            // reactively, on every delimiter/header correction — so nothing
+            // needs precomputing here (see `deriveColumnPreview`).
+            onUploaded({ kind: 'mapping', batch, text })
           } else {
             // A matching saved profile skips mapping confirmation (story 32):
-            // the batch already landed at `previewed`.
-            const delimiter = batch.confirmed_mapping?.delimiter ?? ','
-            const hasHeader = batch.confirmed_mapping?.has_header ?? true
-            const records = parseCsvRecords(text, delimiter)
-            const headerRow = hasHeader ? (records[0] ?? null) : null
+            // the batch already landed at `previewed`. Nothing here corrects
+            // the mapping, so a one-time derive is fine.
+            const { headerRow } = deriveColumnPreview(
+              text,
+              batch.confirmed_mapping?.delimiter ?? ',',
+              batch.confirmed_mapping?.has_header ?? true,
+            )
             onUploaded({
               kind: 'preview',
               batch,
@@ -331,19 +319,17 @@ function UploadStep({
 
 function MappingStep({
   batch,
-  headerRow,
-  sampleRow,
-  columnCount,
+  text,
   onConfirmed,
 }: {
   batch: ImportOut
-  headerRow: string[] | null
-  sampleRow: string[] | null
-  columnCount: number
-  onConfirmed: (batch: ImportOut) => void
+  text: string
+  onConfirmed: (batch: ImportOut, headerRow: string[] | null) => void
 }) {
   const suggested = batch.suggested_mapping
-  const [delimiter, setDelimiter] = useState(suggested?.delimiter ?? ',')
+  const [delimiter, setDelimiter] = useState(
+    suggested?.delimiter ?? sniffDelimiter(text),
+  )
   const [hasHeader, setHasHeader] = useState(suggested?.has_header ?? true)
   const [dateFormat, setDateFormat] = useState(
     suggested?.date_format ?? '%Y-%m-%d',
@@ -351,12 +337,36 @@ function MappingStep({
   const [sign, setSign] = useState<'negative_out' | 'positive_out'>(
     suggested?.sign ?? 'negative_out',
   )
+  const [error, setError] = useState<string | null>(null)
+
+  // The column table is derived from the raw file text on every
+  // delimiter/header-row change — NOT frozen at upload time. Those two
+  // controls exist to correct a bad sniff; if correcting them didn't
+  // reshape the table, a mis-sniffed file (e.g. one column instead of
+  // three) would be an unrecoverable dead end.
+  const { headerRow, sampleRow, columnCount } = useMemo(
+    () => deriveColumnPreview(text, delimiter, hasHeader),
+    [text, delimiter, hasHeader],
+  )
+
   const [roles, setRoles] = useState<ColumnRole[]>(() =>
     suggested
       ? rolesFromMapping(suggested, columnCount)
       : Array.from({ length: columnCount }, () => 'skip'),
   )
-  const [error, setError] = useState<string | null>(null)
+  // Re-seed roles whenever a delimiter/header correction reshapes the
+  // table — stale role indices from the old shape would otherwise point at
+  // the wrong (or nonexistent) columns. The suggested mapping only seeds
+  // the INITIAL shape (the lazy useState above); any subsequent reshape is
+  // the user correcting a bad sniff, so it starts clean. The ref is
+  // primed with the first render's own columnCount, so this never fires
+  // on mount — only on a genuine post-mount change.
+  const previousColumnCount = useRef(columnCount)
+  useEffect(() => {
+    if (previousColumnCount.current === columnCount) return
+    previousColumnCount.current = columnCount
+    setRoles(Array.from({ length: columnCount }, () => 'skip'))
+  }, [columnCount])
 
   const confirm = useMutation({
     ...confirmMappingMutation(),
@@ -378,7 +388,7 @@ function MappingStep({
     setError(null)
     confirm.mutate(
       { path: { import_id: batch.id }, body: result.spec },
-      { onSuccess: onConfirmed },
+      { onSuccess: (confirmed) => onConfirmed(confirmed, headerRow) },
     )
   }
 
@@ -406,7 +416,11 @@ function MappingStep({
           >
             <option value=",">Comma</option>
             <option value=";">Semicolon</option>
-            <option value="\t">Tab</option>
+            {/* A JSX string attribute never processes "\t" — that's the two
+                literal characters backslash+t, not a tab. An expression
+                container is required for a real tab character, both here
+                and to match a sniffed/suggested delimiter that is one. */}
+            <option value={'\t'}>Tab</option>
             <option value="|">Pipe</option>
           </select>
         </div>
