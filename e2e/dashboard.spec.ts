@@ -94,13 +94,13 @@ test('populated dashboard: greeting, review CTA, tiles, net-worth card, day-page
   const cta = page.getByTestId('dashboard-review-cta')
   await expect(cta).toContainText('Review 3 transactions')
 
-  // Net-worth mini-card: hero + the chart's accessible seam; the local range
-  // dropdown re-renders without touching the URL.
+  // Net-worth card, chartless since F10 CP2 (#88): the number, the
+  // this-month delta, and the Accounts link — the shape lives in Accounts.
+  const nwCard = page.getByTestId('dashboard-net-worth')
   await expect(page.getByTestId('dashboard-nw-hero')).toBeVisible()
-  await expect(page.getByTestId('chart-data-table')).toBeAttached()
-  await page.getByLabel('Net worth range').selectOption('1m')
-  await expect(page).toHaveURL(/\/dashboard$/)
-  await expect(page.getByTestId('dashboard-nw-hero')).toBeVisible()
+  await expect(nwCard).toContainText('this month')
+  await expect(page.getByTestId('dashboard-nw-accounts-link')).toBeVisible()
+  await expect(nwCard.getByTestId('chart-data-table')).toHaveCount(0)
 
   // Penny's read teaser is present but inert (no pulse, "Coming soon").
   await expect(page.getByTestId('dashboard-penny-read')).toContainText(
@@ -117,6 +117,24 @@ test('populated dashboard: greeting, review CTA, tiles, net-worth card, day-page
   await page.getByRole('button', { name: 'Next day' }).click()
   await expect(page.getByTestId('to-review-day')).toContainText('Yesterday')
   await expect(page.getByTestId('to-review-row')).toHaveCount(1)
+
+  // The card's Accounts link lands on the page that owns the chart now.
+  await page.getByTestId('dashboard-nw-accounts-link').click()
+  await expect(page).toHaveURL(/\/accounts$/)
+})
+
+test('the review CTA lands on the Register’s To-review tab (F10 CP1)', async ({
+  page,
+}) => {
+  const email = uniqueEmail('dash-cta')
+  await seedDashboard(email, [{ days: 0, description: 'Alpha Market' }])
+  await openDashboard(page, email)
+
+  await page.getByTestId('dashboard-review-cta').click()
+  await expect(page).toHaveURL(/\/register\?view=review$/)
+  await expect(
+    page.getByTestId('queue-row').filter({ hasText: 'Alpha Market' }),
+  ).toBeVisible()
 })
 
 test('inline ✓ and Accept-day clear the queue and decrement the To-review tile', async ({

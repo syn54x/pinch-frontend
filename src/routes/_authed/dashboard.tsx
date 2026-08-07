@@ -12,7 +12,7 @@ import { DashboardEmpty } from '@/components/dashboard/dashboard-empty'
 import { NetWorthCard } from '@/components/dashboard/net-worth-card'
 import { PennyReadTeaser } from '@/components/dashboard/penny-read-teaser'
 import { ToReviewCard } from '@/components/dashboard/to-review-card'
-import { ProvenanceBadge } from '@/components/inbox/provenance-badge'
+import { ProvenanceBadge } from '@/components/review/provenance-badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Sparkline } from '@/components/ui/sparkline'
@@ -100,7 +100,8 @@ function DashboardPage() {
         </div>
         {stats.data.unreviewed > 0 && (
           <Link
-            to="/inbox"
+            to="/register"
+            search={{ view: 'review' }}
             data-testid="dashboard-review-cta"
             className={cn(buttonVariants())}
           >

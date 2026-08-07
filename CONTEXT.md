@@ -11,23 +11,46 @@ exception.
 ## Surfaces
 
 **Register**:
-The surface for finding and inspecting money movement: the transaction list
-plus the grammar around it — filtering, account scoping, and per-transaction
-inspection. A read surface: review verbs live in the Inbox, even when reached
-from a Register row.
-_Avoid_: ledger (the screen sense — a Ledger is the tenancy unit), transactions page
+The one surface for money movement, in three URL-backed views: All (the
+transaction list plus the find-grammar — filtering, account scoping, text
+search), To review · N (the pure queue — day groups, accept-day, pair
+callouts, the queue keyboard kit and its legend; the filter bar hides and
+filter params sit inert), and Uncategorized (reviewed rows still missing a
+category, through the shared filter bar). Its Inspector's mode follows the
+transaction (see Inspector). Review is a filter on the Register, not a
+place — ADR 0002.
+_Avoid_: ledger (the screen sense — a Ledger is the tenancy unit),
+transactions page, inbox (retired — the Inbox route died with F10 CP1; its
+review kit lives in the To-review view)
 
-**Inbox**:
-The surface for review — accepting or correcting the proposals on incoming
-transactions.
-_Avoid_: review queue
+**CSV import wizard**:
+Entered from the Register toolbar (between Export and + Add): upload
+(manual accounts only) → confirm or correct the suggested column mapping,
+skipped when a saved import profile matches (its mapping is shown, not
+hidden) → row preview with the duplicate flag, excluded by default with a
+per-row override → commit, with auto-file exposed as a toggle defaulted on.
+Import, import profile, auto-file, and duplicate flag are canonical domain
+terms (`pinch-backend/CONTEXT.md`); this wizard is the surface that drives
+them. Completion reports how many rows still lack a category and links to
+the Register's Uncategorized view.
+_Avoid_: CSV upload, file import (Import is the domain noun)
 
 **App shell**:
-The persistent chrome every authed surface mounts inside: the sidebar (nav
-with live Inbox count, Setup section, Penny pill, and the profile menu on
-the user row) and the top bar (screen title, search, Ask Penny). Theme and
-logout live in the profile menu, not the bar. Nav shows only surfaces that
-exist — no disabled destinations.
+The persistent chrome every authed surface mounts inside: the sidebar and
+the top bar (screen title, global search, Ask Penny). Theme and logout live
+in the profile menu, not the bar. The sidebar's nav reads Dashboard ·
+Register (with the live unreviewed-count pill) · Recurring · Accounts ·
+Categories & Rules · Connections — no disabled destinations, no "Setup"
+grouping (retired F10 CP3). Below the nav, **Your money** lists the ledger's
+accounts in collapsible Cash / Investments / Property / Debt groups (kind
+mapping: depository → Cash, investment → Investments, asset → Property,
+credit + loan → Debt), reading the net-worth report rather than the plain
+accounts list so group totals are real primary-currency sums; an account the
+report excludes for lack of an FX path still renders in its group at its own
+native balance, held out of the total. Collapse state persists per device;
+group totals stay visible collapsed. The account list scrolls inside the
+sidebar — the Penny pill and profile block on the user row stay pinned
+below it, never scrolling away.
 _Avoid_: layout, frame
 
 **Profile menu**:
@@ -45,15 +68,20 @@ _Avoid_: account settings (Account is a financial term), preferences page
 (Preferences is one pane of it)
 
 **Inspector**:
-The detail pane beside a list surface (Inbox, Register) where one
-transaction is examined and edited in place — category, tags, notes, split
-lines. In the Inbox it also carries the review verbs.
+The detail pane beside the Register's list views and queue — and inside the
+Dashboard's Fix drawer — where one transaction is examined. One shared
+component whose mode follows the transaction, not the surface it opened
+from: an unreviewed transaction shows the reviewing variant (staged
+corrections, Apply-to, the accept verbs in the footer); a reviewed one shows
+the browsing variant (category, tags, notes, display name edited in place —
+no accept ritual).
 _Avoid_: detail view, side panel
 
 **Onboarding**:
 The first-run wizard — primary currency, first account (connect or manual,
-skippable), first sync — shown when the ledger has no accounts and no
-connections. Ends by landing in a full Inbox, never an empty app.
+skippable), first sync — shown on the Register when the ledger has no
+accounts and no connections. Ends by landing on the Register's To-review
+tab with synced history waiting, never an empty app.
 _Avoid_: setup wizard, welcome flow
 
 **Penny (screen)**:

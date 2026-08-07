@@ -23,13 +23,13 @@ import { onboardingStatsLine } from '@/lib/onboarding'
 import { cn } from '@/lib/utils'
 
 // Onboarding (CONTEXT.md, wireframe #5): the inferred first-run wizard —
-// an empty ledger (no accounts, no connections) lands here instead of the
-// queue. Three cards: primary currency (pre-filled from /me, saved through
-// the F3 enabler), connect-or-manual (the shared provider picker since F8
-// CP0), and honest sync progress (connection status only — no
-// classification counts, no recurring counts; that theater returns with
-// real numbers in M8). Every step skippable: the wizard never holds the
-// user hostage, and a skipped-through run lands on the Inbox empty state.
+// an empty ledger (no accounts, no connections) opens the Register onto
+// this instead of the ledger views (rehomed from the retired Inbox route
+// by F10 CP1). Three cards: primary currency (pre-filled from /me, saved
+// through the F3 enabler), connect-or-manual (the shared provider picker
+// since F8 CP0), and honest sync progress. Every step skippable: the
+// wizard never holds the user hostage, and a skipped-through run lands on
+// the To-review tab's empty state.
 //
 // The trigger is stateless — the ledger's emptiness IS the state — so a
 // skip lives only as long as this page load (module scope, not storage):
@@ -407,7 +407,7 @@ function ProgressStep({
   // First sync complete: the pipeline has classified. Re-ask the queue, count,
   // accounts, and stats one last time so the landing card is accurate — then
   // the user lands with an explicit "Review N transactions →" (not an
-  // auto-dismiss), the wizard's hand-off into a full Inbox of finished work.
+  // auto-dismiss), the wizard's hand-off into a full To-review queue of finished work.
   useEffect(() => {
     if (!synced || landed) return
     setLanded(true)
@@ -453,7 +453,7 @@ function ProgressStep({
         >
           {unreviewed > 0
             ? `Review ${unreviewed} transactions →`
-            : 'Go to your Inbox →'}
+            : 'Go to your Register →'}
         </Button>
       </div>
     )
@@ -482,8 +482,8 @@ function ProgressStep({
             'The connection reported an error — it can be repaired from Connections.')
           : (statsLine ??
             (accountCount > 0
-              ? `${accountCount} ${accountCount === 1 ? 'account' : 'accounts'} linked — pulling their history. Your Inbox fills the moment it lands.`
-              : 'Linking your accounts and pulling their history. Your Inbox fills the moment it lands.'))}
+              ? `${accountCount} ${accountCount === 1 ? 'account' : 'accounts'} linked — pulling their history. Your review queue fills the moment it lands.`
+              : 'Linking your accounts and pulling their history. Your review queue fills the moment it lands.'))}
       </p>
       {!failed && (
         <div

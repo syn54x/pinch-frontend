@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Archive, ChevronRight, Trash2 } from 'lucide-react'
 import { useState } from 'react'
@@ -10,9 +15,14 @@ import {
   listAccountsOptions,
   listAccountsQueryKey,
   listTransactionsQueryKey,
+  netWorthReportOptions,
   netWorthReportQueryKey,
 } from '@/api/generated/@tanstack/react-query.gen'
 import type { AccountOut } from '@/api/generated/types.gen'
+import {
+  AccountsOverview,
+  type AccountsTab,
+} from '@/components/accounts/accounts-overview'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -28,35 +38,62 @@ import {
   groupAccounts,
   isDebtAccount,
   primaryCurrency,
-  totalBalanceMinor,
 } from '@/lib/accounts'
 import { formatMinorUnits } from '@/lib/money'
-import { useHoverReveal } from '@/lib/use-hover-reveal'
+import type { NetWorthRange } from '@/lib/net-worth'
 import { cn } from '@/lib/utils'
+
+type AccountsSearch = { tab?: AccountsTab; range?: NetWorthRange }
 
 export const Route = createFileRoute('/_authed/accounts')({
   staticData: { title: 'Accounts' },
+  // Tab and range live in the URL so they survive reload and share as links;
+  // a malformed hand-edit degrades to the defaults, never an error. The
+  // default tab (Net worth) and range (6m) stay out of the URL.
+  validateSearch: (raw: Record<string, unknown>): AccountsSearch => {
+    const search: AccountsSearch = {}
+    if (raw.tab === 'assets-debts') search.tab = raw.tab
+    const range = raw.range
+    if (range === '1m' || range === '6m' || range === '1y' || range === 'all')
+      search.range = range
+    return search
+  },
   component: AccountsPage,
 })
 
-// The Accounts surface (wireframe s-Accounts): every account grouped by category
-// with a subtotal, over a running total. Debt lives under Accounts now — the
-// Liabilities section and each loan row open the Debt view.
+// The Accounts surface (F10 CP2, wireframes 1l/4f/3b): Accounts absorbs Net
+// Worth. The page opens on a Net worth tab — the full chart with range chips,
+// an Assets vs debts tab beside it — and the grouped account list beneath,
+// every account under its category with a subtotal. Debt still lives under
+// Accounts: the Liabilities section and each loan row open the Debt view.
 //
 // Archive (API story 3, surfaced post-F4): "closed is a state, not an exit" —
-// archived accounts leave the total, the groups, and every report (the
+// archived accounts leave the chart, the groups, and every report (the
 // backend's own exclusion), but stay listed in a dimmed section below and
 // keep their history in the Register. One-way from the app: no unarchive.
 function AccountsPage() {
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const tab: AccountsTab = search.tab ?? 'net-worth'
+  const range: NetWorthRange = search.range ?? '6m'
+
   // Non-401 failures (the interceptor owns those) throw to the _authed error
   // boundary rather than rendering a silent empty page.
   const accounts = useQuery({ ...listAccountsOptions(), throwOnError: true })
+  const report = useQuery({
+    ...netWorthReportOptions({ query: { range } }),
+    // Keep the previous range's numbers on screen while the next loads —
+    // switching ranges shouldn't flash a skeleton.
+    placeholderData: keepPreviousData,
+    throwOnError: true,
+  })
   const [archiving, setArchiving] = useState<AccountOut | null>(null)
   const [deleting, setDeleting] = useState<AccountOut | null>(null)
 
-  if (accounts.isPending) {
+  if (accounts.isPending || report.data === undefined) {
     return (
       <div className="mx-auto w-full max-w-3xl space-y-3">
+        <Skeleton className="h-64 w-full rounded-xl" />
         <AccountSkeletons />
       </div>
     )
@@ -78,15 +115,30 @@ function AccountsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+      <AccountsOverview
+        data={report.data}
+        tab={tab}
+        range={range}
+        onTabChange={(next) =>
+          navigate({
+            search: (prev) => ({
+              ...prev,
+              tab: next === 'net-worth' ? undefined : next,
+            }),
+          })
+        }
+        onRangeChange={(next) =>
+          navigate({
+            search: (prev) => ({ ...prev, range: next }),
+            replace: true,
+          })
+        }
+      />
+
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <div className="label-caps">
-            Total across {active.length} accounts
-          </div>
-          <div className="amount mt-0.5 font-semibold text-3xl">
-            {formatMinorUnits(totalBalanceMinor(active), currency)}
-          </div>
-        </div>
+        <span className="label-caps">
+          {active.length} account{active.length === 1 ? '' : 's'}
+        </span>
         <Button asChild size="sm">
           <Link to="/connections">Connect bank</Link>
         </Button>
@@ -279,7 +331,6 @@ function AccountRow({
   const linksToDetail = debt || investment
   const amount = accountBalanceMinor(account)
   const subline = accountSubline(account)
-  const { ref, hovered, bind } = useHoverReveal()
 
   const content = (
     <>
@@ -324,8 +375,6 @@ function AccountRow({
   return (
     <div
       data-testid="account-card"
-      ref={ref}
-      {...bind}
       className={cn(
         'flex items-center gap-3 border-b p-4 last:border-b-0',
         linksToDetail && 'transition-colors hover:bg-muted/40',
@@ -355,21 +404,14 @@ function AccountRow({
       ) : (
         <div className="flex min-w-0 flex-1 items-center gap-3">{content}</div>
       )}
+      {/* The archive/delete rail (F10 CP2, wireframes 1l/4f): always visible,
+          no hover discovery — destructive-adjacent verbs aren't hidden. */}
       {onArchive && (
         <Button
           size="icon-sm"
           variant="ghost"
           aria-label={`Archive ${account.label}`}
-          className={cn(
-            // transition-colors overrides the Button base's transition-all
-            // (tailwind-merge resolves same-group conflicts by last-wins):
-            // opacity must flip instantly, never animate. Safari can hold a
-            // stale compositor layer for an animated opacity property on a
-            // button with an SVG child, painting it "revealed" long after
-            // the state (and every other engine) says it's hidden.
-            'shrink-0 opacity-0 transition-colors focus-visible:opacity-100',
-            hovered && 'opacity-100',
-          )}
+          className="shrink-0 text-muted-foreground hover:text-foreground"
           onClick={onArchive}
         >
           <Archive className="size-3.5" aria-hidden />
@@ -380,12 +422,7 @@ function AccountRow({
           size="icon-sm"
           variant="ghost"
           aria-label={`Delete ${account.label}`}
-          className={cn(
-            // See the Archive button above: transition-colors overrides
-            // the Button base's transition-all so opacity flips instantly.
-            'shrink-0 opacity-0 transition-colors focus-visible:opacity-100',
-            hovered && 'opacity-100',
-          )}
+          className="shrink-0 text-destructive hover:text-destructive"
           onClick={onDelete}
         >
           <Trash2 className="size-3.5" aria-hidden />

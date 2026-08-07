@@ -6,7 +6,10 @@ import {
   listTagsOptions,
 } from '@/api/generated/@tanstack/react-query.gen'
 import { Input } from '@/components/ui/input'
+import { ExportButton } from './export-button'
 import { FilterChip } from './filter-chip'
+import { ImportCsv } from './import-wizard'
+import { ManualAdd } from './manual-add'
 import {
   dateChipLabel,
   datePresets,
@@ -17,8 +20,9 @@ import {
 
 // Wireframe #8's find row: search flex-1, then the four filter chips —
 // account × category × date range × tag. Every control writes URL search
-// state; the parent owns navigation. (The wireframe's Export / + Add live
-// in later CPs — nothing disabled ships.)
+// state; the parent owns navigation. The toolbar tail holds Export (F10 CP7
+// #93), then Import CSV (F10 CP6 #92, immediately before + Add per the
+// manual-add overlay wireframe s10/2b), then + Add (F10 CP5 #91).
 export function FilterBar({
   search,
   onPatch,
@@ -61,21 +65,25 @@ export function FilterBar({
           })),
         ]}
       />
-      <FilterChip
-        name="Category"
-        label={categoryLabel ?? 'Category'}
-        active={Boolean(search.category)}
-        selected={search.category}
-        onSelect={(category) => onPatch({ category })}
-        options={[
-          { value: undefined, label: 'All categories' },
-          { value: UNCATEGORIZED, label: 'Uncategorized' },
-          ...(categories.data?.items ?? []).map((c) => ({
-            value: c.id,
-            label: c.name,
-          })),
-        ]}
-      />
+      {/* On the Uncategorized view the tab owns the category slot — the
+          chip would be a silent no-op there, so it steps aside. */}
+      {search.view !== 'uncategorized' && (
+        <FilterChip
+          name="Category"
+          label={categoryLabel ?? 'Category'}
+          active={Boolean(search.category)}
+          selected={search.category}
+          onSelect={(category) => onPatch({ category })}
+          options={[
+            { value: undefined, label: 'All categories' },
+            { value: UNCATEGORIZED, label: 'Uncategorized' },
+            ...(categories.data?.items ?? []).map((c) => ({
+              value: c.id,
+              label: c.name,
+            })),
+          ]}
+        />
+      )}
       <FilterChip
         name="Date"
         label={dateChipLabel(search)}
@@ -124,6 +132,9 @@ export function FilterBar({
           Clear filters
         </button>
       )}
+      <ExportButton search={search} />
+      <ImportCsv />
+      <ManualAdd />
     </div>
   )
 }

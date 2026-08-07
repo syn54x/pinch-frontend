@@ -13,34 +13,34 @@ import type { TransactionOut } from '@/api/generated/types.gen'
 import {
   CategoryPill,
   UncategorizedPill,
-} from '@/components/inbox/category-pill'
-import { dayLabel } from '@/components/inbox/day-label'
-import { ProvenanceBadge } from '@/components/inbox/provenance-badge'
-import { payeeOf } from '@/components/inbox/reviewer-model'
+} from '@/components/review/category-pill'
+import { dayLabel } from '@/components/review/day-label'
+import { ProvenanceBadge } from '@/components/review/provenance-badge'
+import { payeeOf } from '@/components/review/reviewer-model'
 import {
   invalidateReviewData,
   useReviewController,
-} from '@/components/inbox/use-review-controller'
+} from '@/components/review/use-review-controller'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { dayIndexOf, queuePosition } from '@/lib/dashboard'
-import { dayGroups, inboxReducer, initialInboxState } from '@/lib/inbox-reducer'
 import { formatMinorUnits } from '@/lib/money'
+import { dayGroups, initialQueueState, queueReducer } from '@/lib/queue-reducer'
 import { FixDrawer } from './fix-drawer'
 
 // The Dashboard's To-review card (wireframe s6): a day-pager over the unreviewed
 // queue. Accept the easy ones inline (✓), Accept a whole day (A), or Fix the odd
 // one in the drawer that walks the full queue. This component is the reviewer
 // HOST — it owns the queue reducer, focus, the batch verbs, and the review
-// controller — mirroring the Inbox page so the same ReviewerPanel mounts in the
-// drawer. Accepting invalidates the review list, the unreviewed count, AND the
+// controller — mirroring the Register's To-review tab so the same TransactionInspector
+// mounts in the drawer. Accepting invalidates the review list, the unreviewed count, AND the
 // ledger stats (the To-review tile above reads them). Liveness is invalidation
 // + refocus, never polling.
 const QUEUE_PAGE = 100
 
 export function ToReviewCard() {
   const queryClient = useQueryClient()
-  const [state, dispatch] = useReducer(inboxReducer, initialInboxState)
+  const [state, dispatch] = useReducer(queueReducer, initialQueueState)
   const [dayIndex, setDayIndex] = useState(0)
   const [fixOpen, setFixOpen] = useState(false)
   const [originId, setOriginId] = useState<string | null>(null)
@@ -181,10 +181,11 @@ export function ToReviewCard() {
               Grouped by day
             </span>
             <Link
-              to="/inbox"
+              to="/register"
+              search={{ view: 'review' }}
               className="text-[11.5px] text-muted-foreground hover:text-foreground"
             >
-              Open Inbox →
+              Open To-review →
             </Link>
           </span>
         </div>
@@ -253,7 +254,6 @@ export function ToReviewCard() {
         position={position.position}
         total={position.total}
         reviewer={reviewer}
-        accepting={busy}
         bodyRef={drawerBodyRef}
         originId={originId}
       />

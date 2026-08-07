@@ -16,25 +16,27 @@ const MX_ACCEPT = 'application/vnd.mx.api.v1+json'
 
 let cachedCreds: { clientId: string; apiKey: string } | null = null
 
-/** Integration credentials: process env in CI, the backend's .env locally.
- * All-or-nothing per source — never a mixed pair. */
+/** Integration credentials: the backend's .env.local locally, process env
+ * in CI — file first so an ambient shell's production exports can't hijack
+ * seeding (see helpers/env.ts). All-or-nothing per source — never a mixed
+ * pair. */
 async function mxCreds(): Promise<{ clientId: string; apiKey: string }> {
   if (cachedCreds) return cachedCreds
-  const envClientId = process.env.PINCH_MX_CLIENT_ID
-  const envApiKey = process.env.PINCH_MX_API_KEY
-  if (envClientId && envApiKey) {
-    cachedCreds = { clientId: envClientId, apiKey: envApiKey }
+  const dotenv = await backendDotenv()
+  const fileClientId = dotenvValue(dotenv, 'PINCH_MX_CLIENT_ID')
+  const fileApiKey = dotenvValue(dotenv, 'PINCH_MX_API_KEY')
+  if (fileClientId && fileApiKey) {
+    cachedCreds = { clientId: fileClientId, apiKey: fileApiKey }
     return cachedCreds
   }
-  const dotenv = await backendDotenv()
-  const clientId = dotenvValue(dotenv, 'PINCH_MX_CLIENT_ID')
-  const apiKey = dotenvValue(dotenv, 'PINCH_MX_API_KEY')
-  if (!clientId || !apiKey) {
+  const envClientId = process.env.PINCH_MX_CLIENT_ID
+  const envApiKey = process.env.PINCH_MX_API_KEY
+  if (!envClientId || !envApiKey) {
     throw new Error(
-      'MX integration credentials not found (process env or backend .env)',
+      'MX integration credentials not found (backend .env.local or process env)',
     )
   }
-  cachedCreds = { clientId, apiKey }
+  cachedCreds = { clientId: envClientId, apiKey: envApiKey }
   return cachedCreds
 }
 

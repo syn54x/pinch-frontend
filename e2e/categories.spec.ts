@@ -58,7 +58,10 @@ test('a category is born with identity, shows its spend, and carries into the Re
     page.getByTestId('category-row').filter({ hasText: 'Matcha Fund' }),
   ).toContainText('$4.50')
 
-  await page.getByRole('link', { name: 'Register', exact: true }).click()
+  await page
+    .getByRole('navigation', { name: 'Primary' })
+    .getByRole('link', { name: 'Register' })
+    .click()
   const pill = page.getByTestId('catpill').filter({ hasText: 'Matcha Fund' })
   await expect(pill.first()).toBeVisible()
   await expect(pill.first()).toContainText('☕')

@@ -21,7 +21,9 @@ export function TransactionList({
   groups,
   selectedId,
   onSelect,
+  manualAccountIds,
   isFiltered,
+  emptyState,
   isLoading,
   isRefreshing,
   hasNextPage,
@@ -33,8 +35,16 @@ export function TransactionList({
   groups: DayGroup[]
   selectedId: string | undefined
   onSelect: (id: string) => void
+  /** Accounts whose rows wear the Manual badge (F10 CP5) — the badge is
+   * account-derived: the row payload has no source field, so "manual"
+   * means "on a manual account". Typed and CSV-imported rows are
+   * deliberately indistinguishable; both are user-supplied. */
+  manualAccountIds: ReadonlySet<string>
   /** Distinguishes "ledger is empty" from "nothing matches these filters". */
   isFiltered: boolean
+  /** Replaces the unfiltered empty state — a view whose emptiness means
+   * something other than "no transactions yet" (the Uncategorized tab). */
+  emptyState?: ReactNode
   isLoading: boolean
   /** A filter change is in flight over previous results. */
   isRefreshing: boolean
@@ -65,7 +75,7 @@ export function TransactionList({
         ) : empty && isFiltered ? (
           <NoMatches onClearFilters={onClearFilters} />
         ) : empty ? (
-          <EmptyLedger />
+          (emptyState ?? <EmptyLedger />)
         ) : (
           <>
             {groups.map((group, index) => (
@@ -82,6 +92,7 @@ export function TransactionList({
                   <TransactionRow
                     key={txn.id}
                     txn={txn}
+                    manual={manualAccountIds.has(txn.account_id)}
                     selected={txn.id === selectedId}
                     onSelect={() => onSelect(txn.id)}
                   />
@@ -103,10 +114,12 @@ export function TransactionList({
 
 function TransactionRow({
   txn,
+  manual,
   selected,
   onSelect,
 }: {
   txn: TransactionOut
+  manual: boolean
   selected: boolean
   onSelect: () => void
 }) {
@@ -116,7 +129,8 @@ function TransactionRow({
 
   // Overlay-button row: the whole row selects (one focus stop, honest
   // semantics), while the unreviewed mark stays an independent link to the
-  // Inbox — review verbs live there, never here.
+  // To-review tab — the queue-level verbs live there; the row itself
+  // reviews in place through the Inspector (mode follows the transaction).
   return (
     <div
       data-testid="txn-row"
@@ -144,11 +158,20 @@ function TransactionRow({
             {splitCount} {splitCount === 1 ? 'split' : 'splits'}
           </RowMark>
         )}
+        {manual && (
+          <RowMark
+            testId="row-manual"
+            title="Manual — you supplied this data, not a bank"
+          >
+            manual
+          </RowMark>
+        )}
         {unreviewed && (
           <Link
-            to="/inbox"
+            to="/register"
+            search={(prev) => ({ ...prev, view: 'review' as const })}
             data-testid="row-unreviewed-link"
-            title="Awaiting review — open the Inbox"
+            title="Awaiting review — open To-review"
             className="pointer-events-auto relative inline-flex shrink-0 items-center rounded-full border px-1.5 py-px font-mono text-[10px] text-muted-foreground hover:text-foreground focus-visible:outline-2"
           >
             unreviewed
@@ -178,10 +201,19 @@ function TransactionRow({
   )
 }
 
-function RowMark({ children, title }: { children: ReactNode; title?: string }) {
+function RowMark({
+  children,
+  title,
+  testId,
+}: {
+  children: ReactNode
+  title?: string
+  testId?: string
+}) {
   return (
     <span
       title={title}
+      data-testid={testId}
       className="inline-flex shrink-0 items-center rounded-full border px-1.5 py-px font-mono text-[10px] text-muted-foreground"
     >
       {children}

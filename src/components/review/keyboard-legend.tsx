@@ -13,7 +13,7 @@ function Key({ children }: { children: string }) {
 export function KeyboardLegend() {
   return (
     <div
-      data-testid="inbox-legend"
+      data-testid="queue-legend"
       className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-t bg-muted/50 px-3.5 py-2 text-[11.5px] text-muted-foreground"
     >
       <span className="flex items-center gap-1">

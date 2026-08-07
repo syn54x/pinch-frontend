@@ -3,12 +3,10 @@ import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import {
   CreditCard,
   Home,
-  Inbox as InboxIcon,
   Link as LinkIcon,
   List,
   RefreshCw,
   Shapes,
-  TrendingUp,
 } from 'lucide-react'
 import { type ComponentType, type ReactNode, useEffect, useState } from 'react'
 import {
@@ -16,9 +14,11 @@ import {
   meOptions,
   requestEmailVerificationMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
+import { GlobalSearch } from '@/components/global-search'
 import { PennyChips } from '@/components/penny/history'
 import { ProfileMenu } from '@/components/profile-menu'
 import { Button } from '@/components/ui/button'
+import { YourMoney } from '@/components/your-money'
 
 // Screen titles live on the routes themselves (staticData); the shell's top
 // bar shows the deepest match that declares one. fullBleed lets a surface
@@ -32,13 +32,16 @@ declare module '@tanstack/react-router' {
 }
 
 // The App shell (CONTEXT.md): the persistent chrome every authed surface
-// mounts inside — sidebar (brand, nav, Penny pill, user row) and top bar
-// (title, Ask Penny). Wireframe #24 is the reference. Only surfaces that
-// exist appear in the nav (no disabled destinations). ⌘K is Penny's key,
+// mounts inside — sidebar (brand, nav, Your money, Penny pill, user row) and
+// top bar (title, search, Ask Penny). Wireframe #24 is the reference. Only
+// surfaces that exist appear in the nav (no disabled destinations); the
+// "Setup" label is gone (F10 CP3, #89) — Categories & Rules and Connections
+// sit in the main list, in the wireframe's final order. ⌘K is Penny's key,
 // permanently (F6 CP2, resolving #15's open question): summon from
 // anywhere, focus the composer when already there — never a toggle, never
 // a command palette (a future palette is reserved to ⌘P; do not bind it).
-// The Inbox count badge is live: unreviewed-count, refreshed by
+// The review count badge lives on the Register item (F10 CP1 — the number
+// follows the surface that owns it): unreviewed-count, refreshed by
 // review-mutation invalidation and window refocus.
 export function AppShell({ children }: { children: ReactNode }) {
   const title = useRouterState({
@@ -78,45 +81,62 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-svh">
       <aside className="flex w-[212px] shrink-0 flex-col border-r bg-sidebar px-3 py-4">
-        <div className="flex items-center gap-2.5 px-2 pt-1 pb-3.5">
-          <div className="size-6 rounded-[7px] bg-primary" aria-hidden />
-          <span className="font-semibold text-sm">Pinch</span>
+        <div className="flex items-center gap-1 px-2 pt-1 pb-3.5">
+          {/* The 🫰 brand mark (wireframes' .logo — the emoji IS the logo). */}
+          <span
+            className="flex size-6 items-center justify-center text-[19px] leading-none"
+            aria-hidden
+          >
+            🫰
+          </span>
+          <span className="font-heading font-semibold text-sm tracking-[-0.02em]">
+            Pinch
+          </span>
         </div>
-        <nav aria-label="Primary" className="flex flex-col gap-[3px]">
+        <nav
+          aria-label="Primary"
+          // Wireframe s24: nav + Your money scroll together, scrollbar
+          // hidden — still wheel/keyboard scrollable (scrollbar-hide only
+          // hides the bar, `overflow-y-auto` keeps it functional).
+          className="scrollbar-hide flex min-h-0 flex-1 flex-col gap-[3px] overflow-y-auto"
+        >
           <NavItem to="/dashboard" icon={Home}>
             Dashboard
           </NavItem>
-          <NavItem to="/inbox" icon={InboxIcon}>
-            Inbox
-            <InboxCount />
-          </NavItem>
+          {/* The Inbox left the nav with F10 CP1 (ADR 0002): review is the
+              Register's To-review view now, and its live count pill moved
+              onto the Register item. */}
           <NavItem to="/register" icon={List}>
             Register
+            <ReviewCount />
           </NavItem>
-          <NavItem to="/net-worth" icon={TrendingUp}>
-            Net Worth
-          </NavItem>
+          {/* Net Worth left the nav with F10 CP2 (#88): the page is absorbed
+              into Accounts, and the nav shows only surfaces that exist. */}
           <NavItem to="/recurring" icon={RefreshCw}>
             Recurring
           </NavItem>
           <NavItem to="/accounts" icon={CreditCard}>
             Accounts
           </NavItem>
-          <div className="label-caps mt-3.5 mb-1 px-2">Setup</div>
-          <NavItem to="/connections" icon={LinkIcon}>
-            Connections
-          </NavItem>
+          {/* F10 CP3 (#89): the final nav order — no "Setup" label, Categories
+              & Rules and Connections join the main list. */}
           <NavItem to="/categories" icon={Shapes}>
             Categories & Rules
           </NavItem>
+          <NavItem to="/connections" icon={LinkIcon}>
+            Connections
+          </NavItem>
+          <YourMoney />
         </nav>
-        <div className="flex-1" />
         <PennyPill active={onPenny} />
         <ProfileMenu />
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-[52px] shrink-0 items-center gap-3.5 border-b px-5">
           <h1 className="font-semibold text-sm">{title}</h1>
+          {/* Global search (F10 CP4): title · search · spacer · Penny, per
+              the wireframes' top bar. `/` focuses it from anywhere. */}
+          <GlobalSearch />
           <div className="ml-auto flex items-center gap-2">
             {/* s22: on the Penny screen the top bar carries her verbs
                 instead of the (redundant) summon pill. Theme and logout
@@ -213,17 +233,17 @@ function NavItem({
   )
 }
 
-function InboxCount() {
+function ReviewCount() {
   // The live review count (wireframe #24's mono nav badge). Liveness is
   // invalidation + refocus, never polling: review mutations invalidate this
   // key, and TanStack's default refetchOnWindowFocus re-asks on return.
-  // Zero hides the badge — inbox zero is a resting state, not a metric.
+  // Zero hides the badge — queue zero is a resting state, not a metric.
   const count = useQuery(countUnreviewedTransactionsOptions())
   if (count.data === undefined || count.data.count === 0) return null
 
   return (
     <span
-      data-testid="inbox-count"
+      data-testid="review-count"
       className="ml-auto rounded-full bg-primary px-1.5 py-px font-mono font-semibold text-[10px] text-primary-foreground"
     >
       {count.data.count}

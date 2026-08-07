@@ -36,8 +36,15 @@ test *args:
     pnpm exec vitest run {{ args }}
 
 # End-to-end tests against a real backend (see e2e/README once it exists).
+# Runs every project: hermetic + the live Plaid/MX sandbox family + noai.
 e2e *args:
     pnpm exec playwright test {{ args }}
+
+# The hermetic e2e project only — the sub-minute gate for feature work.
+# Skips the live Plaid/MX sandbox specs (wait-bound, run-varying) and the
+# noai stack boot; run plain `just e2e` for the full pre-merge gate.
+e2e-fast *args:
+    pnpm exec playwright test --project=chromium {{ args }}
 
 # Stand up the backend for e2e on a fresh database. The Playwright config
 # runs this as a webServer; the schema arrives via the backend's
@@ -53,10 +60,14 @@ e2e *args:
 # EMPTY — the backend loads its .env with override=False, so an unset knob
 # would inherit a developer's real model + key and the classification sweep
 # would make live LLM calls mid-suite (real money, nondeterministic inbox).
+# PINCH_ENV is pinned to local for the same hermeticity (backend PR #94):
+# the backend reads .env.local no matter what the invoking shell exports —
+# a shell that inherited prod env once sent production Plaid creds here.
 e2e-backend backend="../pinch-backend" db="docker":
     just _e2e-db-reset-{{ db }}
     mkdir -p test-results
     cd {{ backend }} && \
+      PINCH_ENV=local \
       PINCH_DATABASE_URL=postgres://postgres:password@localhost:5432/pinch_e2e \
       PINCH_PLAID_WEBHOOK_URL=https://e2e.invalid/webhooks/plaid \
       PINCH_MX_WEBHOOK_SECRET=e2e-only-not-a-secret \
@@ -79,6 +90,7 @@ e2e-backend-noai backend="../pinch-backend" db="docker":
     just _e2e-db-reset-noai-{{ db }}
     mkdir -p test-results
     cd {{ backend }} && \
+      PINCH_ENV=local \
       PINCH_DATABASE_URL=postgres://postgres:password@localhost:5432/pinch_e2e_noai \
       PINCH_PLAID_WEBHOOK_URL=https://e2e.invalid/webhooks/plaid \
       PINCH_MX_WEBHOOK_SECRET=e2e-only-not-a-secret \
