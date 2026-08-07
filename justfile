@@ -36,8 +36,15 @@ test *args:
     pnpm exec vitest run {{ args }}
 
 # End-to-end tests against a real backend (see e2e/README once it exists).
+# Runs every project: hermetic + the live Plaid/MX sandbox family + noai.
 e2e *args:
     pnpm exec playwright test {{ args }}
+
+# The hermetic e2e project only — the sub-minute gate for feature work.
+# Skips the live Plaid/MX sandbox specs (wait-bound, run-varying) and the
+# noai stack boot; run plain `just e2e` for the full pre-merge gate.
+e2e-fast *args:
+    pnpm exec playwright test --project=chromium {{ args }}
 
 # Stand up the backend for e2e on a fresh database. The Playwright config
 # runs this as a webServer; the schema arrives via the backend's

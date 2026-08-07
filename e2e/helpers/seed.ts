@@ -83,13 +83,16 @@ export async function createPayeeRule(
 /** Stage exactly one `ai`-provenance proposal (with the named category) on
  * an unreviewed transaction of the user's ledger. The classifier
  * deterministically abstains in v0, so this state is unreachable through
- * the API — the one DB-staged provenance (#18). */
+ * the API — the one DB-staged provenance (#18).
+ *
+ * Polls: the classify sweep runs async after the sync lands, so under
+ * suite load (parallel workers sharing one job worker) the `none`
+ * proposal can trail waitForFirstSync by a few seconds. */
 export async function stageAiProposal(
   email: string,
   categoryName: string,
 ): Promise<void> {
-  const updated = await psql(
-    `UPDATE proposal SET provenance = 'ai', category_id = (
+  const sql = `UPDATE proposal SET provenance = 'ai', category_id = (
        SELECT c.id FROM category c
        WHERE c.ledger_id = proposal.ledger_id AND c.name = ${literal(categoryName)}
      )
@@ -104,13 +107,18 @@ export async function stageAiProposal(
        AND p.provenance = 'none' AND t.reviewed_at IS NULL
        ORDER BY p.id LIMIT 1
      )
-     RETURNING id`,
-  )
-  // psql prints the command tag even under -t: "UPDATE 1" on success.
-  if (!updated.includes('UPDATE 1')) {
-    throw new Error(
-      `stageAiProposal found no unreviewed none-proposal to stage (${updated})`,
-    )
+     RETURNING id`
+  const deadline = Date.now() + 20_000
+  for (;;) {
+    // psql prints the command tag even under -t: "UPDATE 1" on success.
+    const updated = await psql(sql)
+    if (updated.includes('UPDATE 1')) return
+    if (Date.now() > deadline) {
+      throw new Error(
+        `stageAiProposal found no unreviewed none-proposal to stage (${updated})`,
+      )
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500))
   }
 }
 
