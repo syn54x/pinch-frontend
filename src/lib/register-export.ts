@@ -1,6 +1,7 @@
 import type { TransactionOut } from '@/api/generated/types.gen'
 import { toCsv } from './csv'
 import { formatMinorUnits } from './money'
+import { walkPages } from './paginate'
 
 // F10 CP7 (#93): Register export — the client walks the list query's keyset
 // cursor to exhaustion with the active filters, then serializes to CSV in
@@ -14,21 +15,14 @@ export type TransactionPage = {
   next_cursor: string | null
 }
 
-/** Walk the cursor to exhaustion: first page (no cursor), then each
- * `next_cursor` until the API returns null, stitched in listing order.
- * Any page failure rejects the whole walk — callers never see a partial
- * set, so a failed export downloads nothing rather than a truncated file. */
+/** The export's own name for the generic cursor-walk (F10 CP6, #92
+ * generalized this into `walkPages`) — kept as a typed re-export so
+ * ExportButton's call site still reads as "walk transactions", not a bare
+ * generic. */
 export async function walkTransactionPages(
   fetchPage: (cursor: string | undefined) => Promise<TransactionPage>,
 ): Promise<TransactionOut[]> {
-  const items: TransactionOut[] = []
-  let cursor: string | undefined
-  do {
-    const page = await fetchPage(cursor)
-    items.push(...page.items)
-    cursor = page.next_cursor ?? undefined
-  } while (cursor !== undefined)
-  return items
+  return walkPages<TransactionOut>(fetchPage)
 }
 
 export const EXPORT_HEADER = [
