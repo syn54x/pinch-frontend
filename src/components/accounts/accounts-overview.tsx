@@ -107,7 +107,7 @@ function NetWorthPanel({
   range: NetWorthRange
 }) {
   const { currency, series } = data
-  const collecting = collectingHistory(series)
+  const collecting = collectingHistory(series, range)
 
   return (
     <div className="flex flex-col gap-4">
@@ -167,7 +167,7 @@ function AssetsDebtsPanel({
   range: NetWorthRange
 }) {
   const { currency, series } = data
-  const collecting = collectingHistory(series)
+  const collecting = collectingHistory(series, range)
   const indexed = indexToStart(deriveAssetsDebts(data.accounts))
   const first = indexed[0]
 

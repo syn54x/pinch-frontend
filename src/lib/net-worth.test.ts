@@ -70,17 +70,38 @@ describe('showProjection', () => {
 
 describe('collectingHistory (60-day gate, wireframe 3b)', () => {
   it('is collecting under 60 days of span, including a single point', () => {
-    expect(collectingHistory(series(['2026-07-21']))).toBe(true)
-    expect(collectingHistory(series(['2026-06-01', '2026-07-25']))).toBe(true)
+    expect(collectingHistory(series(['2026-07-21']), '6m')).toBe(true)
+    expect(collectingHistory(series(['2026-06-01', '2026-07-25']), '6m')).toBe(
+      true,
+    )
+    // "All" on six weeks is exactly the case the state exists for (3b).
+    expect(collectingHistory(series(['2026-06-09', '2026-07-21']), 'all')).toBe(
+      true,
+    )
   })
 
   it('opens at 60 days', () => {
-    expect(collectingHistory(series(['2026-05-01', '2026-06-30']))).toBe(false)
-    expect(collectingHistory(series(['2026-01-01', '2026-07-01']))).toBe(false)
+    expect(collectingHistory(series(['2026-05-01', '2026-06-30']), '6m')).toBe(
+      false,
+    )
+    expect(collectingHistory(series(['2026-01-01', '2026-07-01']), '1y')).toBe(
+      false,
+    )
+  })
+
+  it('caps at the range window: a fully covered month is not collecting', () => {
+    // 30 days of span < 60, but they are the whole 1M window (threshold 27).
+    expect(collectingHistory(series(['2026-06-21', '2026-07-21']), '1m')).toBe(
+      false,
+    )
+    // A few days of the month still is collecting.
+    expect(collectingHistory(series(['2026-07-18', '2026-07-21']), '1m')).toBe(
+      true,
+    )
   })
 
   it('an empty history is not "collecting" — that is the empty state', () => {
-    expect(collectingHistory([])).toBe(false)
+    expect(collectingHistory([], '6m')).toBe(false)
   })
 })
 

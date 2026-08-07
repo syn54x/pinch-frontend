@@ -35,10 +35,22 @@ export function projectionReady(series: SeriesPoint[]): boolean {
 
 /** The collecting-history gate (F10 CP2, wireframe 3b): under ~two months of
  * span, the chart shows the honest early state — history compressed to its
- * real share of the range, never stretched to look like a year. */
+ * real share of the range, never stretched to look like a year. The series is
+ * already windowed by the range, so the threshold caps at 90% of the window:
+ * a 1M chart whose month is fully covered is not "collecting", even though a
+ * month is less than 60 days. */
 export const COLLECTING_SPAN_DAYS = 60
-export function collectingHistory(series: SeriesPoint[]): boolean {
-  return series.length > 0 && spanDays(series) < COLLECTING_SPAN_DAYS
+export function collectingThresholdDays(range: NetWorthRange): number {
+  return Math.min(
+    COLLECTING_SPAN_DAYS,
+    Math.round(rangeWindowDays(range) * 0.9),
+  )
+}
+export function collectingHistory(
+  series: SeriesPoint[],
+  range: NetWorthRange,
+): boolean {
+  return series.length > 0 && spanDays(series) < collectingThresholdDays(range)
 }
 
 /** Nominal width of a range's window in days, for sizing the collecting-state
