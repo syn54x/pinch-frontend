@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { authedContext } from './api'
+import { DB_NAME } from './slot'
 
 // Review-queue seeding (F3 CP2): everything the real stack can produce goes
 // through the real stack — categories and rules via the API *before* the
@@ -14,7 +15,7 @@ const exec = promisify(execFile)
 async function psql(sql: string): Promise<string> {
   // Mirrors helpers/db.ts: docker via local-pg locally, direct psql in CI.
   const direct = process.env.E2E_DB_MODE === 'direct'
-  const args = ['-U', 'postgres', '-d', 'pinch_e2e', '-t', '-c', sql]
+  const args = ['-U', 'postgres', '-d', DB_NAME, '-t', '-c', sql]
   const { stdout } = direct
     ? await exec('psql', ['-h', 'localhost', ...args], {
         env: { ...process.env, PGPASSWORD: 'password' },

@@ -1,10 +1,13 @@
 import { readFile } from 'node:fs/promises'
+import { BACKEND_LOG } from './slot'
 
 // The e2e backend's console mailer prints every message to stdout, which
-// `just e2e-backend` tees into test-results/backend.log. Delivery IS the
-// log — these helpers fish the tokened links back out of it.
+// `just e2e-backend` tees into test-results/<BACKEND_LOG>. Delivery IS the
+// log — these helpers fish the tokened links back out of it. The filename
+// is slot-derived (see slot.ts) so concurrent runs never read each other's
+// mail.
 
-const LOG_PATH = new URL('../../test-results/backend.log', import.meta.url)
+const LOG_PATH = new URL(`../../test-results/${BACKEND_LOG}`, import.meta.url)
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -29,7 +32,7 @@ async function tokenFor(email: string, linkPath: string): Promise<string> {
     if (last) return last
     await new Promise((resolve) => setTimeout(resolve, 200))
   }
-  throw new Error(`no ${linkPath} mail for ${email} in backend.log`)
+  throw new Error(`no ${linkPath} mail for ${email} in ${BACKEND_LOG}`)
 }
 
 /** The latest email-verification token mailed to `email`. */

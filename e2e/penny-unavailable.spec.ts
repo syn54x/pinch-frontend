@@ -1,14 +1,15 @@
 import { expect, test } from '@playwright/test'
 import { PASSWORD, seedUser, uniqueEmail } from './helpers/api'
+import { NOAI_BACKEND_URL } from './helpers/slot'
 import { loginViaUi } from './helpers/ui'
 
 // F6 CP1 (issue #47): the keyless/disabled gate, against a REAL backend
 // with no chat model configured (the chromium-noai project: backend 8101,
-// frontend 5184). Absence reads as configuration, not breakage — the
-// screen exists, explains itself with the server's own reason, and the
-// composer takes no input.
+// frontend 5184, both shifted by E2E_SLOT). Absence reads as configuration,
+// not breakage — the screen exists, explains itself with the server's own
+// reason, and the composer takes no input.
 
-const NOAI_API = 'http://localhost:8101'
+const NOAI_API = NOAI_BACKEND_URL
 
 test('an unconfigured server renders the explanatory disabled state', async ({
   page,

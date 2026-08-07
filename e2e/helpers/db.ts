@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
+import { DB_NAME } from './slot'
 
 // Direct pokes at the e2e database — the same side-channel family as
 // fishing mail tokens from the console-mailer log: never used to ASSERT
@@ -12,7 +13,7 @@ async function psql(sql: string): Promise<string> {
   // Mirrors the justfile's db modes: docker via local-pg locally,
   // direct psql against the service container in CI.
   const direct = process.env.E2E_DB_MODE === 'direct'
-  const args = ['-U', 'postgres', '-d', 'pinch_e2e', '-t', '-c', sql]
+  const args = ['-U', 'postgres', '-d', DB_NAME, '-t', '-c', sql]
   const { stdout } = direct
     ? await exec('psql', ['-h', 'localhost', ...args], {
         env: { ...process.env, PGPASSWORD: 'password' },

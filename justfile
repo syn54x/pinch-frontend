@@ -63,15 +63,27 @@ e2e-fast *args:
 # PINCH_ENV is pinned to local for the same hermeticity (backend PR #94):
 # the backend reads .env.local no matter what the invoking shell exports —
 # a shell that inherited prod env once sent production Plaid creds here.
-e2e-backend backend="../pinch-backend" db="docker":
-    just _e2e-db-reset-{{ db }}
+#
+# port/frontend_port/dbname/logfile default to slot 0's values (see
+# e2e/helpers/slot.ts) so direct CLI use is unchanged; playwright.config.ts
+# passes the E2E_SLOT-derived values explicitly for every run it drives.
+#
+# The guard below is same-SLOT exclusivity, not cross-slot locking: two
+# different slots never touch each other, but two runs racing the SAME
+# slot would otherwise have the second run's db-reset DROP the first run's
+# live database out from under it before either process ever fails on the
+# port bind. Failing fast on a listening port stops that before anything
+# is touched.
+e2e-backend backend="../pinch-backend" db="docker" port="8100" frontend_port="5183" dbname="pinch_e2e" logfile="backend.log":
+    if lsof -nP -iTCP:{{ port }} -sTCP:LISTEN >/dev/null 2>&1; then echo "port {{ port }} busy — another e2e run on this slot? pick a different E2E_SLOT" >&2; exit 1; fi
+    just _e2e-db-reset-{{ db }} {{ dbname }}
     mkdir -p test-results
     cd {{ backend }} && \
       PINCH_ENV=local \
-      PINCH_DATABASE_URL=postgres://postgres:password@localhost:5432/pinch_e2e \
+      PINCH_DATABASE_URL=postgres://postgres:password@localhost:5432/{{ dbname }} \
       PINCH_PLAID_WEBHOOK_URL=https://e2e.invalid/webhooks/plaid \
       PINCH_MX_WEBHOOK_SECRET=e2e-only-not-a-secret \
-      PINCH_FRONTEND_BASE_URL=http://localhost:5183 \
+      PINCH_FRONTEND_BASE_URL=http://localhost:{{ frontend_port }} \
       PINCH_BREACH_CHECK_ENABLED=false \
       PINCH_AI_CHAT_MODEL=test \
       PINCH_AI_CATEGORIZATION_MODEL= \
@@ -80,21 +92,22 @@ e2e-backend backend="../pinch-backend" db="docker":
       PINCH_SECRET_KEY=e2e-only-not-a-secret \
       PINCH_SECRET_ENCRYPTION_KEY=0fgqNJQuqR09ILyfU1jynGBXmn3_6a_h-8iLItevJXk= \
       PYTHONUNBUFFERED=1 \
-      sh -c '(until curl -sf http://localhost:8100/health >/dev/null 2>&1; do sleep 0.5; done; echo "[e2e-harness] server healthy, starting worker"; exec uv run python -m pinch_backend.cli.app worker) & worker_waiter=$!; trap "kill $worker_waiter 2>/dev/null" EXIT; uv run litestar --app pinch_backend.api.app:app run --port 8100' 2>&1 \
-      | tee {{ justfile_directory() }}/test-results/backend.log
+      sh -c '(until curl -sf http://localhost:{{ port }}/health >/dev/null 2>&1; do sleep 0.5; done; echo "[e2e-harness] server healthy, starting worker"; exec uv run python -m pinch_backend.cli.app worker) & worker_waiter=$!; trap "kill $worker_waiter 2>/dev/null" EXIT; uv run litestar --app pinch_backend.api.app:app run --port {{ port }}' 2>&1 \
+      | tee {{ justfile_directory() }}/test-results/{{ logfile }}
 
 # The Penny-unavailable stack (F6 CP1): the same backend with NO chat model,
 # on its own port and database, so the disabled state is the real backend
 # saying no — not a mock. No worker: nothing on this stack syncs.
-e2e-backend-noai backend="../pinch-backend" db="docker":
-    just _e2e-db-reset-noai-{{ db }}
+e2e-backend-noai backend="../pinch-backend" db="docker" port="8101" frontend_port="5184" dbname="pinch_e2e_noai" logfile="backend-noai.log":
+    if lsof -nP -iTCP:{{ port }} -sTCP:LISTEN >/dev/null 2>&1; then echo "port {{ port }} busy — another e2e run on this slot? pick a different E2E_SLOT" >&2; exit 1; fi
+    just _e2e-db-reset-{{ db }} {{ dbname }}
     mkdir -p test-results
     cd {{ backend }} && \
       PINCH_ENV=local \
-      PINCH_DATABASE_URL=postgres://postgres:password@localhost:5432/pinch_e2e_noai \
+      PINCH_DATABASE_URL=postgres://postgres:password@localhost:5432/{{ dbname }} \
       PINCH_PLAID_WEBHOOK_URL=https://e2e.invalid/webhooks/plaid \
       PINCH_MX_WEBHOOK_SECRET=e2e-only-not-a-secret \
-      PINCH_FRONTEND_BASE_URL=http://localhost:5184 \
+      PINCH_FRONTEND_BASE_URL=http://localhost:{{ frontend_port }} \
       PINCH_BREACH_CHECK_ENABLED=false \
       PINCH_AI_CHAT_MODEL= \
       PINCH_AI_CATEGORIZATION_MODEL= \
@@ -103,23 +116,16 @@ e2e-backend-noai backend="../pinch-backend" db="docker":
       PINCH_SECRET_KEY=e2e-only-not-a-secret \
       PINCH_SECRET_ENCRYPTION_KEY=0fgqNJQuqR09ILyfU1jynGBXmn3_6a_h-8iLItevJXk= \
       PYTHONUNBUFFERED=1 \
-      uv run litestar --app pinch_backend.api.app:app run --port 8101 2>&1 \
-      | tee {{ justfile_directory() }}/test-results/backend-noai.log
+      uv run litestar --app pinch_backend.api.app:app run --port {{ port }} 2>&1 \
+      | tee {{ justfile_directory() }}/test-results/{{ logfile }}
 
-e2e_db_reset_sql := "-c 'DROP DATABASE IF EXISTS pinch_e2e' -c 'CREATE DATABASE pinch_e2e'"
-e2e_noai_db_reset_sql := "-c 'DROP DATABASE IF EXISTS pinch_e2e_noai' -c 'CREATE DATABASE pinch_e2e_noai'"
+# dbname defaults to slot 0's pinch_e2e; e2e-backend/-noai pass the
+# E2E_SLOT-derived name (pinch_e2e_sN / pinch_e2e_noai_sN) explicitly.
+_e2e-db-reset-docker dbname="pinch_e2e":
+    docker exec local-pg psql -U postgres -c 'DROP DATABASE IF EXISTS {{ dbname }}' -c 'CREATE DATABASE {{ dbname }}'
 
-_e2e-db-reset-docker:
-    docker exec local-pg psql -U postgres {{ e2e_db_reset_sql }}
-
-_e2e-db-reset-direct:
-    PGPASSWORD=password psql -h localhost -U postgres {{ e2e_db_reset_sql }}
-
-_e2e-db-reset-noai-docker:
-    docker exec local-pg psql -U postgres {{ e2e_noai_db_reset_sql }}
-
-_e2e-db-reset-noai-direct:
-    PGPASSWORD=password psql -h localhost -U postgres {{ e2e_noai_db_reset_sql }}
+_e2e-db-reset-direct dbname="pinch_e2e":
+    PGPASSWORD=password psql -h localhost -U postgres -c 'DROP DATABASE IF EXISTS {{ dbname }}' -c 'CREATE DATABASE {{ dbname }}'
 
 # Re-export the backend's OpenAPI schema and regenerate the typed client.
 # The committed openapi.json snapshot is the contract seam between the repos:

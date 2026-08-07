@@ -5,6 +5,7 @@ import {
   seedUser,
   uniqueEmail,
 } from './helpers/api'
+import { VITE_URL } from './helpers/slot'
 import { loginViaUi, mainContent } from './helpers/ui'
 
 test('login lands on the accounts page showing seeded accounts', async ({
@@ -99,7 +100,7 @@ test('a stale CSRF cookie self-heals instead of failing the form', async ({
     {
       name: 'csrftoken',
       value: 'stale-token-from-a-dead-process',
-      url: 'http://localhost:5183',
+      url: VITE_URL,
     },
   ])
 
