@@ -88,11 +88,16 @@ export function deriveColumnPreview(
   return { headerRow, sampleRow, columnCount }
 }
 
+/** MappingSpec's amount-sign convention, named once — spelled out as a
+ * union in three places otherwise (the draft, the mapping step's state,
+ * and its `<select>` handler). */
+export type Sign = 'negative_out' | 'positive_out'
+
 export type MappingDraft = {
   delimiter: string
   hasHeader: boolean
   dateFormat: string
-  sign: 'negative_out' | 'positive_out'
+  sign: Sign
   roles: ColumnRole[]
 }
 
@@ -163,10 +168,11 @@ function columnLabel(index: number, headerRow: string[] | null): string {
   return named && named.trim() !== '' ? named : `Column ${index + 1}`
 }
 
-/** What the applied-or-confirmed mapping says, in the header's own words
- * when a header row is available — the "the applied profile is visible to
- * the user" acceptance criterion (#92), and reused as the confirmed
- * mapping's own read-out either way. */
+/** What a mapping says, in the header's own words when a header row is
+ * available — the "applied profile is visible to the user" acceptance
+ * criterion (#92). Rendered only for a profile-matched import (the preview
+ * step's banner); a mapping the user just confirmed by hand doesn't repeat
+ * it back through this — the form they filled in already says it. */
 export function mappingSummaryLines(
   spec: MappingSpec,
   headerRow: string[] | null,
@@ -209,6 +215,13 @@ export function rowIsValid(row: ImportRowOut): boolean {
   return row.errors.length === 0
 }
 
+/** A duplicate-flagged row the per-row override actually applies to — the
+ * backend's own `include_duplicates` precondition (valid AND duplicate),
+ * named once instead of re-spelled at every call site. */
+export function isOverridableDuplicate(row: ImportRowOut): boolean {
+  return row.duplicate && rowIsValid(row)
+}
+
 /** How many of the previewed rows will actually commit: valid rows, minus
  * duplicates the user hasn't overridden. What the Import button counts. */
 export function countIncludedRows(
@@ -222,7 +235,7 @@ export function countIncludedRows(
 }
 
 export function countDuplicateRows(rows: ImportRowOut[]): number {
-  return rows.filter((row) => row.duplicate && rowIsValid(row)).length
+  return rows.filter(isOverridableDuplicate).length
 }
 
 /** The commit request body — filters `includedDuplicateIds` down to ids
@@ -235,7 +248,7 @@ export function commitPayload(
   autoFile: boolean,
 ): CommitIn {
   const overridable = new Set(
-    rows.filter((row) => row.duplicate && rowIsValid(row)).map((row) => row.id),
+    rows.filter(isOverridableDuplicate).map((row) => row.id),
   )
   return {
     include_duplicates: [...includedDuplicateIds].filter((id) =>
@@ -243,6 +256,21 @@ export function commitPayload(
     ),
     auto_file: autoFile,
   }
+}
+
+/** The preview's duplicate-status line — reflects the per-row override
+ * state instead of a static "skipped" that would contradict the Import
+ * button the moment a row is overridden: "2 duplicates flagged" until an
+ * override lands, then "2 duplicates flagged · 1 included". Empty when
+ * there's nothing to report — the caller renders nothing for that case. */
+export function duplicateSummaryLine(
+  duplicateCount: number,
+  includedCount: number,
+): string {
+  if (duplicateCount === 0) return ''
+  const noun = duplicateCount === 1 ? 'duplicate' : 'duplicates'
+  const base = `${duplicateCount} ${noun} flagged`
+  return includedCount > 0 ? `${base} · ${includedCount} included` : base
 }
 
 // --- completion -----------------------------------------------------------

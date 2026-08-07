@@ -126,18 +126,23 @@ test('duplicate rows are flagged and excluded by default, with a per-row overrid
 
   const duplicateRows = dialog.getByTestId('import-duplicate-row')
   await expect(duplicateRows).toHaveCount(2)
-  await expect(dialog.getByText('2 duplicate rows skipped')).toBeVisible()
+  await expect(dialog.getByText('2 duplicates flagged')).toBeVisible()
 
   // Auto-file off keeps this deterministic (no async settle to wait on) —
   // the story under test here is the duplicate override, not auto-file.
   await dialog.getByTestId('import-auto-file-toggle').uncheck()
 
-  // Both start unchecked (excluded by default); override exactly one.
+  // Both start unchecked (excluded by default); override exactly one. The
+  // status line reflects the override live — it would contradict the
+  // Import button below if it stayed a static "skipped".
   const firstCheckbox = duplicateRows.nth(0).locator('input[type="checkbox"]')
   const secondCheckbox = duplicateRows.nth(1).locator('input[type="checkbox"]')
   await expect(firstCheckbox).not.toBeChecked()
   await expect(secondCheckbox).not.toBeChecked()
   await firstCheckbox.check()
+  await expect(
+    dialog.getByText('2 duplicates flagged · 1 included'),
+  ).toBeVisible()
   await expect(dialog.getByText('1 row will be imported')).toBeVisible()
 
   await dialog.getByTestId('import-commit').click()
@@ -191,4 +196,55 @@ test('correcting the delimiter reshapes the mapping table, not just its labels',
   // control's value away from comma.
   await dialog.getByLabel('Delimiter').selectOption({ label: 'Tab' })
   await expect(dialog.getByLabel('Delimiter')).not.toHaveValue(',')
+})
+
+test('a saved import profile skips mapping on the next file from the same source', async ({
+  page,
+}) => {
+  const email = uniqueEmail('csv-profile')
+  await seedUser(email, PASSWORD)
+  const seed = await RegisterSeeder.login(email, PASSWORD)
+  await seed.createAccount('Wallet')
+  await seed.dispose()
+
+  await openRegister(page, email)
+
+  // The first import goes through mapping confirmation as usual; its
+  // commit is what saves the profile server-side (imports/profiles.py —
+  // headered files only, and this file has a header).
+  const first = await uploadAndConfirmMapping(
+    page,
+    'Date,Description,Amount\n2026-01-05,FIRST ROW,-1.00\n',
+  )
+  await first.getByTestId('import-auto-file-toggle').uncheck()
+  await first.getByTestId('import-commit').click()
+  await expect(first.getByTestId('import-complete-message')).toBeVisible()
+  await first.getByRole('button', { name: 'Done' }).click()
+  await expect(first).toBeHidden()
+
+  // A second file, same header shape (a returning CSV importer, story 32):
+  // the wizard skips mapping confirmation entirely.
+  await page.getByTestId('import-trigger').click()
+  const second = page.getByRole('dialog', { name: 'Import CSV' })
+  await expect(second).toBeVisible()
+  await second
+    .getByTestId('import-file-input')
+    .setInputFiles(
+      csvFile('Date,Description,Amount\n2026-02-01,SECOND ROW,-2.00\n'),
+    )
+  await second.getByTestId('import-upload-submit').click()
+
+  // Straight to preview — no mapping step — and the applied profile is
+  // visible (acceptance: "the applied profile is visible to the user").
+  await expect(second.getByTestId('import-mapping-confirm')).toHaveCount(0)
+  await expect(second.getByTestId('import-profile-banner')).toBeVisible()
+  await expect(second.getByTestId('import-profile-banner')).toContainText(
+    'Date → Date',
+  )
+  await expect(second.getByTestId('import-profile-banner')).toContainText(
+    'Payee → Description',
+  )
+  await expect(second.getByTestId('import-profile-banner')).toContainText(
+    'Amount → Amount',
+  )
 })

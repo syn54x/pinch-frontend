@@ -7,6 +7,8 @@ import {
   countDuplicateRows,
   countIncludedRows,
   deriveColumnPreview,
+  duplicateSummaryLine,
+  isOverridableDuplicate,
   type MappingDraft,
   mappingSummaryLines,
   newlyUncategorized,
@@ -268,6 +270,30 @@ describe('rowIsValid / countIncludedRows / countDuplicateRows', () => {
 
   it('counts valid duplicate rows', () => {
     expect(countDuplicateRows(rows)).toBe(2)
+  })
+
+  it('isOverridableDuplicate matches the override checkbox rows carry', () => {
+    expect(isOverridableDuplicate(row({ duplicate: true }))).toBe(true)
+    expect(isOverridableDuplicate(row({ duplicate: false }))).toBe(false)
+    expect(
+      isOverridableDuplicate(row({ duplicate: true, errors: ['bad'] })),
+    ).toBe(false)
+  })
+})
+
+describe('duplicateSummaryLine', () => {
+  it('is empty when there are no duplicates', () => {
+    expect(duplicateSummaryLine(0, 0)).toBe('')
+  })
+
+  it('reports the flag count with singular/plural before any override', () => {
+    expect(duplicateSummaryLine(1, 0)).toBe('1 duplicate flagged')
+    expect(duplicateSummaryLine(2, 0)).toBe('2 duplicates flagged')
+  })
+
+  it('appends the included count once an override lands — never a static "skipped"', () => {
+    expect(duplicateSummaryLine(2, 1)).toBe('2 duplicates flagged · 1 included')
+    expect(duplicateSummaryLine(2, 2)).toBe('2 duplicates flagged · 2 included')
   })
 })
 

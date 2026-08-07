@@ -8,16 +8,17 @@ import {
   createImportMutation,
   ledgerStatsOptions,
   ledgerStatsQueryKey,
-  listAccountsOptions,
   listAccountsQueryKey,
   listTransactionsQueryKey,
 } from '@/api/generated/@tanstack/react-query.gen'
 import {
   ledgerStats,
+  listAccounts,
   listImportRows,
   listTransactions,
 } from '@/api/generated/sdk.gen'
 import type {
+  AccountOut,
   ImportOut,
   ImportRowOut,
   MappingSpec,
@@ -34,7 +35,6 @@ import { Label } from '@/components/ui/label'
 import { sniffDelimiter } from '@/lib/csv'
 import { formatMinorUnits } from '@/lib/money'
 import { walkPages } from '@/lib/paginate'
-import { cn } from '@/lib/utils'
 import {
   buildMappingSpec,
   COLUMN_ROLE_OPTIONS,
@@ -44,11 +44,14 @@ import {
   countDuplicateRows,
   countIncludedRows,
   deriveColumnPreview,
+  duplicateSummaryLine,
+  isOverridableDuplicate,
   type MappingDraft,
   mappingSummaryLines,
   newlyUncategorized,
   rolesFromMapping,
   rowIsValid,
+  type Sign,
 } from './import-model'
 
 // F10 CP6 (#92, wireframe s9/2a): the CSV import wizard, driving the
@@ -62,7 +65,9 @@ import {
 // completion. No backend changes: everything here is the pipeline the
 // server already ships.
 
-const ROW_PAGE_SIZE = 100
+// The API's own page cap — every cursor walk in this file (accounts,
+// import rows, the uncategorized-transactions snapshot) pages at it.
+const WALK_PAGE_SIZE = 100
 const SETTLE_POLL_MS = 1_500
 const SETTLE_MAX_ATTEMPTS = 40 // ~60s bounded poll, the onboarding precedent
 
@@ -197,6 +202,20 @@ function ImportWizardDialog({
 
 // --- step 1: upload ---------------------------------------------------
 
+/** Every account, cursor-walked to exhaustion — a single page would make a
+ * manual account beyond the API's page cap unreachable as an import
+ * target. The account picker is a complete list or it's broken, not a
+ * "first 100" approximation. */
+async function walkAllAccounts(): Promise<AccountOut[]> {
+  return walkPages<AccountOut>(async (cursor) => {
+    const { data } = await listAccounts({
+      query: { cursor, limit: WALK_PAGE_SIZE },
+      throwOnError: true,
+    })
+    return data
+  })
+}
+
 function UploadStep({
   onUploaded,
 }: {
@@ -204,8 +223,11 @@ function UploadStep({
     step: Extract<WizardStep, { kind: 'mapping' | 'preview' }>,
   ) => void
 }) {
-  const accounts = useQuery(listAccountsOptions({ query: { limit: 100 } }))
-  const manualAccounts = (accounts.data?.items ?? []).filter(
+  const accounts = useQuery({
+    queryKey: ['import-accounts'],
+    queryFn: walkAllAccounts,
+  })
+  const manualAccounts = (accounts.data ?? []).filter(
     (account) => account.manual && !account.archived,
   )
   const [accountId, setAccountId] = useState('')
@@ -334,9 +356,7 @@ function MappingStep({
   const [dateFormat, setDateFormat] = useState(
     suggested?.date_format ?? '%Y-%m-%d',
   )
-  const [sign, setSign] = useState<'negative_out' | 'positive_out'>(
-    suggested?.sign ?? 'negative_out',
-  )
+  const [sign, setSign] = useState<Sign>(suggested?.sign ?? 'negative_out')
   const [error, setError] = useState<string | null>(null)
 
   // The column table is derived from the raw file text on every
@@ -440,9 +460,7 @@ function MappingStep({
             <select
               id="import-sign"
               value={sign}
-              onChange={(event) =>
-                setSign(event.target.value as 'negative_out' | 'positive_out')
-              }
+              onChange={(event) => setSign(event.target.value as Sign)}
               className="h-8 rounded-md border bg-transparent px-2 text-sm"
             >
               <option value="negative_out">Negative = money out</option>
@@ -453,10 +471,10 @@ function MappingStep({
       </div>
 
       <div className="overflow-hidden rounded-lg border">
-        <div className="flex gap-3 bg-muted/50 px-3 py-2 text-[10px] text-muted-foreground uppercase tracking-wide">
-          <span className="w-32 shrink-0">CSV column</span>
-          <span className="flex-1">Sample</span>
-          <span className="w-56 shrink-0">Maps to</span>
+        <div className="flex gap-3 bg-muted/50 px-3 py-2">
+          <span className="label-caps w-32 shrink-0">CSV column</span>
+          <span className="label-caps flex-1">Sample</span>
+          <span className="label-caps w-56 shrink-0">Maps to</span>
         </div>
         {Array.from({ length: columnCount }, (_, index) => (
           <div
@@ -513,7 +531,7 @@ async function walkImportRows(importId: string): Promise<ImportRowOut[]> {
   return walkPages<ImportRowOut>(async (cursor) => {
     const { data } = await listImportRows({
       path: { import_id: importId },
-      query: { cursor, limit: ROW_PAGE_SIZE },
+      query: { cursor, limit: WALK_PAGE_SIZE },
       throwOnError: true,
     })
     return data
@@ -530,7 +548,7 @@ async function uncategorizedCount(accountId: string): Promise<number> {
         reviewed: true,
         uncategorized: true,
         cursor,
-        limit: 100,
+        limit: WALK_PAGE_SIZE,
       },
       throwOnError: true,
     })
@@ -570,6 +588,8 @@ function PreviewStep({
   const commit = useMutation({ ...commitImportMutation() })
 
   const rows = rowsQuery.data ?? []
+  const validCount = rows.filter(rowIsValid).length
+  const invalidCount = rows.length - validCount
   const duplicateCount = countDuplicateRows(rows)
   const includedCount = countIncludedRows(rows, includedDuplicates)
   const mapping: MappingSpec | null = batch.confirmed_mapping
@@ -644,49 +664,46 @@ function PreviewStep({
       ) : (
         <>
           <p className="text-[12.5px] text-muted-foreground">
-            {rows.filter(rowIsValid).length} valid rows
+            {validCount} valid rows
             {duplicateCount > 0 &&
-              ` · ${duplicateCount} duplicate rows skipped`}
-            {rows.length - rows.filter(rowIsValid).length > 0 &&
-              ` · ${rows.length - rows.filter(rowIsValid).length} rows couldn't be read`}
+              ` · ${duplicateSummaryLine(duplicateCount, includedDuplicates.size)}`}
+            {invalidCount > 0 && ` · ${invalidCount} rows couldn't be read`}
           </p>
 
           {duplicateCount > 0 && (
             <div className="overflow-hidden rounded-lg border">
-              <div className="flex items-center gap-3 bg-muted/50 px-3 py-2 text-[10px] text-muted-foreground uppercase tracking-wide">
+              <div className="flex items-center gap-3 bg-muted/50 px-3 py-2">
                 <span className="w-9 shrink-0" />
-                <span className="w-24 shrink-0">Date</span>
-                <span className="flex-1">Payee</span>
-                <span className="w-24 shrink-0 text-right">Amount</span>
+                <span className="label-caps w-24 shrink-0">Date</span>
+                <span className="label-caps flex-1">Payee</span>
+                <span className="label-caps w-24 shrink-0 text-right">
+                  Amount
+                </span>
               </div>
-              {rows
-                .filter((row) => row.duplicate && rowIsValid(row))
-                .map((row) => (
-                  <label
-                    key={row.id}
-                    data-testid="import-duplicate-row"
-                    className="flex cursor-pointer items-center gap-3 border-t px-3 py-2 text-[12.5px] hover:bg-muted/30"
-                  >
-                    <input
-                      type="checkbox"
-                      className="w-9 shrink-0 accent-primary"
-                      data-testid={`import-row-include-${row.id}`}
-                      checked={includedDuplicates.has(row.id)}
-                      onChange={() => toggleDuplicate(row.id)}
-                    />
-                    <span className="w-24 shrink-0 font-mono text-[11.5px]">
-                      {row.date}
-                    </span>
-                    <span className="flex-1 truncate">
-                      {row.description_raw}
-                    </span>
-                    <span className="w-24 shrink-0 text-right font-mono text-[11.5px]">
-                      {row.amount_minor !== null
-                        ? formatMinorUnits(row.amount_minor, row.currency)
-                        : '—'}
-                    </span>
-                  </label>
-                ))}
+              {rows.filter(isOverridableDuplicate).map((row) => (
+                <label
+                  key={row.id}
+                  data-testid="import-duplicate-row"
+                  className="flex cursor-pointer items-center gap-3 border-t px-3 py-2 text-[12.5px] hover:bg-muted/30"
+                >
+                  <input
+                    type="checkbox"
+                    className="w-9 shrink-0 accent-primary"
+                    data-testid={`import-row-include-${row.id}`}
+                    checked={includedDuplicates.has(row.id)}
+                    onChange={() => toggleDuplicate(row.id)}
+                  />
+                  <span className="w-24 shrink-0 font-mono text-[11.5px]">
+                    {row.date}
+                  </span>
+                  <span className="flex-1 truncate">{row.description_raw}</span>
+                  <span className="amount w-24 shrink-0 text-right text-[11.5px]">
+                    {row.amount_minor !== null
+                      ? formatMinorUnits(row.amount_minor, row.currency)
+                      : '—'}
+                  </span>
+                </label>
+              ))}
             </div>
           )}
 
@@ -827,7 +844,7 @@ function DoneStep({
           to="/register"
           search={{ view: 'uncategorized' }}
           data-testid="import-uncategorized-link"
-          className={cn('text-primary text-sm underline underline-offset-2')}
+          className="text-primary text-sm underline underline-offset-2"
           onClick={onClose}
         >
           Review {stillUncategorized} uncategorized →
@@ -838,7 +855,7 @@ function DoneStep({
           to="/register"
           search={{ view: 'review' }}
           data-testid="import-review-link"
-          className={cn('text-primary text-sm underline underline-offset-2')}
+          className="text-primary text-sm underline underline-offset-2"
           onClick={onClose}
         >
           Review {imported} transactions →

@@ -1,7 +1,9 @@
-// A generic cursor-walk: the Register export's `walkTransactionPages`
-// pattern (F10 CP7, #93), lifted so any keyset-paginated `Page[T]` listing
-// (imports/rows included) can be exhausted the same honest way — every
-// page or none, never a partial set on a failed walk.
+// A generic cursor-walk (F10 CP6, #92): the ONE implementation of the
+// Register export's cursor-to-exhaustion pattern (F10 CP7, #93). Both
+// register-export.ts's `walkTransactionPages` and the CSV import wizard's
+// row/account/uncategorized-transaction walks delegate here — any
+// keyset-paginated `Page[T]` listing is exhausted the same honest way,
+// every page or none, never a partial set on a failed walk.
 
 export type CursorPage<T> = {
   items: T[]
