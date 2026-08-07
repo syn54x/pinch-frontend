@@ -12,7 +12,7 @@ import { payeeOf } from './reviewer-model'
 // (aria-activedescendant), so this row is pure rendering + pointer target.
 
 export function proposalRowDomId(id: string): string {
-  return `inbox-row-${id}`
+  return `queue-row-${id}`
 }
 
 export function ProposalRow({
@@ -31,7 +31,7 @@ export function ProposalRow({
     // biome-ignore lint/a11y/useKeyWithClickEvents: keyboard reaches rows via the listbox's J/K, not per-row handlers
     <div
       id={proposalRowDomId(txn.id)}
-      data-testid="inbox-row"
+      data-testid="queue-row"
       role="option"
       aria-selected={focused}
       tabIndex={-1}

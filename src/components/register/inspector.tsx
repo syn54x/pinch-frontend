@@ -6,8 +6,8 @@ import {
   listAccountsOptions,
 } from '@/api/generated/@tanstack/react-query.gen'
 import type { TransactionOut } from '@/api/generated/types.gen'
-import { useReviewController } from '@/components/inbox/use-review-controller'
 import { TransactionInspector } from '@/components/inspector/transaction-inspector'
+import { useReviewController } from '@/components/review/use-review-controller'
 
 // The Register's Inspector mount (CONTEXT.md): the pane beside the list where
 // one transaction shows everything. It mounts the ONE inspector — mode

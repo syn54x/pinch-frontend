@@ -1,7 +1,7 @@
 import type { RefObject } from 'react'
 import type { TransactionOut } from '@/api/generated/types.gen'
-import type { useReviewController } from '@/components/inbox/use-review-controller'
 import { TransactionInspector } from '@/components/inspector/transaction-inspector'
+import type { useReviewController } from '@/components/review/use-review-controller'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 
 // The Dashboard's "Fix" drawer (wireframe s6b): the CP1 reviewer mounted in a

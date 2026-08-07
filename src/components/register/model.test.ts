@@ -75,6 +75,23 @@ describe('sanitizeRegisterSearch', () => {
       }),
     ).toEqual({})
   })
+
+  it('keeps a known view and drops an unknown one', () => {
+    expect(sanitizeRegisterSearch({ view: 'review' })).toEqual({
+      view: 'review',
+    })
+    expect(sanitizeRegisterSearch({ view: 'uncategorized' })).toEqual({
+      view: 'uncategorized',
+    })
+    expect(sanitizeRegisterSearch({ view: 'all' })).toEqual({})
+    expect(sanitizeRegisterSearch({ view: 42 })).toEqual({})
+  })
+
+  it('preserves filter params alongside a view — inert, not dropped', () => {
+    expect(
+      sanitizeRegisterSearch({ view: 'review', account: 'acc-1' }),
+    ).toEqual({ view: 'review', account: 'acc-1' })
+  })
 })
 
 describe('toListQuery', () => {
@@ -107,12 +124,41 @@ describe('toListQuery', () => {
   it('sends nothing for an empty filter state', () => {
     expect(toListQuery({})).toEqual({})
   })
+
+  it('pins the Uncategorized view to reviewed-but-uncategorized, its category slot owned by the tab', () => {
+    expect(
+      toListQuery({
+        view: 'uncategorized',
+        q: 'whole',
+        account: 'acc-1',
+        category: 'cat-1',
+        tag: 'errands',
+        from: '2026-07-01',
+        to: '2026-07-21',
+      }),
+    ).toEqual({
+      q: 'whole',
+      account_id: ['acc-1'],
+      tag: ['errands'],
+      date_from: '2026-07-01',
+      date_to: '2026-07-21',
+      uncategorized: true,
+      reviewed: true,
+    })
+  })
+
+  it('never translates the review view — the queue owns its own query', () => {
+    expect(toListQuery({ view: 'review', account: 'acc-1' })).toEqual({
+      account_id: ['acc-1'],
+    })
+  })
 })
 
 describe('hasActiveFilters', () => {
-  it('counts every find-grammar field but not the selection', () => {
+  it('counts every find-grammar field but not the selection or the view', () => {
     expect(hasActiveFilters({})).toBe(false)
     expect(hasActiveFilters({ txn: 't1' })).toBe(false)
+    expect(hasActiveFilters({ view: 'uncategorized' })).toBe(false)
     expect(hasActiveFilters({ q: 'x' })).toBe(true)
     expect(hasActiveFilters({ from: '2026-01-01' })).toBe(true)
   })

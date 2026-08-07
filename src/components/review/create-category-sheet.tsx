@@ -17,7 +17,7 @@ import { CATEGORY_COLOR_SLOTS, categoryColorVar } from '@/lib/category-colors'
 import { cn } from '@/lib/utils'
 
 // #63 (wireframe s7c 2c): the inline sheet the picker's create row opens —
-// creating never leaves the Inbox. Four fields, all pre-filled or optional:
+// creating never leaves the review flow. Four fields, all pre-filled or optional:
 // the name is what they typed, icon & color are guessed (the same
 // derivation the unset-identity pill uses, so the guess matches what
 // they'd see anyway), a picked parent's color outranks the guess (the

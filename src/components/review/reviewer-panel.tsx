@@ -24,7 +24,7 @@ import type { useReviewController } from './use-review-controller'
 // place. One fixed skeleton (identity, category, Apply-to, tags, footer) whose
 // middle content and footer verbs swap per state. Purely presentational:
 // every value and verb arrives via the controller object, so every host
-// (Inbox pane, Register pane, Dashboard Fix drawer) mounts the same body
+// (the Register's To-review tab and pane, the Dashboard Fix drawer) mounts the same body
 // through TransactionInspector. Corrections stage here and ride ONE review
 // call on Accept — no separate "save"; the decision SHAPES are exclusive
 // (category OR split OR transfer, the API's 422), so staging one clears the
@@ -87,7 +87,7 @@ export function ReviewerPanel({
 
   return (
     <div
-      data-testid="inbox-inspector"
+      data-testid="reviewer-panel"
       className="flex min-w-0 flex-1 flex-col overflow-y-auto p-4"
     >
       <div className="label-caps">Inspecting</div>
@@ -465,7 +465,7 @@ function ApplyToBlock({
               {ruleScope === 'forward'
                 ? `Going forward only — ${existing} existing transaction${existing === 1 ? '' : 's'} stay as they are`
                 : ruleScope === 'unreviewed'
-                  ? `Also re-proposes the ${preview?.unreviewed_count ?? 0} still waiting in the inbox`
+                  ? `Also re-proposes the ${preview?.unreviewed_count ?? 0} still waiting to review`
                   : `Recategorizes all ${existing}, including ${preview?.reviewed_count ?? 0} already reviewed`}
             </span>
             <button
@@ -498,7 +498,7 @@ function ApplyToBlock({
                 checked={ruleScope === 'unreviewed'}
                 onChange={() => onChange('unreviewed')}
               />
-              The {preview?.unreviewed_count ?? 0} still waiting in the inbox
+              The {preview?.unreviewed_count ?? 0} still waiting to review
             </label>
             <label className="flex items-center gap-2">
               <input
@@ -517,7 +517,7 @@ function ApplyToBlock({
               >
                 This overwrites {preview?.reviewed_count} decision
                 {preview?.reviewed_count === 1 ? '' : 's'} you made. They stay
-                reviewed — nothing returns to your inbox. Logged as one entry in
+                reviewed — nothing returns to your queue. Logged as one entry in
                 Learning.
               </p>
             )}

@@ -24,7 +24,14 @@ import { formatMinorUnits } from '../../lib/money'
 
 export const UNCATEGORIZED = 'uncategorized'
 
+// The Register's views (F10 CP1): All (absent), the To-review queue, and
+// reviewed-but-uncategorized. A view is an address, not a filter — switching
+// tabs keeps the filter params in the URL.
+export type RegisterView = 'review' | 'uncategorized'
+
 export type RegisterSearch = {
+  /** The active view tab; absent means All. */
+  view?: RegisterView
   /** Text search — the backend `q` param (payee/description/name/notes). */
   q?: string
   /** Account id filter. */
@@ -59,6 +66,9 @@ export function sanitizeRegisterSearch(
   raw: Record<string, unknown>,
 ): RegisterSearch {
   const search: RegisterSearch = {}
+  if (raw.view === 'review' || raw.view === 'uncategorized') {
+    search.view = raw.view
+  }
   const q = cleanString(raw.q)
   const account = cleanString(raw.account)
   const category = cleanString(raw.category)
@@ -78,12 +88,21 @@ export function sanitizeRegisterSearch(
 
 export type ListQuery = NonNullable<ListTransactionsData['query']>
 
-/** The URL filter state, translated to the listing API's parameters. */
+/** The URL filter state, translated to the listing API's parameters. The
+ * Uncategorized view pins reviewed-but-uncategorized and owns the category
+ * slot (the tab IS the category filter there); the review view never reaches
+ * this — the queue owns its own query. */
 export function toListQuery(search: RegisterSearch): ListQuery {
   const query: ListQuery = {}
   if (search.account) query.account_id = [search.account]
-  if (search.category === UNCATEGORIZED) query.uncategorized = true
-  else if (search.category) query.category_id = [search.category]
+  if (search.view === 'uncategorized') {
+    query.uncategorized = true
+    query.reviewed = true
+  } else if (search.category === UNCATEGORIZED) {
+    query.uncategorized = true
+  } else if (search.category) {
+    query.category_id = [search.category]
+  }
   if (search.tag) query.tag = [search.tag]
   if (search.from) query.date_from = search.from
   if (search.to) query.date_to = search.to

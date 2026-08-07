@@ -6,7 +6,7 @@ import {
   listCorrectionLogOptions,
 } from '@/api/generated/@tanstack/react-query.gen'
 import type { CorrectionLogEntryOut } from '@/api/generated/types.gen'
-import { ProvenanceBadge } from '@/components/inbox/provenance-badge'
+import { ProvenanceBadge } from '@/components/review/provenance-badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatTile } from '@/components/ui/stat-tile'
 
@@ -110,7 +110,7 @@ function LearningTab() {
         )}
         {groups.length === 0 && (
           <li className="px-3.5 py-6 text-center text-muted-foreground text-sm">
-            Decisions you make in the Inbox land here — the flywheel's memory.
+            Decisions you make reviewing land here — the flywheel's memory.
           </li>
         )}
       </ul>

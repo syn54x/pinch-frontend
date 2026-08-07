@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
   dayGroups,
-  type InboxAction,
-  type InboxState,
-  inboxReducer,
-  initialInboxState,
-} from './inbox-reducer'
+  initialQueueState,
+  type QueueAction,
+  type QueueState,
+  queueReducer,
+} from './queue-reducer'
 
 // Two day groups, newest-first — the server's visual order.
 const ROWS = [
@@ -15,12 +15,12 @@ const ROWS = [
   { id: 'd', date: '2026-07-20' },
 ]
 
-function loaded(): InboxState {
-  return inboxReducer(initialInboxState, { type: 'sync', rows: ROWS })
+function loaded(): QueueState {
+  return queueReducer(initialQueueState, { type: 'sync', rows: ROWS })
 }
 
-function run(state: InboxState, ...actions: InboxAction[]): InboxState {
-  return actions.reduce(inboxReducer, state)
+function run(state: QueueState, ...actions: QueueAction[]): QueueState {
+  return actions.reduce(queueReducer, state)
 }
 
 describe('sync', () => {
@@ -32,13 +32,13 @@ describe('sync', () => {
 
   it('keeps focus on a surviving row', () => {
     const state = run(loaded(), { type: 'focus', id: 'c' })
-    const synced = inboxReducer(state, { type: 'sync', rows: ROWS })
+    const synced = queueReducer(state, { type: 'sync', rows: ROWS })
     expect(synced.focusId).toBe('c')
   })
 
   it('mid-list removal: a reviewed row leaving the list hands focus to the next survivor', () => {
     const state = run(loaded(), { type: 'focus', id: 'b' })
-    const synced = inboxReducer(state, {
+    const synced = queueReducer(state, {
       type: 'sync',
       rows: ROWS.filter((row) => row.id !== 'b'),
     })
@@ -80,15 +80,15 @@ describe('traversal', () => {
 
 describe('empty inbox', () => {
   it('is inert: traversal and removal are all no-ops', () => {
-    expect(inboxReducer(initialInboxState, { type: 'focusNext' })).toEqual(
-      initialInboxState,
+    expect(queueReducer(initialQueueState, { type: 'focusNext' })).toEqual(
+      initialQueueState,
     )
-    expect(inboxReducer(initialInboxState, { type: 'focusPrev' })).toEqual(
-      initialInboxState,
+    expect(queueReducer(initialQueueState, { type: 'focusPrev' })).toEqual(
+      initialQueueState,
     )
     expect(
-      inboxReducer(initialInboxState, { type: 'remove', ids: ['a'] }),
-    ).toEqual(initialInboxState)
+      queueReducer(initialQueueState, { type: 'remove', ids: ['a'] }),
+    ).toEqual(initialQueueState)
   })
 
   it('removing the last remaining rows lands on no focus', () => {

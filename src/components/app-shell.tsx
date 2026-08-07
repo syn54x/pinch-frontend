@@ -3,7 +3,6 @@ import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import {
   CreditCard,
   Home,
-  Inbox as InboxIcon,
   Link as LinkIcon,
   List,
   RefreshCw,
@@ -38,7 +37,8 @@ declare module '@tanstack/react-router' {
 // permanently (F6 CP2, resolving #15's open question): summon from
 // anywhere, focus the composer when already there — never a toggle, never
 // a command palette (a future palette is reserved to ⌘P; do not bind it).
-// The Inbox count badge is live: unreviewed-count, refreshed by
+// The review count badge lives on the Register item (F10 CP1 — the number
+// follows the surface that owns it): unreviewed-count, refreshed by
 // review-mutation invalidation and window refocus.
 export function AppShell({ children }: { children: ReactNode }) {
   const title = useRouterState({
@@ -94,12 +94,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           <NavItem to="/dashboard" icon={Home}>
             Dashboard
           </NavItem>
-          <NavItem to="/inbox" icon={InboxIcon}>
-            Inbox
-            <InboxCount />
-          </NavItem>
+          {/* The Inbox left the nav with F10 CP1 (ADR 0002): review is the
+              Register's To-review view now, and its live count pill moved
+              onto the Register item. */}
           <NavItem to="/register" icon={List}>
             Register
+            <ReviewCount />
           </NavItem>
           {/* Net Worth left the nav with F10 CP2 (#88): the page is absorbed
               into Accounts, and the nav shows only surfaces that exist. */}
@@ -223,17 +223,17 @@ function NavItem({
   )
 }
 
-function InboxCount() {
+function ReviewCount() {
   // The live review count (wireframe #24's mono nav badge). Liveness is
   // invalidation + refocus, never polling: review mutations invalidate this
   // key, and TanStack's default refetchOnWindowFocus re-asks on return.
-  // Zero hides the badge — inbox zero is a resting state, not a metric.
+  // Zero hides the badge — queue zero is a resting state, not a metric.
   const count = useQuery(countUnreviewedTransactionsOptions())
   if (count.data === undefined || count.data.count === 0) return null
 
   return (
     <span
-      data-testid="inbox-count"
+      data-testid="review-count"
       className="ml-auto rounded-full bg-primary px-1.5 py-px font-mono font-semibold text-[10px] text-primary-foreground"
     >
       {count.data.count}
