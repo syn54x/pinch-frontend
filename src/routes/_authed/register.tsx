@@ -1,7 +1,14 @@
-import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useQuery,
+} from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { useCallback } from 'react'
-import { listTransactionsInfiniteOptions } from '@/api/generated/@tanstack/react-query.gen'
+import { useCallback, useMemo } from 'react'
+import {
+  listAccountsOptions,
+  listTransactionsInfiniteOptions,
+} from '@/api/generated/@tanstack/react-query.gen'
 import { FilterBar } from '@/components/register/filter-bar'
 import { Inspector } from '@/components/register/inspector'
 import {
@@ -58,6 +65,21 @@ function RegisterPage() {
     throwOnError: (_, query) => query.state.data === undefined,
   })
 
+  // The Manual badge's source of truth (F10 CP5): rows on manual accounts
+  // wear it, synced rows never do. Same options as the filter bar — one
+  // cached accounts query serves both.
+  const accounts = useQuery(listAccountsOptions({ query: { limit: 100 } }))
+  const accountItems = accounts.data?.items
+  const manualAccountIds = useMemo(
+    () =>
+      new Set(
+        (accountItems ?? [])
+          .filter((account) => account.manual)
+          .map((account) => account.id),
+      ),
+    [accountItems],
+  )
+
   const items = list.data?.pages.flatMap((page) => page.items) ?? []
   const fetchNextPage = list.fetchNextPage
   const onFetchNextPage = useCallback(() => {
@@ -84,6 +106,7 @@ function RegisterPage() {
           groups={groupByDay(items)}
           selectedId={search.txn}
           onSelect={(txn) => patchSearch({ txn })}
+          manualAccountIds={manualAccountIds}
           isFiltered={hasActiveFilters(search)}
           isLoading={list.isPending}
           isRefreshing={list.isPlaceholderData}
