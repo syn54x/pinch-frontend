@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as NetWorthRouteImport } from './routes/net-worth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
@@ -20,7 +21,6 @@ import { Route as AuthedCategoriesRouteImport } from './routes/_authed/categorie
 import { Route as AuthedConnectionsRouteImport } from './routes/_authed/connections'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
 import { Route as AuthedInboxRouteImport } from './routes/_authed/inbox'
-import { Route as AuthedNetWorthRouteImport } from './routes/_authed/net-worth'
 import { Route as AuthedPennyRouteImport } from './routes/_authed/penny'
 import { Route as AuthedRecurringRouteImport } from './routes/_authed/recurring'
 import { Route as AuthedRegisterRouteImport } from './routes/_authed/register'
@@ -56,6 +56,11 @@ const AuthedRoute = AuthedRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NetWorthRoute = NetWorthRouteImport.update({
+  id: '/net-worth',
+  path: '/net-worth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -96,11 +101,6 @@ const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
 const AuthedInboxRoute = AuthedInboxRouteImport.update({
   id: '/inbox',
   path: '/inbox',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedNetWorthRoute = AuthedNetWorthRouteImport.update({
-  id: '/net-worth',
-  path: '/net-worth',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedPennyRoute = AuthedPennyRouteImport.update({
@@ -226,6 +226,7 @@ const AuthedAccountsDebtAccountIdTermsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/net-worth': typeof NetWorthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -234,7 +235,6 @@ export interface FileRoutesByFullPath {
   '/connections': typeof AuthedConnectionsRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/inbox': typeof AuthedInboxRoute
-  '/net-worth': typeof AuthedNetWorthRoute
   '/penny': typeof AuthedPennyRoute
   '/recurring': typeof AuthedRecurringRoute
   '/register': typeof AuthedRegisterRoute
@@ -261,6 +261,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/net-worth': typeof NetWorthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -268,7 +269,6 @@ export interface FileRoutesByTo {
   '/connections': typeof AuthedConnectionsRoute
   '/dashboard': typeof AuthedDashboardRoute
   '/inbox': typeof AuthedInboxRoute
-  '/net-worth': typeof AuthedNetWorthRoute
   '/penny': typeof AuthedPennyRoute
   '/recurring': typeof AuthedRecurringRoute
   '/register': typeof AuthedRegisterRoute
@@ -295,6 +295,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authed': typeof AuthedRouteWithChildren
   '/login': typeof LoginRoute
+  '/net-worth': typeof NetWorthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -303,7 +304,6 @@ export interface FileRoutesById {
   '/_authed/connections': typeof AuthedConnectionsRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
   '/_authed/inbox': typeof AuthedInboxRoute
-  '/_authed/net-worth': typeof AuthedNetWorthRoute
   '/_authed/penny': typeof AuthedPennyRoute
   '/_authed/recurring': typeof AuthedRecurringRoute
   '/_authed/register': typeof AuthedRegisterRoute
@@ -332,6 +332,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/net-worth'
     | '/reset-password'
     | '/signup'
     | '/verify-email'
@@ -340,7 +341,6 @@ export interface FileRouteTypes {
     | '/connections'
     | '/dashboard'
     | '/inbox'
-    | '/net-worth'
     | '/penny'
     | '/recurring'
     | '/register'
@@ -367,6 +367,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/net-worth'
     | '/reset-password'
     | '/signup'
     | '/verify-email'
@@ -374,7 +375,6 @@ export interface FileRouteTypes {
     | '/connections'
     | '/dashboard'
     | '/inbox'
-    | '/net-worth'
     | '/penny'
     | '/recurring'
     | '/register'
@@ -400,6 +400,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authed'
     | '/login'
+    | '/net-worth'
     | '/reset-password'
     | '/signup'
     | '/verify-email'
@@ -408,7 +409,6 @@ export interface FileRouteTypes {
     | '/_authed/connections'
     | '/_authed/dashboard'
     | '/_authed/inbox'
-    | '/_authed/net-worth'
     | '/_authed/penny'
     | '/_authed/recurring'
     | '/_authed/register'
@@ -437,6 +437,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthedRoute: typeof AuthedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  NetWorthRoute: typeof NetWorthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
@@ -464,6 +465,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/net-worth': {
+      id: '/net-worth'
+      path: '/net-worth'
+      fullPath: '/net-worth'
+      preLoaderRoute: typeof NetWorthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -520,13 +528,6 @@ declare module '@tanstack/react-router' {
       path: '/inbox'
       fullPath: '/inbox'
       preLoaderRoute: typeof AuthedInboxRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/net-worth': {
-      id: '/_authed/net-worth'
-      path: '/net-worth'
-      fullPath: '/net-worth'
-      preLoaderRoute: typeof AuthedNetWorthRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/penny': {
@@ -770,7 +771,6 @@ interface AuthedRouteChildren {
   AuthedConnectionsRoute: typeof AuthedConnectionsRoute
   AuthedDashboardRoute: typeof AuthedDashboardRoute
   AuthedInboxRoute: typeof AuthedInboxRoute
-  AuthedNetWorthRoute: typeof AuthedNetWorthRoute
   AuthedPennyRoute: typeof AuthedPennyRoute
   AuthedRecurringRoute: typeof AuthedRecurringRoute
   AuthedRegisterRoute: typeof AuthedRegisterRoute
@@ -787,7 +787,6 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedConnectionsRoute: AuthedConnectionsRoute,
   AuthedDashboardRoute: AuthedDashboardRoute,
   AuthedInboxRoute: AuthedInboxRoute,
-  AuthedNetWorthRoute: AuthedNetWorthRoute,
   AuthedPennyRoute: AuthedPennyRoute,
   AuthedRecurringRoute: AuthedRecurringRoute,
   AuthedRegisterRoute: AuthedRegisterRoute,
@@ -807,6 +806,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
+  NetWorthRoute: NetWorthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   VerifyEmailRoute: VerifyEmailRoute,
