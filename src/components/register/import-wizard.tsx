@@ -12,7 +12,11 @@ import {
   listAccountsQueryKey,
   listTransactionsQueryKey,
 } from '@/api/generated/@tanstack/react-query.gen'
-import { listImportRows, listTransactions } from '@/api/generated/sdk.gen'
+import {
+  ledgerStats,
+  listImportRows,
+  listTransactions,
+} from '@/api/generated/sdk.gen'
 import type {
   ImportOut,
   ImportRowOut,
@@ -575,7 +579,7 @@ function PreviewStep({
       const [uncategorizedBefore, statsBefore] = await Promise.all([
         autoFile ? uncategorizedCount(batch.account_id) : Promise.resolve(0),
         autoFile
-          ? queryClient.fetchQuery(ledgerStatsOptions())
+          ? queryClient.fetchQuery({ ...ledgerStatsOptions(), staleTime: 0 })
           : Promise.resolve(null),
       ])
       const committed = await new Promise<ImportOut>((resolve, reject) => {
@@ -734,41 +738,36 @@ function SettlingStep({
   unreviewedBefore: number
   onSettled: (stillUncategorized: number) => void
 }) {
-  const [attempt, setAttempt] = useState(0)
-  const [resolved, setResolved] = useState(false)
   // The onboarding wizard's own seam (ProgressStep): poll ledgerStats,
   // bounded, until the classify job's auto-file consumption brings the
   // ledger's unreviewed count back down to what it was before this
   // import's rows briefly bumped it — the settle signal, no new polling
-  // surface (CONTEXT.md/PRD: reuse, don't invent).
-  const stats = useQuery({
-    ...ledgerStatsOptions(),
-    refetchInterval: resolved ? undefined : SETTLE_POLL_MS,
-  })
-  const settled =
-    stats.data !== undefined && stats.data.unreviewed <= unreviewedBefore
-  const timedOut = attempt >= SETTLE_MAX_ATTEMPTS
-
-  // Advance the bound independently of whether ledgerStats' value changed —
-  // a run that never settles still reaches the cap instead of polling
-  // forever.
+  // surface (CONTEXT.md/PRD: reuse, don't invent). A raw imperative loop,
+  // not `useQuery`: React Query would hand back the pre-commit snapshot
+  // still sitting in cache as `data` on the very first render (stale
+  // data shown while a revalidating fetch is in flight), which reads as
+  // "already settled" against a baseline equal to itself — a false
+  // positive the instant this step mounts. Every tick here is a genuine
+  // network round trip, so the first check can't lie.
   useEffect(() => {
-    if (resolved) return
-    const timer = setInterval(() => setAttempt((a) => a + 1), SETTLE_POLL_MS)
-    return () => clearInterval(timer)
-  }, [resolved])
-
-  // Resolve exactly once: the moment either condition fires, walk the
-  // account's uncategorized-reviewed rows one last time and hand the delta
-  // up. `resolved` guards against the effect re-firing on every subsequent
-  // poll tick once settled is already true.
-  useEffect(() => {
-    if (resolved || (!settled && !timedOut)) return
-    setResolved(true)
-    uncategorizedCount(accountId).then((after) => {
+    let cancelled = false
+    async function poll() {
+      for (let attempt = 0; attempt < SETTLE_MAX_ATTEMPTS; attempt++) {
+        const { data } = await ledgerStats({ throwOnError: true })
+        if (cancelled) return
+        if (data.unreviewed <= unreviewedBefore) break
+        await new Promise((resolve) => setTimeout(resolve, SETTLE_POLL_MS))
+        if (cancelled) return
+      }
+      const after = await uncategorizedCount(accountId)
+      if (cancelled) return
       onSettled(newlyUncategorized(uncategorizedBefore, after))
-    })
-  }, [resolved, settled, timedOut, accountId, uncategorizedBefore, onSettled])
+    }
+    poll()
+    return () => {
+      cancelled = true
+    }
+  }, [accountId, uncategorizedBefore, unreviewedBefore, onSettled])
 
   return (
     <div
