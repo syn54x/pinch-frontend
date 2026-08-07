@@ -18,6 +18,7 @@ import { GlobalSearch } from '@/components/global-search'
 import { PennyChips } from '@/components/penny/history'
 import { ProfileMenu } from '@/components/profile-menu'
 import { Button } from '@/components/ui/button'
+import { YourMoney } from '@/components/your-money'
 
 // Screen titles live on the routes themselves (staticData); the shell's top
 // bar shows the deepest match that declares one. fullBleed lets a surface
@@ -31,9 +32,11 @@ declare module '@tanstack/react-router' {
 }
 
 // The App shell (CONTEXT.md): the persistent chrome every authed surface
-// mounts inside — sidebar (brand, nav, Penny pill, user row) and top bar
-// (title, search, Ask Penny). Wireframe #24 is the reference. Only surfaces that
-// exist appear in the nav (no disabled destinations). ⌘K is Penny's key,
+// mounts inside — sidebar (brand, nav, Your money, Penny pill, user row) and
+// top bar (title, search, Ask Penny). Wireframe #24 is the reference. Only
+// surfaces that exist appear in the nav (no disabled destinations); the
+// "Setup" label is gone (F10 CP3, #89) — Categories & Rules and Connections
+// sit in the main list, in the wireframe's final order. ⌘K is Penny's key,
 // permanently (F6 CP2, resolving #15's open question): summon from
 // anywhere, focus the composer when already there — never a toggle, never
 // a command palette (a future palette is reserved to ⌘P; do not bind it).
@@ -90,7 +93,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             Pinch
           </span>
         </div>
-        <nav aria-label="Primary" className="flex flex-col gap-[3px]">
+        <nav
+          aria-label="Primary"
+          // Wireframe s24: nav + Your money scroll together, scrollbar
+          // hidden — still wheel/keyboard scrollable (scrollbar-hide only
+          // hides the bar, `overflow-y-auto` keeps it functional).
+          className="scrollbar-hide flex min-h-0 flex-1 flex-col gap-[3px] overflow-y-auto"
+        >
           <NavItem to="/dashboard" icon={Home}>
             Dashboard
           </NavItem>
@@ -109,15 +118,16 @@ export function AppShell({ children }: { children: ReactNode }) {
           <NavItem to="/accounts" icon={CreditCard}>
             Accounts
           </NavItem>
-          <div className="label-caps mt-3.5 mb-1 px-2">Setup</div>
-          <NavItem to="/connections" icon={LinkIcon}>
-            Connections
-          </NavItem>
+          {/* F10 CP3 (#89): the final nav order — no "Setup" label, Categories
+              & Rules and Connections join the main list. */}
           <NavItem to="/categories" icon={Shapes}>
             Categories & Rules
           </NavItem>
+          <NavItem to="/connections" icon={LinkIcon}>
+            Connections
+          </NavItem>
+          <YourMoney />
         </nav>
-        <div className="flex-1" />
         <PennyPill active={onPenny} />
         <ProfileMenu />
       </aside>

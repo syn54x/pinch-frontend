@@ -1,4 +1,13 @@
-import { expect, type Page } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
+
+/** The page's content area, scoped away from the sidebar — since Your money
+ * (F10 CP3, #89) lists every account's name in the sidebar too, an unscoped
+ * `page.getByText(accountLabel)` is ambiguous once that account is
+ * non-archived. Use this wherever a test locates content by an account
+ * name that isn't itself sidebar-specific. */
+export function mainContent(page: Page): Locator {
+  return page.locator('main')
+}
 
 /** Log in through the UI — for tests where login is setup, not the subject. */
 export async function loginViaUi(

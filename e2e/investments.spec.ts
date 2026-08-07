@@ -7,7 +7,7 @@ import {
 } from './helpers/db'
 import { seedSandboxConnection, waitForFirstSync } from './helpers/plaid'
 import { armPlaidFake } from './helpers/plaid-fake'
-import { loginViaUi } from './helpers/ui'
+import { loginViaUi, mainContent } from './helpers/ui'
 
 // M10 companion (pinch-frontend#66): the investments detail page and the
 // Enable-investments consent affordance. Holdings are provider-owned with
@@ -30,7 +30,7 @@ test('an investment account deep-links to holdings and activity', async ({
 
   await loginViaUi(page, email, PASSWORD)
   await page.getByRole('link', { name: 'Accounts' }).click()
-  await page.getByText('Stash Brokerage').click()
+  await mainContent(page).getByText('Stash Brokerage').click()
 
   await expect(
     page.getByRole('heading', { name: /Stash Brokerage/ }),
@@ -71,7 +71,7 @@ test('an empty manual investment account is honest about why', async ({
 
   await loginViaUi(page, email, PASSWORD)
   await page.getByRole('link', { name: 'Accounts' }).click()
-  await page.getByText('Paper Portfolio').click()
+  await mainContent(page).getByText('Paper Portfolio').click()
 
   await expect(page.getByTestId('investments-empty')).toContainText(
     "Manual accounts don't sync holdings.",
@@ -100,7 +100,7 @@ test('a consent-waiting connection offers Enable investments end to end', async 
   // so the accounts page deep-links it — and its detail reads the consent
   // state honestly, pointing back at the connection.
   await page.getByRole('link', { name: 'Accounts' }).click()
-  await page.getByText('Plaid 401k').click()
+  await mainContent(page).getByText('Plaid 401k').click()
   await expect(page.getByTestId('investments-consent-empty')).toContainText(
     'Waiting on investments access',
   )

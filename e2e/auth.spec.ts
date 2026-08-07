@@ -5,7 +5,7 @@ import {
   seedUser,
   uniqueEmail,
 } from './helpers/api'
-import { loginViaUi } from './helpers/ui'
+import { loginViaUi, mainContent } from './helpers/ui'
 
 test('login lands on the accounts page showing seeded accounts', async ({
   page,
@@ -21,7 +21,7 @@ test('login lands on the accounts page showing seeded accounts', async ({
   await page.getByRole('button', { name: 'Log in' }).click()
 
   await expect(page).toHaveURL(/\/accounts$/)
-  await expect(page.getByText('Everyday Checking')).toBeVisible()
+  await expect(mainContent(page).getByText('Everyday Checking')).toBeVisible()
 })
 
 test('logged-out deep link redirects to login and returns after', async ({
@@ -40,7 +40,7 @@ test('logged-out deep link redirects to login and returns after', async ({
   await page.getByRole('button', { name: 'Log in' }).click()
 
   await expect(page).toHaveURL(/\/accounts$/)
-  await expect(page.getByText('Travel Card')).toBeVisible()
+  await expect(mainContent(page).getByText('Travel Card')).toBeVisible()
 })
 
 test('logout revokes the session for real', async ({ page }) => {
@@ -86,7 +86,7 @@ test('the session survives a reload', async ({ page }) => {
 
   await page.reload()
   await expect(page).toHaveURL(/\/accounts$/)
-  await expect(page.getByText('House')).toBeVisible()
+  await expect(mainContent(page).getByText('House')).toBeVisible()
 })
 
 test('a stale CSRF cookie self-heals instead of failing the form', async ({

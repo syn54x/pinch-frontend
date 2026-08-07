@@ -344,6 +344,20 @@
   color: var(--muted-foreground);
 }
 
+/* Wireframe s24's `.sbscroll`: the sidebar's nav + Your money scroll as one
+ * region with the scrollbar hidden (cross-browser — Firefox/modern via the
+ * property, WebKit via the pseudo-element) while staying keyboard/wheel
+ * scrollable. Scoped to whichever container opts in, never global. */
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
