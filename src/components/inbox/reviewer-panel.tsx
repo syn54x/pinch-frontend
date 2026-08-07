@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import type {
-  CategoryOut,
   RetroApplyTier,
   RulePreviewOut,
   TransactionOut,
 } from '@/api/generated/types.gen'
 import { Button } from '@/components/ui/button'
 import { formatMinorUnits } from '@/lib/money'
-import { type SplitDraftLine, splitStatus } from '@/lib/split-draft'
+import { splitStatus } from '@/lib/split-draft'
 import { cn } from '@/lib/utils'
 import { CategoryPicker } from './category-picker'
 import { CategoryPill, UncategorizedPill } from './category-pill'
@@ -15,89 +14,61 @@ import { CreateCategorySheet } from './create-category-sheet'
 import { formatDay } from './day-label'
 import { PairCallout } from './pair-callout'
 import { ProvenanceBadge } from './provenance-badge'
-import { type Correction, payeeOf, type ReviewPanel } from './reviewer-model'
+import { payeeOf } from './reviewer-model'
 import { SplitEditor } from './split-editor'
 import { TagEditor } from './tag-editor'
+import type { useReviewController } from './use-review-controller'
 
-// The ReviewerPanel (s7c): the self-contained body where the focused proposal
-// is examined and corrected in place — one fixed skeleton (identity, category,
-// tags, footer) whose middle content and footer verbs swap per state. Purely
-// presentational: every value and verb arrives via props (from
-// useReviewController), so the Inbox pane and the Dashboard Fix drawer mount the
-// same body. Corrections stage here and ride ONE review call on Accept — no
-// separate "save"; the decision SHAPES are exclusive (category OR split OR
-// transfer, the API's 422), so staging one clears the others upstream.
+// The ReviewerPanel (s7c): the reviewing VARIANT of the one inspector — the
+// body where the focused unreviewed transaction is examined and corrected in
+// place. One fixed skeleton (identity, category, Apply-to, tags, footer) whose
+// middle content and footer verbs swap per state. Purely presentational:
+// every value and verb arrives via the controller object, so every host
+// (Inbox pane, Register pane, Dashboard Fix drawer) mounts the same body
+// through TransactionInspector. Corrections stage here and ride ONE review
+// call on Accept — no separate "save"; the decision SHAPES are exclusive
+// (category OR split OR transfer, the API's 422), so staging one clears the
+// others upstream.
 
 export function ReviewerPanel({
   txn,
-  correction,
-  onCorrectionChange,
-  panel,
-  onOpenCategory,
-  onCloseCategory,
-  createName,
-  onOpenCreateCategory,
-  onBackToPicker,
-  rulePreview,
-  onAccept,
-  accepting,
-  categories,
-  categoriesPending,
-  tagSuggestions,
-  splitLines,
-  onSplitLinesChange,
-  onOpenSplit,
-  onMergeBack,
-  onSaveSplit,
-  onCancelSplit,
-  counterpart,
-  counterpartLabel,
-  onConfirmTransfer,
-  canMarkTransfer,
-  transferChoices,
-  onOpenTransfer,
-  onMarkTransfer,
-  onCloseTransfer,
+  reviewer,
 }: {
   txn: TransactionOut
-  correction: Correction
-  onCorrectionChange: (correction: Correction) => void
-  panel: ReviewPanel | null
-  onOpenCategory: () => void
-  onCloseCategory: () => void
-  /** The create sheet's seed — what they typed into the picker (#63). */
-  createName: string
-  onOpenCreateCategory: (name: string) => void
-  onBackToPicker: () => void
-  /** Consent counts for the staged payee-equals rule (8b), null while off. */
-  rulePreview: RulePreviewOut | null
-  onAccept: () => void
-  accepting: boolean
-  categories: CategoryOut[]
-  categoriesPending: boolean
-  tagSuggestions: string[]
-  /** The staged split draft for THIS transaction — null when unsplit. */
-  splitLines: SplitDraftLine[] | null
-  onSplitLinesChange: (lines: SplitDraftLine[]) => void
-  onOpenSplit: () => void
-  onMergeBack: () => void
-  /** ↩ — close the editor keeping the (valid) document staged. */
-  onSaveSplit: () => void
-  /** Escape / Cancel — discard this editing session's changes. */
-  onCancelSplit: () => void
-  /** The detected pair's other leg (det rows only; null while loading). */
-  counterpart: TransactionOut | null
-  counterpartLabel: string | null
-  onConfirmTransfer: () => void
-  /** The manual transfer verb — rows with NO detected pairing. */
-  canMarkTransfer: boolean
-  /** Linkable queue rows for the manual picker, with their account labels. */
-  transferChoices: { txn: TransactionOut; label: string }[]
-  onOpenTransfer: () => void
-  /** A picked counterpart id links both legs; null marks it untracked. */
-  onMarkTransfer: (counterpartId: string | null) => void
-  onCloseTransfer: () => void
+  reviewer: ReturnType<typeof useReviewController>
 }) {
+  const {
+    correction,
+    panel,
+    createName,
+    rulePreview,
+    categories,
+    categoriesPending,
+    tagSuggestions,
+    splitLines,
+    counterpart,
+    counterpartLabel,
+    canMarkTransfer,
+    transferChoices,
+    accountLabel,
+    busy: accepting,
+    setCorrection: onCorrectionChange,
+    openCategory: onOpenCategory,
+    closeCategory: onCloseCategory,
+    openCreateCategory: onOpenCreateCategory,
+    backToPicker: onBackToPicker,
+    accept: onAccept,
+    setSplitLines: onSplitLinesChange,
+    openSplit: onOpenSplit,
+    mergeBack: onMergeBack,
+    saveSplit: onSaveSplit,
+    cancelSplit: onCancelSplit,
+    consentTransfer: onConfirmTransfer,
+    openTransfer: onOpenTransfer,
+    markTransfer: onMarkTransfer,
+    closeTransfer: onCloseTransfer,
+  } = reviewer
+  const account = accountLabel(txn.account_id)
   const proposal = txn.proposal
   const category = correction.category ?? proposal?.category ?? null
   const tags = correction.tags ?? proposal?.tags ?? []
@@ -138,7 +109,10 @@ export function ReviewerPanel({
         {formatMinorUnits(txn.amount_minor, txn.currency)}
       </div>
       <div className="mt-1 text-[11.5px] text-muted-foreground">
-        {formatDay(txn.date)} · {txn.pending ? 'pending' : 'posted'}
+        {formatDay(txn.date)}
+        {account !== undefined && <> · {account}</>}
+        {' · '}
+        {txn.pending ? 'pending' : 'posted'}
       </div>
 
       {detected && !declining && (

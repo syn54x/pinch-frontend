@@ -13,8 +13,9 @@ exception.
 **Register**:
 The surface for finding and inspecting money movement: the transaction list
 plus the grammar around it — filtering, account scoping, and per-transaction
-inspection. A read surface: review verbs live in the Inbox, even when reached
-from a Register row.
+inspection. Its Inspector's mode follows the transaction: an unreviewed row
+opens with the review verbs right there (see Inspector); queue-level verbs
+(accept day, accept all, the keyboard kit) still live in the Inbox.
 _Avoid_: ledger (the screen sense — a Ledger is the tenancy unit), transactions page
 
 **Inbox**:
@@ -45,9 +46,13 @@ _Avoid_: account settings (Account is a financial term), preferences page
 (Preferences is one pane of it)
 
 **Inspector**:
-The detail pane beside a list surface (Inbox, Register) where one
-transaction is examined and edited in place — category, tags, notes, split
-lines. In the Inbox it also carries the review verbs.
+The detail pane beside a list surface (Inbox, Register) — and inside the
+Dashboard's Fix drawer — where one transaction is examined. One shared
+component whose mode follows the transaction, not the surface it opened
+from: an unreviewed transaction shows the reviewing variant (staged
+corrections, Apply-to, the accept verbs in the footer); a reviewed one shows
+the browsing variant (category, tags, notes, display name edited in place —
+no accept ritual).
 _Avoid_: detail view, side panel
 
 **Onboarding**:

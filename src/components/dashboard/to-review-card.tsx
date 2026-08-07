@@ -253,7 +253,6 @@ export function ToReviewCard() {
         position={position.position}
         total={position.total}
         reviewer={reviewer}
-        accepting={busy}
         bodyRef={drawerBodyRef}
         originId={originId}
       />
