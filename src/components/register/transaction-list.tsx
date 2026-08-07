@@ -21,6 +21,7 @@ export function TransactionList({
   groups,
   selectedId,
   onSelect,
+  manualAccountIds,
   isFiltered,
   isLoading,
   isRefreshing,
@@ -33,6 +34,11 @@ export function TransactionList({
   groups: DayGroup[]
   selectedId: string | undefined
   onSelect: (id: string) => void
+  /** Accounts whose rows wear the Manual badge (F10 CP5) — the badge is
+   * account-derived: the row payload has no source field, so "manual"
+   * means "on a manual account". Typed and CSV-imported rows are
+   * deliberately indistinguishable; both are user-supplied. */
+  manualAccountIds: ReadonlySet<string>
   /** Distinguishes "ledger is empty" from "nothing matches these filters". */
   isFiltered: boolean
   isLoading: boolean
@@ -82,6 +88,7 @@ export function TransactionList({
                   <TransactionRow
                     key={txn.id}
                     txn={txn}
+                    manual={manualAccountIds.has(txn.account_id)}
                     selected={txn.id === selectedId}
                     onSelect={() => onSelect(txn.id)}
                   />
@@ -103,10 +110,12 @@ export function TransactionList({
 
 function TransactionRow({
   txn,
+  manual,
   selected,
   onSelect,
 }: {
   txn: TransactionOut
+  manual: boolean
   selected: boolean
   onSelect: () => void
 }) {
@@ -144,6 +153,14 @@ function TransactionRow({
             {splitCount} {splitCount === 1 ? 'split' : 'splits'}
           </RowMark>
         )}
+        {manual && (
+          <RowMark
+            testId="row-manual"
+            title="Manual — you supplied this data, not a bank"
+          >
+            manual
+          </RowMark>
+        )}
         {unreviewed && (
           <Link
             to="/inbox"
@@ -178,10 +195,19 @@ function TransactionRow({
   )
 }
 
-function RowMark({ children, title }: { children: ReactNode; title?: string }) {
+function RowMark({
+  children,
+  title,
+  testId,
+}: {
+  children: ReactNode
+  title?: string
+  testId?: string
+}) {
   return (
     <span
       title={title}
+      data-testid={testId}
       className="inline-flex shrink-0 items-center rounded-full border px-1.5 py-px font-mono text-[10px] text-muted-foreground"
     >
       {children}
