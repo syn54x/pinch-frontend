@@ -305,7 +305,10 @@ test('hard delete states the toll and takes the history with it', async ({
   await expect(page.getByText('1 account', { exact: true })).toBeVisible()
 
   // The history went with it — the Register no longer knows the payee.
-  await page.getByRole('link', { name: 'Register', exact: true }).click()
+  await page
+    .getByRole('navigation', { name: 'Primary' })
+    .getByRole('link', { name: 'Register' })
+    .click()
   await expect(page.getByText('BLUE BOTTLE')).toHaveCount(0)
 })
 
