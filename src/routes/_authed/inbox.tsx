@@ -54,7 +54,7 @@ const queueOptions = () =>
 // before accepting through the same one-shot review call. Selection and
 // keyboard nav live in the pure inbox reducer; the per-item review orchestration
 // lives in useReviewController (F5 CP1) so the Dashboard Fix drawer can mount the
-// same ReviewerPanel. This page is the shell: the queue, the batch verbs, and
+// same TransactionInspector. This page is the shell: the queue, the batch verbs, and
 // the keyboard. Liveness is invalidation + refocus, never polling.
 function InboxPage() {
   const queryClient = useQueryClient()
