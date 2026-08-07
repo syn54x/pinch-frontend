@@ -15,6 +15,7 @@ import {
   meOptions,
   requestEmailVerificationMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
+import { GlobalSearch } from '@/components/global-search'
 import { PennyChips } from '@/components/penny/history'
 import { ProfileMenu } from '@/components/profile-menu'
 import { Button } from '@/components/ui/button'
@@ -32,7 +33,7 @@ declare module '@tanstack/react-router' {
 
 // The App shell (CONTEXT.md): the persistent chrome every authed surface
 // mounts inside — sidebar (brand, nav, Penny pill, user row) and top bar
-// (title, Ask Penny). Wireframe #24 is the reference. Only surfaces that
+// (title, search, Ask Penny). Wireframe #24 is the reference. Only surfaces that
 // exist appear in the nav (no disabled destinations). ⌘K is Penny's key,
 // permanently (F6 CP2, resolving #15's open question): summon from
 // anywhere, focus the composer when already there — never a toggle, never
@@ -115,6 +116,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-[52px] shrink-0 items-center gap-3.5 border-b px-5">
           <h1 className="font-semibold text-sm">{title}</h1>
+          {/* Global search (F10 CP4): title · search · spacer · Penny, per
+              the wireframes' top bar. `/` focuses it from anywhere. */}
+          <GlobalSearch />
           <div className="ml-auto flex items-center gap-2">
             {/* s22: on the Penny screen the top bar carries her verbs
                 instead of the (redundant) summon pill. Theme and logout

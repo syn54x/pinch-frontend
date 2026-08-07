@@ -72,9 +72,9 @@ test('the nav is exactly Dashboard, Inbox, Register, Recurring, Accounts, Setup 
   await expect(topBarPill).toContainText('Ask Penny')
   await expect(topBarPill).toContainText('⌘K')
 
-  // No inline search: it was cut from F6 with the rest of the search
-  // feature — the top bar is title · spacer · Ask Penny · controls.
-  await expect(page.getByPlaceholder(/search/i)).toHaveCount(0)
+  // Global search (F10 CP4): the top bar is title · search · spacer ·
+  // Ask Penny. Behavior lives in search.spec.ts; here just its presence.
+  await expect(page.getByTestId('global-search')).toBeVisible()
 })
 
 test('⌘K summons Penny from anywhere; on her screen it focuses the composer, never navigates away', async ({
