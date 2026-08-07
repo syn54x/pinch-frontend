@@ -337,8 +337,11 @@ test('the Uncategorized tab shows reviewed-but-uncategorized rows through the sh
   await page.getByTestId('view-uncategorized').click()
   await expect(page).toHaveURL(/\/register\?view=uncategorized$/)
 
-  // Exactly the reviewed-but-uncategorized row, behind the shared bar.
+  // Exactly the reviewed-but-uncategorized row, behind the shared bar —
+  // minus the Category chip, whose slot the tab itself owns here.
   await expect(page.getByLabel('Search transactions')).toBeVisible()
+  await expect(page.getByTestId('chip-account')).toBeVisible()
+  await expect(page.getByTestId('chip-category')).toHaveCount(0)
   await expect(rows(page)).toHaveCount(1)
   await expect(rowFor(page, 'Vending Machine')).toBeVisible()
 

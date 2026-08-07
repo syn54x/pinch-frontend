@@ -7,7 +7,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useCallback, useMemo, useState } from 'react'
 import {
   listAccountsOptions,
-  listConnectionsOptions,
   listTransactionsInfiniteOptions,
 } from '@/api/generated/@tanstack/react-query.gen'
 import {
@@ -26,6 +25,7 @@ import {
 import { TransactionList } from '@/components/register/transaction-list'
 import { ViewTabs } from '@/components/register/view-tabs'
 import { ReviewQueue } from '@/components/review/review-queue'
+import { useEmptyLedger } from '@/components/use-empty-ledger'
 
 // Cursor pages of 50: dense enough that one screen never paginates, small
 // enough that a large history streams in smoothly.
@@ -63,15 +63,8 @@ function RegisterPage() {
   )
 
   // Onboarding's stateless trigger (#20, rehomed from the Inbox by F10
-  // CP1): no accounts AND no connections — the ledger's emptiness is the
-  // state, nothing is stored.
-  const accounts = useQuery(listAccountsOptions({ query: { limit: 100 } }))
-  const connections = useQuery(listConnectionsOptions())
-  const emptyLedger =
-    accounts.data !== undefined &&
-    connections.data !== undefined &&
-    accounts.data.items.length === 0 &&
-    connections.data.items.length === 0
+  // CP1): the ledger's emptiness is the state, nothing is stored.
+  const emptyLedger = useEmptyLedger()
   // 'engaged' keeps the wizard mounted once the user starts it — a fresh
   // connection un-infers the trigger mid-flow, but step 3 must still show.
   // 'done' (plus the module-scope skip flag) lasts exactly one page load.

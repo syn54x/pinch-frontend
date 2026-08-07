@@ -6,7 +6,6 @@ import { errorDetail } from '@/api/client'
 import {
   countUnreviewedTransactionsOptions,
   listAccountsOptions,
-  listConnectionsOptions,
   listTransactionsOptions,
   reviewBatchMutation,
 } from '@/api/generated/@tanstack/react-query.gen'
@@ -23,6 +22,7 @@ import {
 } from '@/components/review/use-review-controller'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useEmptyLedger } from '@/components/use-empty-ledger'
 import { dayGroups, initialQueueState, queueReducer } from '@/lib/queue-reducer'
 
 // One page of queue at a time (the API cap). Reviews shrink the queue and
@@ -54,15 +54,11 @@ export function ReviewQueue() {
   // told once.
   const count = useQuery(countUnreviewedTransactionsOptions())
   // Account labels name the pair callout's other leg (wireframe: "pairs
-  // with Ally Savings …"). Loaded once; a ledger has few accounts.
-  const accounts = useQuery(listAccountsOptions({}))
+  // with Ally Savings …"). Same options as the Register's other views —
+  // one cached accounts query serves all three.
+  const accounts = useQuery(listAccountsOptions({ query: { limit: 100 } }))
   // An empty ledger's zero state routes back to connecting.
-  const connections = useQuery(listConnectionsOptions())
-  const emptyLedger =
-    accounts.data !== undefined &&
-    connections.data !== undefined &&
-    accounts.data.items.length === 0 &&
-    connections.data.items.length === 0
+  const emptyLedger = useEmptyLedger()
 
   // Server truth → reducer rows (order + date only; rendering re-joins).
   const items = queue.data?.items

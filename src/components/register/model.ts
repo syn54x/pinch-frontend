@@ -27,7 +27,8 @@ export const UNCATEGORIZED = 'uncategorized'
 // The Register's views (F10 CP1): All (absent), the To-review queue, and
 // reviewed-but-uncategorized. A view is an address, not a filter — switching
 // tabs keeps the filter params in the URL.
-export type RegisterView = 'review' | 'uncategorized'
+export const REGISTER_VIEWS = ['review', 'uncategorized'] as const
+export type RegisterView = (typeof REGISTER_VIEWS)[number]
 
 export type RegisterSearch = {
   /** The active view tab; absent means All. */
@@ -66,9 +67,8 @@ export function sanitizeRegisterSearch(
   raw: Record<string, unknown>,
 ): RegisterSearch {
   const search: RegisterSearch = {}
-  if (raw.view === 'review' || raw.view === 'uncategorized') {
-    search.view = raw.view
-  }
+  const view = REGISTER_VIEWS.find((candidate) => candidate === raw.view)
+  if (view !== undefined) search.view = view
   const q = cleanString(raw.q)
   const account = cleanString(raw.account)
   const category = cleanString(raw.category)

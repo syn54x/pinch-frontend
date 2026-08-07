@@ -63,21 +63,25 @@ export function FilterBar({
           })),
         ]}
       />
-      <FilterChip
-        name="Category"
-        label={categoryLabel ?? 'Category'}
-        active={Boolean(search.category)}
-        selected={search.category}
-        onSelect={(category) => onPatch({ category })}
-        options={[
-          { value: undefined, label: 'All categories' },
-          { value: UNCATEGORIZED, label: 'Uncategorized' },
-          ...(categories.data?.items ?? []).map((c) => ({
-            value: c.id,
-            label: c.name,
-          })),
-        ]}
-      />
+      {/* On the Uncategorized view the tab owns the category slot — the
+          chip would be a silent no-op there, so it steps aside. */}
+      {search.view !== 'uncategorized' && (
+        <FilterChip
+          name="Category"
+          label={categoryLabel ?? 'Category'}
+          active={Boolean(search.category)}
+          selected={search.category}
+          onSelect={(category) => onPatch({ category })}
+          options={[
+            { value: undefined, label: 'All categories' },
+            { value: UNCATEGORIZED, label: 'Uncategorized' },
+            ...(categories.data?.items ?? []).map((c) => ({
+              value: c.id,
+              label: c.name,
+            })),
+          ]}
+        />
+      )}
       <FilterChip
         name="Date"
         label={dateChipLabel(search)}

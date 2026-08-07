@@ -98,7 +98,7 @@ Implemented code is still mostly stock shadcn/ui primitives, but the wireframes 
 **App shell** (wireframe #24 is the reference):
 - **Sidebar** — 212px fixed, panel surface, 1px border-right. Brand row (24px rounded-square logo in the accent color + name), nav items (13px, muted → ink+selected-bg when active), mono-caps section labels, a spacer, then the **Penny pill** (card-surface bordered row: purple dot + two-line label; accent-tinted border + glow in dark) and the user row.
 - **Top bar** — 52px, border-bottom. Screen title, inline search, spacer, **Ask Penny** affordance with `⌘K` kbd hint. Penny is reachable from every screen.
-- **Inbox count** — mono badge in the nav item, accent bg: the live number of transactions awaiting review.
+- **Review count** — mono badge on the Register nav item (F10 CP1 moved it there with the Inbox's retirement), accent bg: the live number of transactions awaiting review.
 
 **Data & ledger vocabulary:**
 - **Amount** — `amount` utility; `.big` 30px hero variant; positive/negative color only when direction is the point.
@@ -110,7 +110,7 @@ Implemented code is still mostly stock shadcn/ui primitives, but the wireframes 
 
 **Conventions:** buttons come in primary (accent), default (bordered card), ghost, and small (27–28px) variants; skeletons are `--muted` rounded blocks; avatars are `--muted` circles; dividers are 1px `--border`.
 
-**Screen index** (docs/wireframes, in journey order): 1 Sign up · 2 Log in · 3 Reset password · 4 Verify email · 5 Onboarding · 6 Dashboard · 7 Inbox/review · 8 Register · 9 Import CSV · 10 Manual entry · 11 Net Worth · 12 Recurring · 13 Accounts · 14 Debt · 15 Loan detail · 16 Connections · 17 Categories & Rules · 18 New category · 19 New rule · 20 Tags · 21 What Penny learned · 22 Penny chat · 23 Settings · 24 App shell.
+**Screen index** (docs/wireframes, in journey order): 1 Sign up · 2 Log in · 3 Reset password · 4 Verify email · 5 Onboarding · 6 Dashboard · 7 Register/To-review · 8 Register · 9 Import CSV · 10 Manual entry · 11 Net Worth · 12 Recurring · 13 Accounts · 14 Debt · 15 Loan detail · 16 Connections · 17 Categories & Rules · 18 New category · 19 New rule · 20 Tags · 21 What Penny learned · 22 Penny chat · 23 Settings · 24 App shell.
 
 ## 6. Do's and Don'ts
 

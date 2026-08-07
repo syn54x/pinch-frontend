@@ -78,7 +78,7 @@ describe('traversal', () => {
   })
 })
 
-describe('empty inbox', () => {
+describe('empty queue', () => {
   it('is inert: traversal and removal are all no-ops', () => {
     expect(queueReducer(initialQueueState, { type: 'focusNext' })).toEqual(
       initialQueueState,
@@ -149,7 +149,7 @@ describe('dayGroups', () => {
     ])
   })
 
-  it('is empty for an empty inbox', () => {
+  it('is empty for an empty queue', () => {
     expect(dayGroups([])).toEqual([])
   })
 })
