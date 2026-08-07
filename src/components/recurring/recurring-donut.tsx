@@ -3,7 +3,6 @@ import { ChartA11y } from '@/components/chart-a11y'
 import { PieChart } from '@/components/charts/pie-chart'
 import { PieSlice } from '@/components/charts/pie-slice'
 import { formatMinorUnits } from '@/lib/money'
-import { cn } from '@/lib/utils'
 
 // One donut hue per bucket, from the categorical ramp — the slice and its legend
 // swatch read the same color (identity, not chrome).
@@ -70,14 +69,14 @@ export function RecurringDonut({
       <ul className="flex min-w-0 flex-1 flex-col gap-1.5">
         <li className="label-caps mb-0.5">Recurring by category</li>
         {slices.map((s) => (
-          <li key={s.label} className="flex items-center gap-2 text-[13px]">
+          <li key={s.label} className="flex items-center gap-2 text-xs">
             <span
               aria-hidden
               className="size-2.5 shrink-0 rounded-[3px]"
               style={{ backgroundColor: s.color }}
             />
             <span className="min-w-0 flex-1 truncate">{s.label}</span>
-            <span className={cn('amount text-muted-foreground')}>
+            <span className="amount">
               {formatMinorUnits(s.value, currency)}
             </span>
           </li>
