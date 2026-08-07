@@ -35,7 +35,7 @@ test('logged out, / funnels through login and still lands on the Dashboard', asy
   await expect(page).toHaveURL(/\/dashboard$/)
 })
 
-test('the nav is exactly Dashboard, Inbox, Register, Net Worth, Recurring, Accounts, Setup → Connections + Categories & Rules — and Penny is reachable from every screen', async ({
+test('the nav is exactly Dashboard, Inbox, Register, Recurring, Accounts, Setup → Connections + Categories & Rules — and Penny is reachable from every screen', async ({
   page,
 }) => {
   const email = uniqueEmail('shell-lean')
@@ -49,7 +49,7 @@ test('the nav is exactly Dashboard, Inbox, Register, Net Worth, Recurring, Accou
     'Dashboard',
     'Inbox',
     'Register',
-    'Net Worth',
+    // Net Worth left with F10 CP2 (#88): absorbed into Accounts.
     'Recurring',
     'Accounts',
     'Connections',
@@ -167,10 +167,6 @@ test('the nav is keyboard traversable with visible focus', async ({ page }) => {
   await page.keyboard.press('Tab')
   await expect(
     primaryNav(page).getByRole('link', { name: 'Register' }),
-  ).toBeFocused()
-  await page.keyboard.press('Tab')
-  await expect(
-    primaryNav(page).getByRole('link', { name: 'Net Worth' }),
   ).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(

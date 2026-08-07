@@ -8,7 +8,6 @@ import {
   List,
   RefreshCw,
   Shapes,
-  TrendingUp,
 } from 'lucide-react'
 import { type ComponentType, type ReactNode, useEffect, useState } from 'react'
 import {
@@ -93,9 +92,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <NavItem to="/register" icon={List}>
             Register
           </NavItem>
-          <NavItem to="/net-worth" icon={TrendingUp}>
-            Net Worth
-          </NavItem>
+          {/* Net Worth left the nav with F10 CP2 (#88): the page is absorbed
+              into Accounts, and the nav shows only surfaces that exist. */}
           <NavItem to="/recurring" icon={RefreshCw}>
             Recurring
           </NavItem>
