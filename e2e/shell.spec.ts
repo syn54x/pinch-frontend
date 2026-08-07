@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test'
 import { PASSWORD, seedUser, uniqueEmail } from './helpers/api'
+import { daysAgo, RegisterSeeder } from './helpers/register'
 import { loginViaUi, setTheme } from './helpers/ui'
 
 // The App shell (F3 CP0, wireframe #24): persistent sidebar + top bar around
@@ -35,7 +36,7 @@ test('logged out, / funnels through login and still lands on the Dashboard', asy
   await expect(page).toHaveURL(/\/dashboard$/)
 })
 
-test('the nav is exactly Dashboard, Register, Recurring, Accounts, Setup → Connections + Categories & Rules — and Penny is reachable from every screen', async ({
+test('the nav is exactly Dashboard, Register, Recurring, Accounts, Categories & Rules, Connections — no Setup label — and Penny is reachable from every screen', async ({
   page,
 }) => {
   const email = uniqueEmail('shell-lean')
@@ -43,8 +44,9 @@ test('the nav is exactly Dashboard, Register, Recurring, Accounts, Setup → Con
   await loginViaUi(page, email, PASSWORD)
   await expect(page).toHaveURL(/\/accounts$/)
 
-  // Exactly these destinations, in wireframe order — no disabled items,
-  // no stubs. Penny is deliberately NOT a nav item: she has her own pill.
+  // Exactly these destinations, in the wireframe's final order (F10 CP3,
+  // #89) — no disabled items, no stubs, no "Setup" grouping. Penny is
+  // deliberately NOT a nav item: she has her own pill.
   await expect(primaryNav(page).getByRole('link')).toHaveText([
     'Dashboard',
     // The Inbox left with F10 CP1 (#87, ADR 0002): review is the
@@ -53,11 +55,11 @@ test('the nav is exactly Dashboard, Register, Recurring, Accounts, Setup → Con
     // Net Worth left with F10 CP2 (#88): absorbed into Accounts.
     'Recurring',
     'Accounts',
+    'Categories & Rules', // F4 CP0 (#58); F10 CP3 moved it ahead of Connections
     'Connections',
-    'Categories & Rules', // F4 CP0 (#58)
   ])
   const sidebar = page.locator('aside')
-  await expect(sidebar.getByText('Setup')).toBeVisible() // the section label
+  await expect(sidebar.getByText('Setup')).toHaveCount(0) // the label is gone
   // exact: the fake e2e email domain also contains "pinch".
   await expect(sidebar.getByText('Pinch', { exact: true })).toBeVisible()
   await expect(sidebar.getByText(email)).toBeVisible() // the user row
@@ -177,6 +179,10 @@ test('the nav is keyboard traversable with visible focus', async ({ page }) => {
     primaryNav(page).getByRole('link', { name: 'Accounts' }),
   ).toBeFocused()
   await page.keyboard.press('Tab')
+  await expect(
+    primaryNav(page).getByRole('link', { name: 'Categories & Rules' }),
+  ).toBeFocused()
+  await page.keyboard.press('Tab')
   const connections = primaryNav(page).getByRole('link', {
     name: 'Connections',
   })
@@ -189,6 +195,199 @@ test('the nav is keyboard traversable with visible focus', async ({ page }) => {
   expect(outline).not.toBe('none')
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/\/connections$/)
+})
+
+test('the live unreviewed-count pill rides the Register nav item (F10 CP3)', async ({
+  page,
+}) => {
+  const email = uniqueEmail('shell-review-count')
+  await seedUser(email, PASSWORD)
+  const seed = await RegisterSeeder.login(email, PASSWORD)
+  const checking = await seed.createAccount('Chase Checking')
+  // Untouched incoming transaction: unreviewed by construction.
+  await seed.createTxn(checking, {
+    date: daysAgo(0),
+    amountMinor: -999,
+    description: 'Mystery Charge',
+  })
+  await seed.dispose()
+
+  await loginViaUi(page, email, PASSWORD)
+  await expect(page).toHaveURL(/\/accounts$/)
+
+  await expect(page.getByTestId('review-count')).toHaveText('1')
+  // The e2e gotcha: the accessible name becomes "Register 1" once the pill
+  // shows — scope to Primary, never `exact: true` for this link.
+  await expect(
+    primaryNav(page).getByRole('link', { name: 'Register 1' }),
+  ).toBeVisible()
+})
+
+test('Your money groups the ledger by kind with real per-account and group totals, consistent with the Accounts page (F10 CP3)', async ({
+  page,
+}) => {
+  const email = uniqueEmail('shell-your-money')
+  await seedUser(email, PASSWORD, [
+    {
+      kind: 'depository',
+      label: 'Chase Checking',
+      currency: 'USD',
+      balanceMinor: 12_430_00,
+    },
+    {
+      kind: 'depository',
+      label: 'Ally Savings',
+      currency: 'USD',
+      balanceMinor: 5_970_00,
+    },
+    {
+      kind: 'investment',
+      label: 'Fidelity Brokerage',
+      currency: 'USD',
+      balanceMinor: 198_200_00,
+    },
+    { kind: 'asset', label: 'Home', currency: 'USD', balanceMinor: 115_000_00 },
+    { kind: 'credit', label: 'Visa', currency: 'USD', balanceMinor: -2_800_00 },
+    {
+      kind: 'loan',
+      label: 'Auto Loan',
+      currency: 'USD',
+      balanceMinor: -28_400_00,
+    },
+  ])
+  await loginViaUi(page, email, PASSWORD)
+  await expect(page).toHaveURL(/\/accounts$/)
+
+  const sidebar = page.locator('aside')
+  await expect(sidebar.getByText('Your money')).toBeVisible()
+
+  // Group totals: real primary-currency sums, kind → group per the PRD
+  // (depository → Cash, investment → Investments, asset → Property, credit
+  // + loan → Debt).
+  await expect(page.getByTestId('sidebar-group-cash-total')).toHaveText(
+    '$18,400.00',
+  )
+  await expect(page.getByTestId('sidebar-group-investments-total')).toHaveText(
+    '$198,200.00',
+  )
+  await expect(page.getByTestId('sidebar-group-property-total')).toHaveText(
+    '$115,000.00',
+  )
+  await expect(page.getByTestId('sidebar-group-debt-total')).toHaveText(
+    '-$31,200.00',
+  )
+
+  // Per-account rows render inside their group, ARIA-labelled.
+  const cashGroup = page.getByRole('group', { name: 'Cash accounts' })
+  await expect(cashGroup.getByText('Chase Checking')).toBeVisible()
+  await expect(cashGroup.getByText('$12,430.00')).toBeVisible()
+  const debtGroup = page.getByRole('group', { name: 'Debt accounts' })
+  await expect(debtGroup.getByText('Auto Loan')).toBeVisible()
+  await expect(debtGroup.getByText('-$28,400.00')).toBeVisible()
+
+  // Consistent with the Accounts page's own hero number — both read the
+  // same net-worth report. 18,400 + 198,200 + 115,000 − 31,200 = 300,400.
+  await expect(page.getByTestId('nw-hero')).toHaveText('$300,400.00')
+})
+
+test('an account the report cannot convert renders in its group at its native balance, outside the group total (F10 CP3)', async ({
+  page,
+}) => {
+  const email = uniqueEmail('shell-your-money-excluded')
+  await seedUser(email, PASSWORD, [
+    {
+      kind: 'depository',
+      label: 'Chase Checking',
+      currency: 'USD',
+      balanceMinor: 5_000_00,
+    },
+    // v0's FX is same-currency-only (fx.py) — a non-primary currency has no
+    // rate, so the net-worth report excludes it from `accounts`/the total,
+    // even though the plain account roster still knows it exists.
+    {
+      kind: 'depository',
+      label: 'Paris Account',
+      currency: 'EUR',
+      balanceMinor: 200_00,
+    },
+  ])
+  await loginViaUi(page, email, PASSWORD)
+  await expect(page).toHaveURL(/\/accounts$/)
+
+  await expect(page.getByTestId('sidebar-group-cash-total')).toHaveText(
+    '$5,000.00',
+  )
+  const cashGroup = page.getByRole('group', { name: 'Cash accounts' })
+  await expect(cashGroup.getByText('Paris Account')).toBeVisible()
+  await expect(cashGroup.getByText('€200.00')).toBeVisible()
+})
+
+test('Your money groups collapse/expand, the total stays visible collapsed, and the state survives reload (F10 CP3)', async ({
+  page,
+}) => {
+  const email = uniqueEmail('shell-your-money-collapse')
+  await seedUser(email, PASSWORD, [
+    {
+      kind: 'depository',
+      label: 'Chase Checking',
+      currency: 'USD',
+      balanceMinor: 1_000_00,
+    },
+  ])
+  await loginViaUi(page, email, PASSWORD)
+  await expect(page).toHaveURL(/\/accounts$/)
+
+  const trigger = page.getByTestId('sidebar-group-cash')
+  const sidebar = page.locator('aside')
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+  await expect(sidebar.getByText('Chase Checking')).toBeVisible()
+
+  await trigger.click()
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+  await expect(sidebar.getByText('Chase Checking')).toBeHidden()
+  // The total keeps showing while collapsed.
+  await expect(page.getByTestId('sidebar-group-cash-total')).toHaveText(
+    '$1,000.00',
+  )
+
+  // Collapse state is per device (localStorage) — it survives a reload.
+  await page.reload()
+  await expect(page.getByTestId('sidebar-group-cash')).toHaveAttribute(
+    'aria-expanded',
+    'false',
+  )
+  await expect(page.getByTestId('sidebar-group-cash-total')).toHaveText(
+    '$1,000.00',
+  )
+})
+
+test('the Penny pill and profile row stay pinned to the bottom regardless of how many accounts fill Your money (F10 CP3)', async ({
+  page,
+}) => {
+  const email = uniqueEmail('shell-your-money-pinned')
+  const many = Array.from({ length: 25 }, (_, i) => ({
+    kind: 'depository' as const,
+    label: `Account ${i + 1}`,
+    currency: 'USD',
+    balanceMinor: 1_00,
+  }))
+  await seedUser(email, PASSWORD, many)
+  await loginViaUi(page, email, PASSWORD)
+  await expect(page).toHaveURL(/\/accounts$/)
+
+  // The nav (brand row excluded) overflows and scrolls internally...
+  const nav = primaryNav(page)
+  await expect(page.getByTestId('sidebar-group-cash-total')).toBeVisible()
+  const [scrollHeight, clientHeight] = await nav.evaluate((el) => [
+    el.scrollHeight,
+    el.clientHeight,
+  ])
+  expect(scrollHeight).toBeGreaterThan(clientHeight)
+
+  // ...while the Penny pill and the user row stay put, visible without the
+  // page itself needing to scroll.
+  await expect(page.getByTestId('penny-pill')).toBeVisible()
+  await expect(page.locator('aside').getByText(email)).toBeVisible()
 })
 
 test('the shell holds in dark mode', async ({ page }) => {

@@ -24,12 +24,21 @@ transactions page, inbox (retired — the Inbox route died with F10 CP1; its
 review kit lives in the To-review view)
 
 **App shell**:
-The persistent chrome every authed surface mounts inside: the sidebar (nav
-with the live unreviewed-count pill on the Register item, Setup section,
-Penny pill, and the profile menu on the user row) and the top bar (screen
-title, global search, Ask Penny). Theme and logout live in the profile
-menu, not the bar. Nav shows only surfaces that exist — no disabled
-destinations.
+The persistent chrome every authed surface mounts inside: the sidebar and
+the top bar (screen title, global search, Ask Penny). Theme and logout live
+in the profile menu, not the bar. The sidebar's nav reads Dashboard ·
+Register (with the live unreviewed-count pill) · Recurring · Accounts ·
+Categories & Rules · Connections — no disabled destinations, no "Setup"
+grouping (retired F10 CP3). Below the nav, **Your money** lists the ledger's
+accounts in collapsible Cash / Investments / Property / Debt groups (kind
+mapping: depository → Cash, investment → Investments, asset → Property,
+credit + loan → Debt), reading the net-worth report rather than the plain
+accounts list so group totals are real primary-currency sums; an account the
+report excludes for lack of an FX path still renders in its group at its own
+native balance, held out of the total. Collapse state persists per device;
+group totals stay visible collapsed. The account list scrolls inside the
+sidebar — the Penny pill and profile block on the user row stay pinned
+below it, never scrolling away.
 _Avoid_: layout, frame
 
 **Profile menu**:
