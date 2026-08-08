@@ -103,7 +103,7 @@ jobs:
           # seeding helper.
           PINCH_MX_CLIENT_ID: ${{ secrets.PINCH_MX_CLIENT_ID }}
           PINCH_MX_API_KEY: ${{ secrets.PINCH_MX_API_KEY }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
