@@ -78,7 +78,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - uses: extractions/setup-just@v2
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
       # Pre-warm the backend env so the Playwright webServer boot isn't
