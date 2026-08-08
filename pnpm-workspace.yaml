@@ -1,3 +1,10 @@
 minimumReleaseAgeExclude:
   - '@ai-sdk/gateway@3.0.162'
   - ai@6.0.240
+
+# S2 vuln triage (pinch-backend#99): transitives held on vulnerable versions
+# by exact/major pins in their dependents. Drop each override once the
+# dependent's own range clears the patched floor.
+overrides:
+  'undici@<6.27.0': ^6.27.0 # @ai-sdk/provider-utils@4 pins ^5.29.0; 5.x is EOL w/ WS DoS advisories; Node-only path, never in the browser bundle
+  'js-yaml@<4.3.1': ^4.3.1 # @hey-api/json-schema-ref-parser pins =4.2.0; dev codegen only
