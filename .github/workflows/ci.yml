@@ -23,6 +23,22 @@ jobs:
       - run: just check-drift
       - run: pnpm build
 
+  # Fails on any known high+ vulnerability in the lockfile (Q8: the gate
+  # blocks merges, it doesn't just file advisories). Transitives held back
+  # by dependent pins are patched via overrides in pnpm-workspace.yaml,
+  # each with a written justification.
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: pnpm audit --audit-level=high
+
   # The walking skeleton's definition of done: the full Playwright suite
   # against a real backend (checked out at the SHA pinned in e2e/backend.pin
   # — bumping it is a reviewable diff) and a fresh Postgres.
